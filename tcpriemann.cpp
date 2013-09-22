@@ -11,9 +11,9 @@
 #include "proto.pb.h"
 
 namespace {
-  char response[] = "HTTP/1.0 200 OK\nServer: SimpleHTTP/0.6 Python/2.7.4\nDate: Sun, 22 Sep 2013 09:49:26 GMT\nContent-type: text/html; charset=UTF-8\nContent-Length: 0\n\n";
-  size_t buffer_size = 1024 * 8;
+  size_t buffer_size = 1024 * 16;
   Msg msg_ok;
+
 }
 //
 //   Buffer class - allow for output buffering such that it can be written out 
@@ -53,6 +53,10 @@ class TcpRiemannInstance {
     ev::io           io;
     static int total_clients;
     int              sfd;
+    char             buffer[1025* 8];
+    size_t           bytes_read;
+    uint32_t         protobuf_size;
+    enum State { ReadingHeader, ReadingMessage } state;
 
     // Buffers that are pending write
     std::list<Buffer*>     write_queue;
@@ -64,10 +68,10 @@ class TcpRiemannInstance {
         return;
       }
 
-      if (revents & EV_READ) 
+      if (revents & EV_READ)
         read_cb(watcher);
 
-      if (revents & EV_WRITE) 
+      if (revents & EV_WRITE)
         write_cb(watcher);
 
       if (write_queue.empty()) {
@@ -99,11 +103,43 @@ class TcpRiemannInstance {
       }
     }
 
-    // Receive message from client socket
-    void read_cb(ev::io &watcher) {
-      uint32_t header;
+    void try_read_header(ev::io &watcher) {
+      char *header_buf = (char*)buffer + bytes_read;
+      ssize_t   nread = recv(watcher.fd, header_buf, 4 - bytes_read, 0);
 
-      ssize_t   nread = recv(watcher.fd, &header, sizeof(header), 0);
+      if (nread < 0) {
+        perror("read error");
+        return;
+      }
+
+      if (nread == 0) {
+        printf("deleting object\n");
+        delete this;
+        return;
+      }
+
+      bytes_read += nread;
+      if (bytes_read != 4) {
+        printf("We don't have a complete header yet.\n");
+        return;
+      }
+
+      uint32_t header;
+      memcpy((void *)&header, buffer, 4);
+      protobuf_size = ntohl(header);
+
+      printf("Header read. Size of protobuf msg %i\n",  protobuf_size);
+
+      state = ReadingMessage;
+      bytes_read = 0;
+      try_read_message(watcher);
+    }
+
+    void try_read_message(ev::io &watcher) {
+      char *msg_buf = (char*)buffer + bytes_read;
+      ssize_t   nread = recv(watcher.fd, msg_buf, protobuf_size - bytes_read, 0);
+
+      printf("Read %i bytes\n", nread);
 
       if (nread < 0) {
         perror("read error");
@@ -115,27 +151,14 @@ class TcpRiemannInstance {
         delete this;
       }
 
-      if (nread != sizeof(header)) {
-        printf("Error reading header\n");
+      bytes_read += nread;
+      if (bytes_read != protobuf_size) {
+        printf("We don't have a complete message yet.\n");
         return;
       }
 
-      uint32_t protobuf_size = ntohl(header);
-      printf("Size of protbuf %i\n",  protobuf_size);
-      if (protobuf_size > buffer_size) {
-        printf("Error header size is greater than buffer size\n");
-        return;
-      }
-
-      // Try to read all events
-      //
-      char buffer[buffer_size];
-      nread = recv(watcher.fd, buffer, protobuf_size, 0);
-
-      if (nread != protobuf_size) {
-        printf("Read bytes and protobuf_size don't match\n");
-        return;
-      }
+      state = ReadingHeader;
+      bytes_read = 0;
 
       Msg message;
       if (!message.ParseFromArray(buffer, protobuf_size)) {
@@ -145,6 +168,10 @@ class TcpRiemannInstance {
 
       printf("Message parsed successfully\n");
 
+      send_response(watcher);
+    }
+
+    void send_response(ev::io &watcher) {
       uint32_t nsize = htonl(msg_ok.ByteSize());
       memcpy(buffer, (void *)&nsize, sizeof(nsize));
       if (!msg_ok.SerializeToArray(buffer + sizeof(nsize), msg_ok.ByteSize())) {
@@ -153,15 +180,19 @@ class TcpRiemannInstance {
       }
       printf("Message serialized successfully. Size %i\n", msg_ok.ByteSize());
       write_queue.push_back(new Buffer(buffer, sizeof(nsize) + msg_ok.ByteSize()));
-      /*
-      if (nread == 0) {
-        // Gack - we're deleting ourself inside of ourself!
-        delete this;
-      } else {
-        // Send message bach to the client
-        //write_queue.push_back(new Buffer(buffer, nread));
-        write_queue.push_back(new Buffer(response, sizeof(response)));
-      }*/
+
+    }
+
+    // Receive message from client socket
+    void read_cb(ev::io &watcher) {
+      switch (state) {
+        case ReadingHeader:
+          try_read_header(watcher);
+          break;
+        case ReadingMessage:
+          try_read_message(watcher);
+          break;
+      }
     }
 
     // effictivly a close and a destroy
@@ -175,7 +206,7 @@ class TcpRiemannInstance {
     }
 
   public:
-    TcpRiemannInstance(int s) : sfd(s) {
+    TcpRiemannInstance(int s) : sfd(s), bytes_read(0), state(ReadingHeader) {
       fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
 
       //printf("Got connection\n");
