@@ -1,0 +1,55 @@
+PROJECT(miniriemann)
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+SET(MINIRIEMANN_SRCS
+    ${CMAKE_SOURCE_DIR}/src/tcpriemann.cpp
+  )
+
+SET(MINIRIEMANN_HDRS
+    ${CMAKE_SOURCE_DIR}/src/
+  )
+
+SET(MINIRIEMANN_PROTOFILES
+    ${CMAKE_SOURCE_DIR}/src/proto.proto
+  )
+
+ADD_DEFINITIONS( -Wall -std=c++11 )
+
+INCLUDE(FindProtobuf)
+
+FIND_PACKAGE(Protobuf REQUIRED)
+
+# Try to find libev by hand
+FIND_PATH(LIBEV_INCLUDE_DIR ev++.h HINTS /usr/include/)
+FIND_LIBRARY(LIBEV_LIBRARIES NAMES ev)
+
+MESSAGE("INCLUDE: ${LIBEV_INCLUDE_DIR}")
+MESSAGE("LIBS: ${LIBEV_LIBRARIES}")
+
+IF(PROTOBUF_FOUND)
+  PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${MINIRIEMANN_PROTOFILES})
+
+  INCLUDE_DIRECTORIES(
+      ${CMAKE_CURRENT_BINARY_DIR}
+      ${CMAKE_BINARY_DIR}
+      ${PROTOBUF_INCLUDE_DIR}
+      ${MINIRIEMANN_HDRS}
+    )
+
+  ADD_EXECUTABLE(
+      miniriemann
+      ${MINIRIEMANN_SRCS}
+      ${ProtoSources}
+      ${ProtoHeaders}
+      ${LIBEV_INCLUDE_DIR}
+    )
+
+  TARGET_LINK_LIBRARIES(
+      miniriemann
+      ${LIBEV_LIBRARIES}
+      ${CMAKE_THREAD_LIBS_INIT}
+      ${PROTOBUF_LIBRARY}
+    )
+
+ENDIF(PROTOBUF_FOUND)
