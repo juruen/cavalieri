@@ -13,6 +13,7 @@
 namespace {
   size_t buffer_size = 1024 * 16;
   Msg msg_ok;
+  uint32_t events = 0;
 
 }
 //
@@ -92,7 +93,7 @@ class TcpRiemannInstance {
 
       ssize_t written = write(watcher.fd, buffer->dpos(), buffer->nbytes());
       if (written < 0) {
-        perror("read error");
+        //perror("read error");
         return;
       }
 
@@ -108,13 +109,13 @@ class TcpRiemannInstance {
       ssize_t   nread = recv(watcher.fd, header_buf, 4 - bytes_read, 0);
 
       if (nread < 0) {
-        perror("read error");
+        //perror("read error");
         return;
       }
 
       if (nread == 0) {
         printf("deleting object\n");
-        delete this;
+        io.stop();
         return;
       }
 
@@ -128,7 +129,7 @@ class TcpRiemannInstance {
       memcpy((void *)&header, buffer, 4);
       protobuf_size = ntohl(header);
 
-      printf("Header read. Size of protobuf msg %i\n",  protobuf_size);
+      //printf("Header read. Size of protobuf msg %i\n",  protobuf_size);
 
       state = ReadingMessage;
       bytes_read = 0;
@@ -139,16 +140,16 @@ class TcpRiemannInstance {
       char *msg_buf = (char*)buffer + bytes_read;
       ssize_t   nread = recv(watcher.fd, msg_buf, protobuf_size - bytes_read, 0);
 
-      printf("Read %i bytes\n", nread);
+     // printf("Read %i bytes\n", nread);
 
       if (nread < 0) {
-        perror("read error");
+        //perror("read error");
         return;
       }
 
       if (nread == 0) {
         printf("deleting object\n");
-        delete this;
+        io.stop();
       }
 
       bytes_read += nread;
@@ -166,7 +167,8 @@ class TcpRiemannInstance {
         return;
       }
 
-      printf("Message parsed successfully\n");
+      //printf("Message parsed successfully. Num of events: %i\n", message.events_size());
+      events += message.events_size();
 
       send_response(watcher);
     }
@@ -178,7 +180,7 @@ class TcpRiemannInstance {
         printf("Error serializing response\n");
         return;
       }
-      printf("Message serialized successfully. Size %i\n", msg_ok.ByteSize());
+//      printf("Message serialized successfully. Size %i\n", msg_ok.ByteSize());
       write_queue.push_back(new Buffer(buffer, sizeof(nsize) + msg_ok.ByteSize()));
 
     }
@@ -204,7 +206,6 @@ class TcpRiemannInstance {
 
       //printf("%d client(s) connected.\n", --total_clients);
     }
-
   public:
     TcpRiemannInstance(int s) : sfd(s), bytes_read(0), state(ReadingHeader) {
       fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
@@ -222,6 +223,7 @@ class TcpRiemannServer {
   private:
     ev::io           io;
     ev::sig         sio;
+    ev::timer       tio;
     int                 s;
 
   public:
@@ -249,6 +251,11 @@ class TcpRiemannServer {
       signal.loop.break_loop();
     }
 
+    void timer_cb(ev::timer &timer, int revents) {
+      printf("Number of events/sec: %f \n", events / 5.0f);
+      events = 0;
+    }
+
     TcpRiemannServer(int port) {
       printf("Listening on port %d\n", port);
 
@@ -273,6 +280,9 @@ class TcpRiemannServer {
 
       sio.set<&TcpRiemannServer::signal_cb>();
       sio.start(SIGINT);
+
+      tio.set<TcpRiemannServer, &TcpRiemannServer::timer_cb>(this);
+      tio.start(0, 5);
     }
 
     virtual ~TcpRiemannServer() {
