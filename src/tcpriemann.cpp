@@ -8,14 +8,30 @@
 #include <resolv.h>
 #include <errno.h>
 #include <list>
+#include <glog/logging.h>
 #include "proto.pb.h"
 
 namespace {
   size_t buffer_size = 1024 * 16;
-  Msg msg_ok;
   uint32_t events = 0;
   char ok_response[1024];
   uint32_t ok_response_size;
+  uint32_t listen_backlog = 100;
+}
+
+static void generate_msg_ok()
+{
+  Msg msg_ok;
+  msg_ok.set_ok(true);
+
+  uint32_t nsize = htonl(msg_ok.ByteSize());
+  memcpy(ok_response, (void *)&nsize, sizeof(nsize));
+  if (!msg_ok.SerializeToArray(ok_response + sizeof(nsize), msg_ok.ByteSize())) {
+    VLOG(1) << "Error serializing response\n";
+    exit(1);
+  }
+
+  ok_response_size = sizeof(nsize) + msg_ok.ByteSize();
 }
 
 //
@@ -62,41 +78,41 @@ class TcpRiemannInstance {
         return;
       }
 
-      ssize_t written = write(watcher.fd, ok_response + bytes_written , ok_response_size - bytes_written);
-     // printf("to write %i, actuallty written %i, written so far %i\n", ok_response_size, written, bytes_written);
-      if (written < 0) {
-        //perror("read error");
+      VLOG(3) << "Trying to write " << ok_response_size - bytes_written << " bytes";
+      ssize_t nwritten = write(watcher.fd, ok_response + bytes_written , ok_response_size - bytes_written);
+      VLOG(3) << "Actually written " << nwritten << " bytes";
+
+      if (nwritten < 0) {
+        VLOG(3) << "read error: " << strerror(errno);
         return;
       }
 
-      bytes_written += written;
+      bytes_written += nwritten;
       if (bytes_written == ok_response_size) {
-        //printf("response sent\n");
         write_queue.pop_front();
-	bytes_written = 0;
+        bytes_written = 0;
+        VLOG(3) << "response sent";
       }
     }
 
     void try_read_header(ev::io &watcher) {
-      char *header_buf = (char*)buffer + bytes_read;
-      ssize_t   nread = recv(watcher.fd, header_buf, buffer_size - bytes_read, 0);
-      //printf("nread header:%i\n", nread);
-      
+      VLOG(3) << "trying to read up to " << buffer_size - bytes_read << " bytes";
+      ssize_t   nread = recv(watcher.fd, (char*)buffer + bytes_read, buffer_size - bytes_read, 0);
+      VLOG(3) << nread << " bytes read in header";
 
       if (nread < 0) {
-        //perror("read error");
+        VLOG(3) << "read error: " << strerror(errno);
         return;
       }
 
       if (nread == 0) {
-        printf("deleting object\n");
+        VLOG(3) << "we should delete the object";
         io.stop();
         return;
       }
 
       bytes_read += nread;
       if (bytes_read < 4) {
-        //printf("We don't have a complete header yet.\n");
         return;
       }
 
@@ -104,7 +120,7 @@ class TcpRiemannInstance {
       memcpy((void *)&header, buffer, 4);
       protobuf_size = ntohl(header);
 
-      //printf("Header read. Size of protobuf msg %i\n",  protobuf_size);
+      VLOG(2) << "header read. Size of protobuf payload " << protobuf_size << " bytes";
 
       state = ReadingMessage;
       try_read_message(watcher);
@@ -112,47 +128,43 @@ class TcpRiemannInstance {
 
     void try_read_message(ev::io &watcher) {
       if (bytes_read < protobuf_size + 4) {
-	      char *msg_buf = (char*)buffer + bytes_read;
-	      ssize_t   nread = recv(watcher.fd, msg_buf, protobuf_size - bytes_read + 4, 0);
-              //printf("nread message:%i\n", nread);
-	     // printf("Read %i bytes\n", nread);
+        VLOG(3) << "trying to read from protobuf payload " << protobuf_size - bytes_read + 4 << " bytes";
+        ssize_t   nread = recv(watcher.fd, (char*)buffer + bytes_read, protobuf_size - bytes_read + 4, 0);
+        VLOG(3) << "actually read " << nread << " bytes";
 
-	      if (nread < 0) {
-		//perror("read error");
-		return;
-	      }
+        if (nread < 0) {
+          VLOG(3) << "read error: " << strerror(errno);
+          return;
+        }
 
-	      if (nread == 0) {
-		printf("deleting object\n");
-		io.stop();
-	      }
+        if (nread == 0) {
+          VLOG(3) << "we should delete the object";
+          io.stop();
+        }
 
-	      bytes_read += nread;
-	      if ((bytes_read - 4) != protobuf_size) {
-		//printf("We don't have a complete message yet.\n");
-		return;
-	      }
+        bytes_read += nread;
+        if ((bytes_read - 4) != protobuf_size) {
+          return;
+        }
       }
+
       state = ReadingHeader;
       bytes_read = 0;
 
       Msg message;
       if (!message.ParseFromArray(buffer + 4, protobuf_size)) {
-        printf("Error parsing message\n");
+        VLOG(2) << "error parsing protobuf payload";
         return;
       }
 
-      //printf("Message parsed successfully. Num of events: %i\n", message.events_size());
+      VLOG(2) << "protobuf payload parsed successfully. nevents " << message.events_size();
       events += message.events_size();
 
       send_response(watcher);
     }
 
     void send_response(ev::io &watcher) {
-     
-//      printf("Message serialized successfully. Size %i\n", msg_ok.ByteSize());
       write_queue.push_back(1);
-
     }
 
     // Receive message from client socket
@@ -171,21 +183,20 @@ class TcpRiemannInstance {
     virtual ~TcpRiemannInstance() {
       // Stop and free watcher if client socket is closing
       io.stop();
-
       close(sfd);
-
-      //printf("%d client(s) connected.\n", --total_clients);
+      VLOG(3) << "Total connected clients " << --total_clients;
     }
   public:
     TcpRiemannInstance(int s) : sfd(s), bytes_read(0), bytes_written(0), state(ReadingHeader) {
       fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
 
-      //printf("Got connection\n");
       total_clients++;
 
       io.set<TcpRiemannInstance, &TcpRiemannInstance::callback>(this);
 
       io.start(s, ev::READ);
+
+      VLOG(3) << "New connection";
     }
 };
 
@@ -200,7 +211,7 @@ class TcpRiemannServer {
 
     void io_accept(ev::io &watcher, int revents) {
       if (EV_ERROR & revents) {
-        perror("got invalid event");
+        VLOG(3) << "got invalid event: " << strerror(errno);
         return;
       }
 
@@ -210,7 +221,7 @@ class TcpRiemannServer {
       int client_sd = accept(watcher.fd, (struct sockaddr *)&client_addr, &client_len);
 
       if (client_sd < 0) {
-        perror("accept error");
+        VLOG(3) << "accept error: " << strerror(errno);
         return;
       }
 
@@ -222,12 +233,14 @@ class TcpRiemannServer {
     }
 
     void timer_cb(ev::timer &timer, int revents) {
-      printf("Number of events/sec: %f \n", events / 5.0f);
+      VLOG(1) << "Number of events/sec: " << events / 5.0f;
       events = 0;
     }
 
     TcpRiemannServer(int port) {
-      printf("Listening on port %d\n", port);
+      VLOG(1) << "Listening on port" << port;
+
+      generate_msg_ok();
 
       struct sockaddr_in addr;
 
@@ -238,12 +251,13 @@ class TcpRiemannServer {
       addr.sin_addr.s_addr = INADDR_ANY;
 
       if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
-        perror("bind");
+        LOG(FATAL) << "bind error: " << strerror(errno);
+        exit(1);
       }
 
       fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
 
-      listen(s, 100);
+      listen(s, listen_backlog);
 
       io.set<TcpRiemannServer, &TcpRiemannServer::io_accept>(this);
       io.start(s, ev::READ);
@@ -265,24 +279,15 @@ int TcpRiemannInstance::total_clients = 0;
 
 int main(int argc, char **argv)
 {
-  int         port = 5555;
+  int port = 5555;
 
   if (argc > 1)
     port = atoi(argv[1]);
 
-  msg_ok.set_ok(true);
-  ev::default_loop       loop;
-  TcpRiemannServer                   echo(port);
+  google::InitGoogleLogging(argv[0]);
 
-  uint32_t nsize = htonl(msg_ok.ByteSize());
-  memcpy(ok_response, (void *)&nsize, sizeof(nsize));
-  if (!msg_ok.SerializeToArray(ok_response + sizeof(nsize), msg_ok.ByteSize())) {
-	  printf("Error serializing response\n");
-	  return 1;
-  }
-
- ok_response_size = sizeof(nsize) + msg_ok.ByteSize();
- printf("ok_response_size %i\n", ok_response_size);
+  ev::default_loop  loop;
+  TcpRiemannServer tcpriemann(port);
 
   loop.run(0);
 
