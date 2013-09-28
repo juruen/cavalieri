@@ -39,19 +39,18 @@ struct connection {
   size_t bytes_read;
   size_t bytes_written;
   bool reading_header;
+  bool write_response;
   uint32_t protobuf_size;
   char buffer[buffer_size];
-  std::list<int> write_queue;
   ev::io io;
 
   connection(int socket_fd) :
-    sfd(socket_fd), bytes_read(0), bytes_written(0), reading_header(true) {}
+    sfd(socket_fd), bytes_read(0), bytes_written(0), reading_header(true), write_response(false) {}
 
-  // Socket is writable
   bool write_cb() {
     VLOG(3) << "write_cb()";
 
-    if (write_queue.empty()) {
+    if (!write_response) {
       io.set(ev::READ);
       return true;
     }
@@ -67,7 +66,7 @@ struct connection {
 
     bytes_written += nwritten;
     if (bytes_written == ok_response_size) {
-      write_queue.pop_front();
+      write_response = false;
       bytes_written = 0;
       VLOG(3) << "response sent";
     }
@@ -140,7 +139,7 @@ struct connection {
     VLOG(2) << "protobuf payload parsed successfully. nevents " << message.events_size();
     events += message.events_size();
 
-    write_queue.push_back(1); // send response
+    write_response = true;
 
     return true;
   }
@@ -151,6 +150,10 @@ struct connection {
     } else {
         return try_read_message();
     }
+  }
+
+  void set_io() {
+    io.set(ev::READ | write_response ?  ev::WRITE : 0);
   }
 
   void stop() {
@@ -217,9 +220,9 @@ class TcpRiemannServer {
       if (conn_ok && (revents & EV_WRITE))
         conn_ok = conn->write_cb();
 
-      if (!conn_ok) {
-        watcher.set(ev::READ | conn->write_queue.empty() ? 0 : ev::WRITE);
-      } else{
+      if (conn_ok) {
+        conn->set_io();
+      } else {
         remove_connection(conn);
       }
     }
