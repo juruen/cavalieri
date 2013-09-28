@@ -12,7 +12,7 @@
 #include "proto.pb.h"
 
 namespace {
-  size_t buffer_size = 1024 * 16;
+  const uint32_t buffer_size = 1024 * 16;
   uint32_t events = 0;
   char ok_response[1024];
   uint32_t ok_response_size;
@@ -34,178 +34,138 @@ static void generate_msg_ok()
   ok_response_size = sizeof(nsize) + msg_ok.ByteSize();
 }
 
-//
-//   A single instance of a non-blocking TcpRiemann handler
-//
-class TcpRiemannInstance {
-  private:
-    ev::io           io;
-    static int total_clients;
-    int              sfd;
-    char             buffer[1025* 8];
-    size_t           bytes_read;
-    size_t           bytes_written;
-    uint32_t         protobuf_size;
-    enum State { ReadingHeader, ReadingMessage } state;
+struct connection {
+  int sfd;
+  size_t bytes_read;
+  size_t bytes_written;
+  bool reading_header;
+  uint32_t protobuf_size;
+  char buffer[buffer_size];
+  std::list<int> write_queue;
+  ev::io io;
 
-    // Buffers that are pending write
-    std::list<int>     write_queue;
+  connection(int socket_fd) :
+    sfd(socket_fd), bytes_read(0), bytes_written(0), reading_header(true) {}
 
-    // Generic callback
-    void callback(ev::io &watcher, int revents) {
-      if (EV_ERROR & revents) {
-        perror("got invalid event");
-        return;
-      }
+  // Socket is writable
+  bool write_cb() {
+    VLOG(3) << "write_cb()";
 
-      if (revents & EV_READ)
-        read_cb(watcher);
-
-      if (revents & EV_WRITE)
-        write_cb(watcher);
-
-      if (write_queue.empty()) {
-        io.set(ev::READ);
-      } else {
-        io.set(ev::READ|ev::WRITE);
-      }
+    if (write_queue.empty()) {
+      io.set(ev::READ);
+      return true;
     }
 
-    // Socket is writable
-    void write_cb(ev::io &watcher) {
-      if (write_queue.empty()) {
-        io.set(ev::READ);
-        return;
-      }
+    VLOG(3) << "Trying to write " << ok_response_size - bytes_written << " bytes";
+    ssize_t nwritten = write(sfd, ok_response + bytes_written ,ok_response_size - bytes_written);
+    VLOG(3) << "Actually written " << nwritten << " bytes";
 
-      VLOG(3) << "Trying to write " << ok_response_size - bytes_written << " bytes";
-      ssize_t nwritten = write(watcher.fd, ok_response + bytes_written , ok_response_size - bytes_written);
-      VLOG(3) << "Actually written " << nwritten << " bytes";
-
-      if (nwritten < 0) {
-        VLOG(3) << "read error: " << strerror(errno);
-        return;
-      }
-
-      bytes_written += nwritten;
-      if (bytes_written == ok_response_size) {
-        write_queue.pop_front();
-        bytes_written = 0;
-        VLOG(3) << "response sent";
-      }
+    if (nwritten < 0) {
+      VLOG(3) << "read error: " << strerror(errno);
+      return false;
     }
 
-    void try_read_header(ev::io &watcher) {
-      VLOG(3) << "trying to read up to " << buffer_size - bytes_read << " bytes";
-      ssize_t   nread = recv(watcher.fd, (char*)buffer + bytes_read, buffer_size - bytes_read, 0);
-      VLOG(3) << nread << " bytes read in header";
+    bytes_written += nwritten;
+    if (bytes_written == ok_response_size) {
+      write_queue.pop_front();
+      bytes_written = 0;
+      VLOG(3) << "response sent";
+    }
+    return true;
+  }
+
+  bool try_read_header() {
+    VLOG(3) << "trying to read up to " << buffer_size - bytes_read << " bytes";
+    ssize_t nread = recv(sfd, (char*)buffer + bytes_read, buffer_size - bytes_read, 0);
+    VLOG(3) << nread << " bytes read in header";
+
+    if (nread < 0) {
+      VLOG(3) << "read error: " << strerror(errno);
+      return true;
+    }
+
+    if (nread == 0) {
+      VLOG(3) << "peer has disconnected gracefully";
+      return false;
+    }
+
+    bytes_read += nread;
+    if (bytes_read < 4) {
+      return true;
+    }
+
+    uint32_t header;
+    memcpy((void *)&header, buffer, 4);
+    protobuf_size = ntohl(header);
+
+    VLOG(2) << "header read. Size of protobuf payload " << protobuf_size << " bytes";
+
+    reading_header = false;
+
+    return try_read_message();
+  }
+
+  bool try_read_message() {
+
+    if (bytes_read < protobuf_size + 4) {
+      VLOG(3) << "trying to read from protobuf payload " << protobuf_size - bytes_read + 4 << " bytes";
+      ssize_t  nread = recv(sfd, (char*)buffer + bytes_read, protobuf_size - bytes_read + 4, 0);
+      VLOG(3) << "actually read " << nread << " bytes";
 
       if (nread < 0) {
         VLOG(3) << "read error: " << strerror(errno);
-        return;
+        return true;
       }
 
       if (nread == 0) {
-        VLOG(3) << "we should delete the object";
-        io.stop();
-        return;
+        VLOG(3) << "peer has disconnected gracefully";
+        return false;
       }
 
       bytes_read += nread;
-      if (bytes_read < 4) {
-        return;
-      }
-
-      uint32_t header;
-      memcpy((void *)&header, buffer, 4);
-      protobuf_size = ntohl(header);
-
-      VLOG(2) << "header read. Size of protobuf payload " << protobuf_size << " bytes";
-
-      state = ReadingMessage;
-      try_read_message(watcher);
-    }
-
-    void try_read_message(ev::io &watcher) {
-      if (bytes_read < protobuf_size + 4) {
-        VLOG(3) << "trying to read from protobuf payload " << protobuf_size - bytes_read + 4 << " bytes";
-        ssize_t   nread = recv(watcher.fd, (char*)buffer + bytes_read, protobuf_size - bytes_read + 4, 0);
-        VLOG(3) << "actually read " << nread << " bytes";
-
-        if (nread < 0) {
-          VLOG(3) << "read error: " << strerror(errno);
-          return;
-        }
-
-        if (nread == 0) {
-          VLOG(3) << "we should delete the object";
-          io.stop();
-        }
-
-        bytes_read += nread;
-        if ((bytes_read - 4) != protobuf_size) {
-          return;
-        }
-      }
-
-      state = ReadingHeader;
-      bytes_read = 0;
-
-      Msg message;
-      if (!message.ParseFromArray(buffer + 4, protobuf_size)) {
-        VLOG(2) << "error parsing protobuf payload";
-        return;
-      }
-
-      VLOG(2) << "protobuf payload parsed successfully. nevents " << message.events_size();
-      events += message.events_size();
-
-      send_response(watcher);
-    }
-
-    void send_response(ev::io &watcher) {
-      write_queue.push_back(1);
-    }
-
-    // Receive message from client socket
-    void read_cb(ev::io &watcher) {
-      switch (state) {
-        case ReadingHeader:
-          try_read_header(watcher);
-          break;
-        case ReadingMessage:
-          try_read_message(watcher);
-          break;
+      if ((bytes_read - 4) != protobuf_size) {
+        return true;
       }
     }
 
-    // effictivly a close and a destroy
-    virtual ~TcpRiemannInstance() {
-      // Stop and free watcher if client socket is closing
-      io.stop();
-      close(sfd);
-      VLOG(3) << "Total connected clients " << --total_clients;
+    reading_header = true;
+    bytes_read = 0;
+
+    Msg message;
+    if (!message.ParseFromArray(buffer + 4, protobuf_size)) {
+      VLOG(2) << "error parsing protobuf payload";
+      return true;
     }
-  public:
-    TcpRiemannInstance(int s) : sfd(s), bytes_read(0), bytes_written(0), state(ReadingHeader) {
-      fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
 
-      total_clients++;
+    VLOG(2) << "protobuf payload parsed successfully. nevents " << message.events_size();
+    events += message.events_size();
 
-      io.set<TcpRiemannInstance, &TcpRiemannInstance::callback>(this);
+    write_queue.push_back(1); // send response
 
-      io.start(s, ev::READ);
+    return true;
+  }
 
-      VLOG(3) << "New connection";
+  bool read_cb() {
+    if (reading_header) {
+        return try_read_header();
+    } else {
+        return try_read_message();
     }
+  }
+
+  void stop() {
+    io.stop();
+    close(sfd);
+  }
 };
 
 class TcpRiemannServer {
   private:
-    ev::io           io;
-    ev::sig         sio;
-    ev::timer       tio;
-    int                 s;
+    ev::io io;
+    ev::sig sio;
+    ev::timer tio;
+    int s;
+    std::map<const int, connection*> conn_map;
 
   public:
 
@@ -225,7 +185,43 @@ class TcpRiemannServer {
         return;
       }
 
-      TcpRiemannInstance *client = new TcpRiemannInstance(client_sd);
+      connection *conn =  new connection(client_sd);
+      conn_map.insert(std::pair<int, connection*>(client_sd, conn));
+      conn->io.set<TcpRiemannServer, &TcpRiemannServer::callback>(this);
+      conn->io.start(client_sd, ev::READ);
+
+      VLOG(3) << "New connection";
+
+    }
+
+    void remove_connection(connection *conn) {
+      conn->stop();
+      conn_map.erase(conn->sfd);
+      delete conn;
+    }
+
+    void callback(ev::io &watcher, int revents) {
+      VLOG(3) << "callback revents " << revents;
+
+      connection *conn = conn_map[watcher.fd];
+
+      if (EV_ERROR & revents) {
+        VLOG(3) << "got invalid event: " << strerror(errno);
+        return;
+      }
+
+      bool conn_ok;
+      if (revents & EV_READ)
+        conn_ok = conn->read_cb();
+
+      if (conn_ok && (revents & EV_WRITE))
+        conn_ok = conn->write_cb();
+
+      if (!conn_ok) {
+        watcher.set(ev::READ | conn->write_queue.empty() ? 0 : ev::WRITE);
+      } else{
+        remove_connection(conn);
+      }
     }
 
     static void signal_cb(ev::sig &signal, int revents) {
@@ -274,8 +270,6 @@ class TcpRiemannServer {
       close(s);
     }
 };
-
-int TcpRiemannInstance::total_clients = 0;
 
 int main(int argc, char **argv)
 {
