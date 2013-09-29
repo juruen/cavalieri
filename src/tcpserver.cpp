@@ -147,7 +147,7 @@ void TCPConnection::set_io() {
   io.set(ev::READ | write_response ?  ev::WRITE : 0);
 }
 
-void TCPConnection::stop() {
+TCPConnection::~TCPConnection() {
   io.stop();
   close(sfd);
 }
@@ -179,7 +179,6 @@ void TCPServer::io_accept(ev::io &watcher, int revents) {
 }
 
 void TCPServer::remove_connection(TCPConnection *conn) {
-  conn->stop();
   conn_map.erase(conn->sfd);
   delete conn;
 }

@@ -5,22 +5,22 @@
 #include <map>
 
 struct TCPConnection {
-  int sfd;
-  size_t bytes_read;
-  size_t bytes_written;
-  bool reading_header;
-  bool write_response;
-  uint32_t protobuf_size;
-  char buffer[1024*8];
-  ev::io io;
+    int sfd;
+    size_t bytes_read;
+    size_t bytes_written;
+    bool reading_header;
+    bool write_response;
+    uint32_t protobuf_size;
+    char buffer[1024*8];
+    ev::io io;
 
-  TCPConnection(int socket_fd);
-  bool write_cb();
-  bool try_read_header();
-  bool try_read_message();
-  bool read_cb();
-  void set_io();
-  void stop();
+    TCPConnection(int socket_fd);
+    virtual ~TCPConnection();
+    void set_io();
+    bool read_cb();
+    bool write_cb();
+    bool try_read_header();
+    bool try_read_message();
 };
 
 class TCPServer {
