@@ -3,7 +3,8 @@ PROJECT(miniriemann)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 SET(MINIRIEMANN_SRCS
-    ${CMAKE_SOURCE_DIR}/src/tcpriemann.cpp
+    ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
+    ${CMAKE_SOURCE_DIR}/src/tcpserver.cpp
   )
 
 SET(MINIRIEMANN_HDRS
