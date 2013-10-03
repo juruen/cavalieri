@@ -3,6 +3,7 @@
 
 #include <ev++.h>
 #include <map>
+#include "streams.h"
 
 struct TCPConnection {
     int sfd;
@@ -13,8 +14,9 @@ struct TCPConnection {
     uint32_t protobuf_size;
     char buffer[1024*8];
     ev::io io;
+    Streams& streams;
 
-    TCPConnection(int socket_fd);
+    TCPConnection(int socket_fd, Streams& streams);
     virtual ~TCPConnection();
     void set_io();
     bool read_cb();
@@ -30,9 +32,10 @@ class TCPServer {
     ev::timer tio;
     int s;
     std::map<const int, TCPConnection*> conn_map;
+    Streams& streams;
 
   public:
-    TCPServer(int port);
+    TCPServer(int port, Streams& streams);
     void io_accept(ev::io &watcher, int revents);
     void remove_connection(TCPConnection* conn);
     void callback(ev::io &watcher, int revents);

@@ -32,9 +32,10 @@ static void generate_msg_ok()
   ok_response_size = sizeof(nsize) + msg_ok.ByteSize();
 }
 
-TCPConnection::TCPConnection(int socket_fd) :
+TCPConnection::TCPConnection(int socket_fd, Streams& streams) :
     sfd(socket_fd), bytes_read(0), bytes_written(0),
-    reading_header(true), write_response(false)
+    reading_header(true), write_response(false),
+    streams(streams)
 {
 }
 
@@ -129,6 +130,7 @@ bool TCPConnection::try_read_message() {
 
   VLOG(2) << "protobuf payload parsed successfully. nevents " << message.events_size();
   events += message.events_size();
+  streams.process_message(message);
 
   write_response = true;
 
@@ -144,7 +146,12 @@ bool TCPConnection::read_cb() {
 }
 
 void TCPConnection::set_io() {
-  io.set(ev::READ | write_response ?  ev::WRITE : 0);
+  VLOG(3) << "setting io to write_response " << write_response;
+  if (write_response) {
+    io.set(ev::READ | ev::WRITE);
+  } else {
+    io.set(ev::READ);
+  }
 }
 
 TCPConnection::~TCPConnection() {
@@ -169,7 +176,7 @@ void TCPServer::io_accept(ev::io &watcher, int revents) {
     return;
   }
 
-  TCPConnection *conn =  new TCPConnection(client_sd);
+  TCPConnection *conn =  new TCPConnection(client_sd, streams);
   conn_map.insert(std::pair<int, TCPConnection*>(client_sd, conn));
   conn->io.set<TCPServer, &TCPServer::callback>(this);
   conn->io.start(client_sd, ev::READ);
@@ -193,7 +200,7 @@ void TCPServer::callback(ev::io &watcher, int revents) {
     return;
   }
 
-  bool conn_ok;
+  bool conn_ok = true;
   if (revents & EV_READ)
     conn_ok = conn->read_cb();
 
@@ -216,8 +223,8 @@ void TCPServer::timer_cb(ev::timer &timer, int revents) {
   events = 0;
 }
 
-TCPServer::TCPServer(int port) {
-  VLOG(1) << "Listening on port" << port;
+TCPServer::TCPServer(int port, Streams& streams) : s(port), streams(streams) {
+  VLOG(1) << "Listening on port " << port;
 
   generate_msg_ok();
 

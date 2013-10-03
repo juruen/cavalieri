@@ -5,6 +5,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
     ${CMAKE_SOURCE_DIR}/src/tcpserver.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams.cpp
   )
 
 SET(MINIRIEMANN_HDRS
