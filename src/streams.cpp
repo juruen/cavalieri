@@ -60,6 +60,14 @@ stream_t with(const with_changes_t& changes, const children_t& children) {
   };
 }
 
+stream_t where(const predicate_t& predicate, const children_t& children) {
+  return [=](const Event& e) {
+    if (predicate(e)) {
+      call_rescue(e, children);
+    }
+  };
+}
+
 void Streams::add_stream(stream_t stream) {
   VLOG(3) << "adding stream";
   streams.push_back(stream);
