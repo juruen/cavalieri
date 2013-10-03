@@ -7,7 +7,7 @@ int main(int argc, char **argv)
 {
   google::InitGoogleLogging(argv[0]);
   Streams streams;
-  streams.add_stream(Streams::prn());
+  streams.add_stream(with({{"host", "foobar"}, {"description", "this is my description"}}, {prn()}));
 
   ev::default_loop  loop;
   TCPServer tcp(5555, streams);
