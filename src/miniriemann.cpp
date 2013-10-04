@@ -8,25 +8,19 @@ int main(int argc, char **argv)
   google::InitGoogleLogging(argv[0]);
   Streams streams;
 
-  /*
+  /* Stream example */
   streams.add_stream(
 
-        where(PRED(e.host() == "host1"),
-
-              CHILD(with({{"description", "this is my foobar host"}},
-
-                         CHILD(prn())))));
-
-  streams.add_stream(prn());
-  */
-  streams.add_stream(
-
+      /* Set metric to 1 */
       with({{"metric", "1"}},
 
+           /* Compute rate in a 5-second interval */
            CHILD(rate(5,
 
+                 /* Change description */
                  CHILD(with({{"description", "events/second"}},
 
+                       /* Print event */
                        CHILD(prn())))))));
 
   ev::default_loop  loop;
