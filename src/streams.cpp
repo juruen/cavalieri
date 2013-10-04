@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <sstream>
 
-static inline std::string metric_to_string(const Event& e) {
+static inline std::string metric_to_string(e_t e) {
   std::ostringstream ss;
   if (e.has_metric_f()) {
     ss << e.metric_f();
@@ -16,14 +16,14 @@ static inline std::string metric_to_string(const Event& e) {
   return ss.str();
 }
 
-void call_rescue(const Event& e, const children_t& children) {
+void call_rescue(e_t e, const children_t& children) {
   for (auto& s: children) {
     s(e);
   }
 }
 
 stream_t prn() {
-  return [](const Event& e) {
+  return [](e_t e) {
     VLOG(3) << "prn()";
     LOG(INFO) << "prn() { host: '" <<  e.host() << "' service: '" << e.service()
               << "' description: '" << e.description()
@@ -33,7 +33,7 @@ stream_t prn() {
 }
 
 stream_t with(const with_changes_t& changes, const children_t& children) {
-  return [=](const Event& e) {
+  return [=](e_t e) {
     Event ne(e);
     for (auto &kv: changes) {
       VLOG(3) << "with()  first: " << kv.first << " second: " << kv.second;
@@ -63,7 +63,7 @@ stream_t with(const with_changes_t& changes, const children_t& children) {
 stream_t where(const predicate_t& predicate, const children_t& children,
                const children_t& else_children)
 {
-  return [=](const Event& e) {
+  return [=](e_t e) {
     if (predicate(e)) {
       call_rescue(e, children);
     } else {
