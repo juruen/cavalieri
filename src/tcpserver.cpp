@@ -252,7 +252,7 @@ TCPServer::TCPServer(int port, Streams& streams) : s(port), streams(streams) {
   sio.start(SIGINT);
 
   tio.set<TCPServer, &TCPServer::timer_cb>(this);
-  tio.start(0, 5);
+  //tio.start(0, 5);
 }
 
 TCPServer::~TCPServer() {
