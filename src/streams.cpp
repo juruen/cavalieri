@@ -1,35 +1,7 @@
 #include "streams.h"
+#include "util.h"
 #include <glog/logging.h>
-#include <sstream>
-#include <ev++.h>
 
-class Timer {
-  private:
-    ev::timer tio;
-    std::function<void()> f;
-  public:
-    Timer(const int interval, const std::function<void()> f) : f(f) {
-      tio.set<Timer, &Timer::callback>(this);
-      tio.start(0, interval);
-    }
-    void callback() {
-      f();
-    }
-};
-
-static inline std::string metric_to_string(e_t e) {
-  std::ostringstream ss;
-  if (e.has_metric_f()) {
-    ss << e.metric_f();
-  } else if (e.has_metric_d()) {
-    ss << e.metric_d();
-  } else if (e.has_metric_sint64()) {
-    ss << e.metric_sint64();
-  } else {
-    ss << "";
-  }
-  return ss.str();
-}
 
 void call_rescue(e_t e, const children_t& children) {
   for (auto& s: children) {
@@ -91,7 +63,7 @@ stream_t where(const predicate_t& predicate, const children_t& children,
 stream_t rate(const int interval, const children_t& children) {
   double* rate = new double(0);
 
-  Timer* timer = new Timer(interval,
+  CallbackTimer* callbackTimer = new CallbackTimer(interval,
       [=]()
       {
         VLOG(3) << "rate-timer()";
@@ -102,7 +74,7 @@ stream_t rate(const int interval, const children_t& children) {
         call_rescue(e, children);
       });
 
-  (void)(timer);
+  (void)(callbackTimer);
 
   return [=](e_t e) {
     VLOG(3) << "rate() +1";
