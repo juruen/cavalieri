@@ -29,6 +29,8 @@ stream_t split(std::list<const predicate_t&, const children_t&> clauses,
 
 stream_t rate(const int seconds, const children_t& children);
 
+stream_t changed_state(std::string initial, const children_t& children);
+
 struct Streams {
   std::list<stream_t> streams;
   void add_stream(stream_t stream);
