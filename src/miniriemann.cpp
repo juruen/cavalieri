@@ -8,6 +8,7 @@ int main(int argc, char **argv)
   google::InitGoogleLogging(argv[0]);
   Streams streams;
 
+  /*
   streams.add_stream(
 
         where(PRED(e.host() == "host1"),
@@ -17,6 +18,11 @@ int main(int argc, char **argv)
                          CHILD(prn())))));
 
   streams.add_stream(prn());
+  */
+  streams.add_stream(
+      rate(5,
+           CHILD(with({{"description", "events/second"}},
+                 CHILD(prn())))));
 
   ev::default_loop  loop;
   TCPServer tcp(5555, streams);
