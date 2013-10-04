@@ -48,7 +48,7 @@ bool TCPConnection::write_cb() {
   }
 
   VLOG(3) << "Trying to write " << ok_response_size - bytes_written << " bytes";
-  ssize_t nwritten = write(sfd, ok_response + bytes_written ,ok_response_size - bytes_written);
+  ssize_t nwritten = write(sfd, ok_response + bytes_written, ok_response_size - bytes_written);
   VLOG(3) << "Actually written " << nwritten << " bytes";
 
   if (nwritten < 0) {
