@@ -78,7 +78,7 @@ stream_t rate(const int interval, const children_t& children) {
 
   return [=](e_t e) {
     VLOG(3) << "rate() +1";
-    *rate += 1;
+    *rate += metric_to_double(e);
   };
 }
 
@@ -86,8 +86,6 @@ void Streams::add_stream(stream_t stream) {
   VLOG(3) << "adding stream";
   streams.push_back(stream);
 }
-
-
 
 void Streams::process_message(const Msg& message) {
   VLOG(3) << "process message. num of streams " << streams.size();

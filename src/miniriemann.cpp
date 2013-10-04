@@ -20,9 +20,14 @@ int main(int argc, char **argv)
   streams.add_stream(prn());
   */
   streams.add_stream(
-      rate(5,
-           CHILD(with({{"description", "events/second"}},
-                 CHILD(prn())))));
+
+      with({{"metric", "1"}},
+
+           CHILD(rate(5,
+
+                 CHILD(with({{"description", "events/second"}},
+
+                       CHILD(prn())))))));
 
   ev::default_loop  loop;
   TCPServer tcp(5555, streams);
