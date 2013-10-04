@@ -5,6 +5,9 @@
 #include <functional>
 #include <proto.pb.h>
 
+#define PRED(EXP) [](const Event& e) { return (EXP); }
+#define CHILD(EXP) {EXP}
+
 typedef std::function<void(const Event&)> stream_t;
 typedef std::function<bool(const Event&)> predicate_t;
 typedef std::list<stream_t> children_t;
