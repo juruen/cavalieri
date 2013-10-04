@@ -6,6 +6,7 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
     ${CMAKE_SOURCE_DIR}/src/tcpserver.cpp
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
+    ${CMAKE_SOURCE_DIR}/src/util.cpp
   )
 
 SET(MINIRIEMANN_HDRS
@@ -16,7 +17,7 @@ SET(MINIRIEMANN_PROTOFILES
     ${CMAKE_SOURCE_DIR}/src/proto.proto
   )
 
-ADD_DEFINITIONS( -Wall -std=c++11 -g)
+ADD_DEFINITIONS( -Wall -std=c++11 -g )
 
 INCLUDE(FindProtobuf)
 
