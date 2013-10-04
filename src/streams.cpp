@@ -1,6 +1,21 @@
 #include "streams.h"
 #include <glog/logging.h>
 #include <sstream>
+#include <ev++.h>
+
+class Timer {
+  private:
+    ev::timer tio;
+    std::function<void()> f;
+  public:
+    Timer(const int interval, const std::function<void()> f) : f(f) {
+      tio.set<Timer, &Timer::callback>(this);
+      tio.start(0, interval);
+    }
+    void callback() {
+      f();
+    }
+};
 
 static inline std::string metric_to_string(e_t e) {
   std::ostringstream ss;
@@ -69,6 +84,29 @@ stream_t where(const predicate_t& predicate, const children_t& children,
     } else {
       call_rescue(e, else_children);
     }
+  };
+}
+
+
+stream_t rate(const int interval, const children_t& children) {
+  double* rate = new double(0);
+
+  Timer* timer = new Timer(interval,
+      [=]()
+      {
+        VLOG(3) << "rate-timer()";
+        Event e;
+        e.set_metric_f(*rate / interval);
+        *rate = 0;
+        VLOG(3) << "rate-timer() value: " << e.metric_f();
+        call_rescue(e, children);
+      });
+
+  (void)(timer);
+
+  return [=](e_t e) {
+    VLOG(3) << "rate() +1";
+    *rate += 1;
   };
 }
 
