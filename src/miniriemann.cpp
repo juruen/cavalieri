@@ -2,6 +2,7 @@
 #include <glog/logging.h>
 #include "tcpserver.h"
 #include "streams.h"
+#include "util.h"
 
 int main(int argc, char **argv)
 {
@@ -22,6 +23,41 @@ int main(int argc, char **argv)
 
                        /* Print event */
                        CHILD(prn())))))));
+
+  /* Another stream example */
+
+  streams.add_stream(
+
+      split({
+              {
+                PRED(metric_to_double(e) > 0.8),
+
+                CHILD(with({{"description", "metric > 0.8"}},
+
+                      CHILD(prn())))
+
+              },
+              {
+                PRED(metric_to_double(e) > 0.4),
+
+                CHILD(with({{"description", "metric > 0.4"}},
+
+                      CHILD(prn())))
+
+              },
+              {
+                PRED(metric_to_double(e) > 0.2),
+
+                CHILD(with({{"description", "metric > 0.2"}},
+
+                      CHILD(prn())))
+
+              }
+            },
+
+            CHILD(with({{"description", "default < 0.2"}},
+                  CHILD(prn())))));
+
 
   ev::default_loop  loop;
   TCPServer tcp(5555, streams);

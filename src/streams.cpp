@@ -47,6 +47,28 @@ stream_t with(const with_changes_t& changes, const children_t& children) {
   };
 }
 
+
+stream_t split(std::list<split_pair_t> clauses,
+               const children_t& default_children)
+{
+  return [=](e_t e) {
+    VLOG(3) << "split()";
+    for (auto &pair: clauses) {
+      predicate_t predicate = pair.first;
+      predicate(e);
+      if (pair.first(e)) {
+        VLOG(3) << "split() clause found";
+        call_rescue(e, pair.second);
+        return;
+      }
+    }
+    if (default_children.size() > 0) {
+      VLOG(3) << "split() default";
+      call_rescue(e, default_children);
+    }
+  };
+}
+
 stream_t where(const predicate_t& predicate, const children_t& children,
                const children_t& else_children)
 {
@@ -77,7 +99,7 @@ stream_t rate(const int interval, const children_t& children) {
   (void)(callbackTimer);
 
   return [=](e_t e) {
-    VLOG(3) << "rate() +1";
+    VLOG(3) << "rate() rate += e.metric";
     *rate += metric_to_double(e);
   };
 }
