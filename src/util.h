@@ -15,7 +15,22 @@ class CallbackTimer {
 };
 
 std::string metric_to_string(const Event& e);
+
+void set_value(
+    const Event& e,
+    const std::string& key,
+    const std::string& value
+);
+
 double metric_to_double(const Event &e);
+
+std::string string_to_value(const Event& e, const std::string& key);
+
+void set_event_value(
+    Event& e,
+    const std::string& key,
+    const std::string& value
+);
 
 #endif
 

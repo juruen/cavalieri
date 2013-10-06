@@ -1,6 +1,7 @@
 #include "streams.h"
 #include "util.h"
 #include <glog/logging.h>
+#include <unordered_map>
 
 
 void call_rescue(e_t e, const children_t& children) {
@@ -24,31 +25,14 @@ stream_t with(const with_changes_t& changes, const children_t& children) {
     Event ne(e);
     for (auto &kv: changes) {
       VLOG(3) << "with()  first: " << kv.first << " second: " << kv.second;
-      std::string key = kv.first;
-      if (key == "host") {
-        ne.set_host(kv.second);
-      } else if (key == "service") {
-        ne.set_service(kv.second);
-      } else if (key == "description") {
-        ne.set_description(kv.second);
-      } else if (key == "state") {
-        ne.set_state(kv.second);
-      } else if (key == "metric") {
-        if (e.has_metric_f()) {
-          ne.set_metric_f(atof(kv.second.c_str()));
-        } else if (e.has_metric_d()) {
-          ne.set_metric_d(atof(kv.second.c_str()));
-        } else if (e.has_metric_sint64()) {
-          ne.set_metric_sint64(atoi(kv.second.c_str()));
-        }
-      }
+      set_event_value(ne, kv.first, kv.second);
     }
     call_rescue(ne, children);
   };
 }
 
 
-stream_t split(std::list<split_pair_t> clauses,
+stream_t split(const split_clauses_t clauses,
                const children_t& default_children)
 {
   return [=](e_t e) {
@@ -65,6 +49,43 @@ stream_t split(std::list<split_pair_t> clauses,
     if (default_children.size() > 0) {
       VLOG(3) << "split() default";
       call_rescue(e, default_children);
+    }
+  };
+}
+
+typedef std::unordered_map<std::string, const children_t> by_streams_map_t;
+
+stream_t by(const by_keys_t& keys, const by_streams_t& streams) {
+  by_streams_map_t* streams_map = new by_streams_map_t();
+  return [=](e_t e) {
+    VLOG(3) << "by()";
+
+    if (keys.size() == 0) {
+      return;
+    }
+
+    std::string key("");
+    for (auto &k: keys) {
+      std::string value = string_to_value(e, k);
+      if (value == "__nil__") {
+        LOG(ERROR) << "by() field empty: " << k;
+      }
+      key += value + "-";
+    }
+
+    VLOG(3) << "by() key: " << key;
+    auto it = streams_map->find(key);
+    if (it == streams_map->end()) {
+      VLOG(3) << "by() key not found. Creating stream.";
+      children_t children;
+      for (auto &s: streams) {
+        children.push_back(s());
+      }
+      streams_map->insert({key, children});
+      call_rescue(e, streams_map->find(key)->second);
+    } else {
+      VLOG(3) << "by() stream exists. ";
+      call_rescue(e, it->second);
     }
   };
 }
