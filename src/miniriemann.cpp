@@ -24,7 +24,7 @@ int main(int argc, char **argv)
                        /* Print event */
                        CHILD(prn())))))));
 
-  /* Another stream example */
+  /* Another stream example using split */
   streams.add_stream(
 
       split({
@@ -54,6 +54,7 @@ int main(int argc, char **argv)
               }
             },
 
+            /* Default stream */
             CHILD(with({{"description", "default < 0.2"}},
                   CHILD(prn())))));
 
