@@ -25,7 +25,6 @@ int main(int argc, char **argv)
                        CHILD(prn())))))));
 
   /* Another stream example */
-
   streams.add_stream(
 
       split({
@@ -57,6 +56,16 @@ int main(int argc, char **argv)
 
             CHILD(with({{"description", "default < 0.2"}},
                   CHILD(prn())))));
+
+  /* Yet another example using by() */
+  streams.add_stream(
+
+      by({"host", "service"},
+
+         CHILD(
+           BY(prn()))
+
+      ));
 
 
   ev::default_loop  loop;
