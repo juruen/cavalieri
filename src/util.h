@@ -20,6 +20,8 @@ double metric_to_double(const Event &e);
 
 std::string string_to_value(const Event& e, const std::string& key);
 
+bool tag_exists(const Event& e, const std::string& tag);
+
 void set_event_value(
     Event& e,
     const std::string& key,

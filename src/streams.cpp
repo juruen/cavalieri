@@ -139,6 +139,44 @@ stream_t changed_state(std::string initial, const children_t& children) {
   };
 }
 
+stream_t tagged_any(const tags_t& tags, const children_t& children) {
+  return [=](e_t e) {
+    VLOG(3) << "tagged_any()";
+    if (tagged_any_(e, tags)) {
+      VLOG(3) << "tagged_any() match";
+      call_rescue(e, children);
+    }
+  };
+}
+
+stream_t tagged_all(const tags_t& tags, const children_t& children) {
+  return [=](e_t e) {
+    VLOG(3) << "tagged_all()";
+    if (tagged_all_(e, tags)) {
+      VLOG(3) << "tagged_all() match";
+      call_rescue(e, children);
+    }
+  };
+}
+
+bool tagged_any_(e_t e, const tags_t& tags) {
+  for (auto &tag: tags) {
+    if (tag_exists(e, tag)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool tagged_all_(e_t e, const tags_t& tags) {
+  for (auto &tag: tags) {
+    if (!tag_exists(e, tag)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void Streams::add_stream(stream_t stream) {
   VLOG(3) << "adding stream";
   streams.push_back(stream);
