@@ -78,3 +78,13 @@ void set_event_value(Event& e, const std::string& key, const std::string& value)
     LOG(ERROR) << "string_to_value() wrong key: " << key;
   }
 }
+
+bool tag_exists(const Event& e, const std::string& tag) {
+  for (int i = 0; i < e.tags_size(); i++) {
+    if (e.tags(i) == tag) {
+      return true;
+    }
+  }
+
+  return false;
+}

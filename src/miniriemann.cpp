@@ -56,6 +56,7 @@ int main(int argc, char **argv)
 
             /* Default stream */
             CHILD(with({{"description", "default < 0.2"}},
+
                   CHILD(prn())))));
 
   /* Yet another example using by() */
@@ -67,6 +68,16 @@ int main(int argc, char **argv)
            BY(prn()))
 
       ));
+
+
+  /* Example using checking tags */
+  streams.add_stream(
+
+      tagged_all({"stress-test", "baz"},
+
+                 CHILD(with({{"description", "tagged with stress-test and baz"}},
+
+                       CHILD(prn())))));
 
 
   ev::default_loop  loop;
