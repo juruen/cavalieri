@@ -1,13 +1,18 @@
 #include <ev++.h>
 #include <glog/logging.h>
+#include "index.h"
 #include "tcpserver.h"
+#include "websocket.h"
 #include "streams.h"
 #include "util.h"
+#include "pubsub.h"
 
 int main(int argc, char **argv)
 {
   google::InitGoogleLogging(argv[0]);
   Streams streams;
+  PubSub pubsub;
+  Index index(pubsub);
 
   /* Stream example */
   streams.add_stream(
@@ -21,8 +26,8 @@ int main(int argc, char **argv)
                  /* Change description */
                  CHILD(with({{"description", "events/second"}},
 
-                       /* Print event */
-                       CHILD(prn())))))));
+                       /* Print event and add it to index*/
+                       {prn(), send_index(index)}))))));
 
   /* Another stream example using split */
   streams.add_stream(
@@ -82,6 +87,7 @@ int main(int argc, char **argv)
 
   ev::default_loop  loop;
   TCPServer tcp(5555, streams);
+  Websocket ws(5556, pubsub);
 
   loop.run(0);
 

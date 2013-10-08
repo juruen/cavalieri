@@ -2,6 +2,8 @@
 #include <string>
 #include <sstream>
 #include <glog/logging.h>
+#include <openssl/sha.h>
+
 
 CallbackTimer::CallbackTimer(const int interval, const std::function<void()> f)
   : f_(f)
@@ -56,6 +58,17 @@ std::string string_to_value(const Event& e, const std::string& key) {
   }
 }
 
+std::string event_to_json(const Event &e) {
+  std::ostringstream ss;
+  ss << "{ ";
+  ss << "\"host\": " << "\"" << e.host() << "\", ";
+  ss << "\"service\": " << "\"" << e.service() << "\", ";
+  ss << "\"description\": " << "\"" << e.description() << "\", ";
+  ss << "\"state\": " << "\"" << e.state() << "\", ";
+  ss << "\"metric\": " << metric_to_string(e);
+  ss << " }";
+  return ss.str();
+}
 
 void set_event_value(Event& e, const std::string& key, const std::string& value) {
   if (key == "host") {
@@ -87,4 +100,51 @@ bool tag_exists(const Event& e, const std::string& tag) {
   }
 
   return false;
+}
+
+std::string sha1(const std::string& str) {
+  unsigned char hash[SHA_DIGEST_LENGTH];
+  SHA1((const unsigned char*)str.c_str(), (unsigned long)str.size(), hash);
+  return std::string((char*)hash, SHA_DIGEST_LENGTH);
+}
+
+/* Taken and slightly modified from
+   http://en.wikibooks.org/wiki/Algorithm_Implementation/Miscellaneous/Base64 */
+
+const static char encodeLookup[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const static char padCharacter = '=';
+std::basic_string<char> base64Encode(std::vector<unsigned char> inputBuffer)
+{
+  std::basic_string<char> encodedString;
+  encodedString.reserve(((inputBuffer.size()/3) + (inputBuffer.size() % 3 > 0)) * 4);
+  long temp;
+  std::vector<unsigned char>::iterator cursor = inputBuffer.begin();
+  for(size_t idx = 0; idx < inputBuffer.size()/3; idx++)
+  {
+    temp  = (*cursor++) << 16; //Convert to big endian
+    temp += (*cursor++) << 8;
+    temp += (*cursor++);
+    encodedString.append(1,encodeLookup[(temp & 0x00FC0000) >> 18]);
+    encodedString.append(1,encodeLookup[(temp & 0x0003F000) >> 12]);
+    encodedString.append(1,encodeLookup[(temp & 0x00000FC0) >> 6 ]);
+    encodedString.append(1,encodeLookup[(temp & 0x0000003F)      ]);
+  }
+  switch(inputBuffer.size() % 3)
+  {
+    case 1:
+      temp  = (*cursor++) << 16; //Convert to big endian
+      encodedString.append(1,encodeLookup[(temp & 0x00FC0000) >> 18]);
+      encodedString.append(1,encodeLookup[(temp & 0x0003F000) >> 12]);
+      encodedString.append(2,padCharacter);
+      break;
+    case 2:
+      temp  = (*cursor++) << 16; //Convert to big endian
+      temp += (*cursor++) << 8;
+      encodedString.append(1,encodeLookup[(temp & 0x00FC0000) >> 18]);
+      encodedString.append(1,encodeLookup[(temp & 0x0003F000) >> 12]);
+      encodedString.append(1,encodeLookup[(temp & 0x00000FC0) >> 6 ]);
+      encodedString.append(1,padCharacter);
+      break;
+  }
+  return encodedString;
 }

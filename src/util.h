@@ -20,6 +20,8 @@ double metric_to_double(const Event &e);
 
 std::string string_to_value(const Event& e, const std::string& key);
 
+std::string event_to_json(const Event &e);
+
 bool tag_exists(const Event& e, const std::string& tag);
 
 void set_event_value(
@@ -27,6 +29,10 @@ void set_event_value(
     const std::string& key,
     const std::string& value
 );
+
+std::basic_string<char> base64Encode(std::vector<unsigned char> inputBuffer);
+
+std::string sha1(const std::string& str);
 
 #endif
 
