@@ -2,6 +2,12 @@ PROJECT(miniriemann)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
+# Project's path for custom cmake modules
+SET(CMAKE_MODULE_PATH
+    ${CMAKE_MODULE_PATH}
+    "${CMAKE_SOURCE_DIR}/.cmake/Modules/"
+  )
+
 SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
     ${CMAKE_SOURCE_DIR}/src/tcpserver.cpp
@@ -22,20 +28,8 @@ ADD_DEFINITIONS( -Wall -std=c++11 -g )
 INCLUDE(FindProtobuf)
 
 FIND_PACKAGE(Protobuf REQUIRED)
-
-# Try to find libev by hand
-FIND_PATH(LIBEV_INCLUDE_DIR ev++.h HINTS /usr/include/)
-FIND_LIBRARY(LIBEV_LIBRARIES NAMES ev)
-
-MESSAGE("INCLUDE: ${LIBEV_INCLUDE_DIR}")
-MESSAGE("LIBS: ${LIBEV_LIBRARIES}")
-
-# Try to find glog
-FIND_PATH(LIBGLOG_INCLUDE_DIR glog/logging.h HINTS /usr/include/)
-FIND_LIBRARY(LIBGLOG_LIBRARIES NAMES glog)
-
-MESSAGE("INCLUDE: ${LIBGLOG_INCLUDE_DIR}")
-MESSAGE("LIBS: ${LIBGLOG_LIBRARIES}")
+FIND_PACKAGE(Glog REQUIRED)
+FIND_PACKAGE(LibEv REQUIRED)
 
 IF(PROTOBUF_FOUND)
   PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${MINIRIEMANN_PROTOFILES})
@@ -43,8 +37,10 @@ IF(PROTOBUF_FOUND)
   INCLUDE_DIRECTORIES(
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_BINARY_DIR}
-      ${PROTOBUF_INCLUDE_DIR}
       ${MINIRIEMANN_HDRS}
+      ${PROTOBUF_INCLUDE_DIR}
+      ${Glog_INCLUDE_DIR}
+      ${LibEv_INCLUDE_DIR}
     )
 
   ADD_EXECUTABLE(
@@ -52,16 +48,14 @@ IF(PROTOBUF_FOUND)
       ${MINIRIEMANN_SRCS}
       ${ProtoSources}
       ${ProtoHeaders}
-      ${LIBEV_INCLUDE_DIR}
     )
 
   TARGET_LINK_LIBRARIES(
       miniriemann
-      ${LIBEV_LIBRARIES}
       ${CMAKE_THREAD_LIBS_INIT}
       ${PROTOBUF_LIBRARY}
-      ${LIBGLOG_LIBRARY}
-      glog
+      ${LibEv_LIBRARIES}
+      ${Glog_LIBRARIES}
     )
 
 ENDIF(PROTOBUF_FOUND)
