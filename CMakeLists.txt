@@ -10,9 +10,12 @@ SET(CMAKE_MODULE_PATH
 
 SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
-    ${CMAKE_SOURCE_DIR}/src/tcpserver.cpp
+    ${CMAKE_SOURCE_DIR}/src/index.cpp
+    ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
+    ${CMAKE_SOURCE_DIR}/src/tcpserver.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket.cpp
   )
 
 SET(MINIRIEMANN_HDRS
@@ -56,6 +59,8 @@ IF(PROTOBUF_FOUND)
       ${PROTOBUF_LIBRARY}
       ${LibEv_LIBRARIES}
       ${Glog_LIBRARIES}
+      ssl
+      crypto
     )
 
 ENDIF(PROTOBUF_FOUND)

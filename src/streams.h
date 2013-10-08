@@ -4,6 +4,7 @@
 #include <list>
 #include <functional>
 #include <proto.pb.h>
+#include <index.h>
 
 typedef const Event& e_t;
 
@@ -43,6 +44,8 @@ stream_t changed_state(std::string initial, const children_t& children);
 stream_t tagged_any(const tags_t& tags, const children_t& children);
 
 stream_t tagged_all(const tags_t& tags, const children_t& children);
+
+stream_t send_index(Index& index);
 
 bool tagged_any_(e_t e, const tags_t& tags);
 
