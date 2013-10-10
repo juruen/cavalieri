@@ -59,15 +59,45 @@ std::string string_to_value(const Event& e, const std::string& key) {
 }
 
 std::string event_to_json(const Event &e) {
-  std::ostringstream ss;
-  ss << "{ ";
-  ss << "\"host\": " << "\"" << e.host() << "\", ";
-  ss << "\"service\": " << "\"" << e.service() << "\", ";
-  ss << "\"description\": " << "\"" << e.description() << "\", ";
-  ss << "\"state\": " << "\"" << e.state() << "\", ";
-  ss << "\"metric\": " << metric_to_string(e);
-  ss << " }";
-  return ss.str();
+  //XXX Use std::string instead of ostringstream.
+  //    This is slow as fuck and not even necessary.
+  std::ostringstream tags;
+  tags << "[ ";
+  for (int i = 0; i < e.tags_size(); i++) {
+    if (i != 0) {
+      tags << ", "; // I miss ",".join() :(
+    }
+    tags << "\"" << e.tags(i) << "\"";
+
+  }
+  tags << " ]";
+
+  std::ostringstream attrs;
+  for (int i = 0; i < e.attributes_size(); i++) {
+    if (i != 0) {
+      attrs << ", ";
+    }
+    attrs << "\"" << e.attributes(i).key() << "\": ";
+    attrs << "\"" << e.attributes(i).value() << "\"";
+  }
+
+  std::ostringstream json;
+  json << "{ ";
+
+  json << "\"host\": " << "\"" << e.host() << "\", ";
+  json << "\"service\": " << "\"" << e.service() << "\", ";
+  json << "\"description\": " << "\"" << e.description() << "\", ";
+  json << "\"state\": " << "\"" << e.state() << "\", ";
+  json << "\"metric\": " << metric_to_string(e) << " , ";
+  json << "\"tags\": " << tags.str();
+
+  if (e.attributes_size() > 0) {
+    json << ", " << attrs.str();
+  }
+
+  json << " }";
+
+  return json.str();
 }
 
 void set_event_value(Event& e, const std::string& key, const std::string& value) {
