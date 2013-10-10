@@ -95,7 +95,8 @@ bool WSConnection::write_cb() {
               VLOG(3) << "Sending one event";
               this->try_send_frame(ev);
             }
-          }
+          },
+          reinterpret_cast<uintptr_t>(this)
       );
     }
   }
@@ -345,6 +346,7 @@ void WSConnection::set_io() {
 WSConnection::~WSConnection() {
   io.stop();
   close(sfd);
+  pubsub.unsubscribe("index", reinterpret_cast<uintptr_t>(this));
 }
 
 
