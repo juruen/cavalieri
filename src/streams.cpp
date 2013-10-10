@@ -13,10 +13,7 @@ void call_rescue(e_t e, const children_t& children) {
 stream_t prn() {
   return [](e_t e) {
     VLOG(3) << "prn()";
-    LOG(INFO) << "prn() { host: '" <<  e.host() << "' service: '" << e.service()
-              << "' description: '" << e.description()
-              << "' state: '" << e.state() << "' metric: '"
-              << metric_to_string(e) << "' }";
+    LOG(INFO) << "prn() " <<  event_to_json(e);
   };
 }
 
