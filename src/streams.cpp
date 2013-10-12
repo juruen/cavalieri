@@ -187,9 +187,23 @@ void Streams::add_stream(stream_t stream) {
 
 void Streams::process_message(const Msg& message) {
   VLOG(3) << "process message. num of streams " << streams.size();
+  unsigned long int sec = time(0);
   for (int i = 0; i < message.events_size(); i++) {
-    for (auto& s: streams) {
-      s(message.events(i));
+    const Event &event = message.events(i);
+    if (!event.has_time()) {
+      Event nevent(event);
+      nevent.set_time(sec);
+      push_event(nevent);
+    } else {
+      push_event(event);
     }
   }
 }
+
+inline void Streams::push_event(const Event& e) {
+  for (auto& s: streams) {
+    s(e);
+  }
+}
+
+
