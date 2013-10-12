@@ -2,7 +2,17 @@
 #include <util.h>
 #include <glog/logging.h>
 
-Index::Index(PubSub& pubsub) : pubsub(pubsub) {
+ExpireCompare::ExpireCompare(const bool& revparam) : reverse(revparam) {}
+
+bool ExpireCompare::operator() (const expire_t& lhs, const expire_t& rhs) const {
+    if (reverse) {
+       return (lhs.first.time() > rhs.first.time());
+    } else {
+       return (lhs.first.time() < rhs.first.time());
+    }
+};
+
+Index::Index(PubSub& pubsub) : expire(ExpireCompare(false)), pubsub(pubsub) {
   pubsub.add_publisher(
       "index",
       [&]() -> std::list<std::string> {

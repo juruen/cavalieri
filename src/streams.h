@@ -56,6 +56,7 @@ struct Streams {
   std::list<stream_t> streams;
   void add_stream(stream_t stream);
   void process_message(const Msg& message);
+  void push_event(const Event& e);
 };
 
 #endif
