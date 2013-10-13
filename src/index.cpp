@@ -8,9 +8,14 @@ compare_t time_compare() {
   };
 }
 
-Index::Index(PubSub& pubsub, const int64_t expire_interval) :
+Index::Index(
+    PubSub& pubsub,
+    push_event_f_t push_event,
+    const int64_t expire_interval)
+  :
   expire(time_compare()),
-  pubsub(pubsub)
+  pubsub(pubsub),
+  push_event(push_event)
 {
   pubsub.add_publisher(
       "index",
@@ -52,30 +57,35 @@ void Index::add_event(const Event& e) {
 
   VLOG(3) << "adding event to expire with time: " << e.time()
           << " and pointer: " << &idx_pair.first->second.first;
+
   auto exp_pair = expire.insert(&idx_pair.first->second.first);
   if (!exp_pair.second) {
     LOG(ERROR) << "something wrong with expire set";
   }
   idx_pair.first->second.second = exp_pair.first;
 
-  VLOG(3) << "add_event() index size: " << index.size();
+  VLOG(3) << "add_event() idx size: " << index.size();
   VLOG(3) << "add_event() expire size: " << expire.size();
+
   pubsub.publish("index", event_to_json(e));
 
 }
 
 void Index::expire_events() {
-  VLOG(3) << "expire_events()";
+  VLOG(3) << "expire_events() expire size: " << expire.size();
   int64_t now = static_cast<int64_t>(time(0));
   for (auto it = expire.begin(); it != expire.end(); it++) {
     const Event& event = **it;
     if ((event.time() + static_cast<int64_t>(event.ttl())) > now) {
       continue;
     }
-
     VLOG(3) << "event has expired: " << event_to_json(event);
-    index.erase(key(event));
+    Event nevent = event;
+    nevent.set_state("expired");
+    VLOG(3) << "pushing expired event to streams";
+    push_event(nevent);
     expire.erase(it);
-
+    index.erase(key(event));
   }
+  VLOG(3) << "expire_events() --";
 }

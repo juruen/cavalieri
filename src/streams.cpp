@@ -190,7 +190,9 @@ bool tagged_all_(e_t e, const tags_t& tags) {
 
 stream_t send_index(Index& index) {
   return [&](e_t e) {
-    index.add_event(e);
+    if (e.state() != "expired") {
+      index.add_event(e);
+    }
   };
 }
 
