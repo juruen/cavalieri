@@ -84,12 +84,12 @@ int main(int argc, char **argv)
                CHILD(prn())))));
 
   /* Everything goes to the index. Check for expired events every 10 seconds */
-  Index index(pubsub, 10);
+  Index index(pubsub, [&](const Event& e){ streams.push_event (e);  }, 3);
 
   streams.add_stream(
 
       /* Set default tt to 60 sec */
-      with_ifempty({{"ttl", "60"}},
+      with_ifempty({{"ttl", "9"}},
 
         /* Push it to index */
         CHILD(send_index(index))));

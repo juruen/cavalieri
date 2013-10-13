@@ -8,21 +8,26 @@
 #include <util.h>
 
 
-
 typedef std::function<bool(const Event*, const Event*)> compare_t;
 typedef std::set<Event*, compare_t> expire_t;
 typedef expire_t::iterator expire_it_t;
 typedef std::unordered_map<std::string, std::pair<Event, expire_it_t>> index_t;
+typedef std::function<void(const Event&)> push_event_f_t;
 
 class Index {
 private:
   expire_t expire;
   PubSub& pubsub;
   index_t index;
+  push_event_f_t push_event;
   CallbackTimer* timer;
 
 public:
-  Index(PubSub& pubsub, const int64_t expire_interval);
+  Index(
+      PubSub& pubsub,
+      push_event_f_t push_event,
+      const int64_t expire_interval
+    );
   ~Index();
   void add_event(const Event& e);
 

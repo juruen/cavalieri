@@ -54,8 +54,11 @@ bool tagged_any_(e_t e, const tags_t& tags);
 bool tagged_all_(e_t e, const tags_t& tags);
 
 
-struct Streams {
+class Streams {
+private:
   std::list<stream_t> streams;
+
+public:
   void add_stream(stream_t stream);
   void process_message(const Msg& message);
   void push_event(const Event& e);
