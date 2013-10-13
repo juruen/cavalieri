@@ -29,6 +29,8 @@ stream_t prn();
 
 stream_t with(const with_changes_t& changes, const children_t& children);
 
+stream_t with_ifempty(const with_changes_t& changes, const children_t& children);
+
 stream_t where(const predicate_t& predicate, const children_t& children,
                const children_t& else_children={});
 

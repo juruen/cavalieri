@@ -27,7 +27,8 @@ bool tag_exists(const Event& e, const std::string& tag);
 void set_event_value(
     Event& e,
     const std::string& key,
-    const std::string& value
+    const std::string& value,
+    const bool& replace
 );
 
 std::basic_string<char> base64Encode(std::vector<unsigned char> inputBuffer);

@@ -12,7 +12,6 @@ int main(int argc, char **argv)
   google::InitGoogleLogging(argv[0]);
   Streams streams;
   PubSub pubsub;
-  Index index(pubsub);
 
   /* Stream example */
   streams.add_stream(
@@ -27,7 +26,7 @@ int main(int argc, char **argv)
                  CHILD(with({{"description", "events/second"}},
 
                        /* Print event and add it to index*/
-                       {prn(), send_index(index)}))))));
+                       {prn()}))))));
 
   /* Another stream example using split */
   streams.add_stream(
@@ -80,10 +79,20 @@ int main(int argc, char **argv)
 
       tagged_all({"stress-test", "baz"},
 
-                 CHILD(with({{"description", "tagged with stress-test and baz"}},
+        CHILD(with({{"description", "tagged with stress-test and baz"}},
 
-                       CHILD(prn())))));
+               CHILD(prn())))));
 
+  /* Everything goes to the index. Check for expired events every 10 seconds */
+  Index index(pubsub, 10);
+
+  streams.add_stream(
+
+      /* Set default tt to 60 sec */
+      with_ifempty({{"ttl", "60"}},
+
+        /* Push it to index */
+        CHILD(send_index(index))));
 
   ev::default_loop  loop;
   TCPServer tcp(5555, streams);

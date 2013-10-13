@@ -30,6 +30,12 @@ std::string metric_to_string(const Event& e) {
   return ss.str();
 }
 
+std::string ttl_to_string(const Event& e) {
+  std::ostringstream ss;
+  ss << e.ttl();
+  return ss.str();
+}
+
 double metric_to_double(const Event &e) {
   if (e.has_metric_f()) {
     return e.metric_f();
@@ -42,6 +48,7 @@ double metric_to_double(const Event &e) {
   }
 }
 
+
 std::string string_to_value(const Event& e, const std::string& key) {
   if (key == "host") {
     return e.host();
@@ -53,6 +60,8 @@ std::string string_to_value(const Event& e, const std::string& key) {
     return e.state();
   } else if (key == "metric") {
     return metric_to_string(e);
+  }  else if (key == "ttl") {
+    return ttl_to_string(e);
   } else {
     return "__nil__";
   }
@@ -89,6 +98,7 @@ std::string event_to_json(const Event &e) {
   json << "\"description\": " << "\"" << e.description() << "\", ";
   json << "\"state\": " << "\"" << e.state() << "\", ";
   json << "\"metric\": " << metric_to_string(e) << " , ";
+  json << "\"ttl\": " << e.ttl() << " , ";
   json << "\"tags\": " << tags.str();
 
   if (e.attributes_size() > 0) {
@@ -100,22 +110,42 @@ std::string event_to_json(const Event &e) {
   return json.str();
 }
 
-void set_event_value(Event& e, const std::string& key, const std::string& value) {
+
+void set_event_value(
+    Event& e,
+    const std::string& key,
+    const std::string& value,
+    const bool& replace)
+{
   if (key == "host") {
-    e.set_host(value);
+    if (replace || (!e.has_host())) {
+      e.set_host(value);
+    }
   } else if (key == "service") {
-    e.set_service(value);
+    if (replace || (!e.has_service())) {
+      e.set_service(value);
+    }
   } else if (key == "description") {
-    e.set_description(value);
+    if (replace || (!e.has_description())) {
+      e.set_description(value);
+    }
   } else if (key == "state") {
-    e.set_state(value);
+    if (replace || (!e.has_state())) {
+      e.set_state(value);
+    }
   } else if (key == "metric") {
-    if (e.has_metric_f()) {
-      e.set_metric_f(atof(value.c_str()));
-    } else if (e.has_metric_d()) {
+    if (e.has_metric_d() && replace) {
       e.set_metric_d(atof(value.c_str()));
-    } else if (e.has_metric_sint64()) {
+    } else if (e.has_metric_sint64() && replace) {
       e.set_metric_sint64(atoi(value.c_str()));
+    } else {
+      if (replace || !e.has_metric_f()) {
+        e.set_metric_f(atof(value.c_str()));
+      }
+    }
+  } else if (key == "ttl") {
+    if (replace || (!e.has_ttl())) {
+      e.set_ttl(atof(value.c_str()));
     }
   } else {
     LOG(ERROR) << "string_to_value() wrong key: " << key;

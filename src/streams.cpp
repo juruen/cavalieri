@@ -22,12 +22,25 @@ stream_t with(const with_changes_t& changes, const children_t& children) {
     Event ne(e);
     for (auto &kv: changes) {
       VLOG(3) << "with()  first: " << kv.first << " second: " << kv.second;
-      set_event_value(ne, kv.first, kv.second);
+      set_event_value(ne, kv.first, kv.second, true);
     }
     call_rescue(ne, children);
   };
 }
 
+stream_t with_ifempty(
+    const with_changes_t& changes,
+    const children_t& children)
+{
+  return [=](e_t e) {
+    Event ne(e);
+    for (auto &kv: changes) {
+      VLOG(3) << "default()  first: " << kv.first << " second: " << kv.second;
+      set_event_value(ne, kv.first, kv.second, false);
+    }
+    call_rescue(ne, children);
+  };
+}
 
 stream_t split(const split_clauses_t clauses,
                const children_t& default_children)
@@ -109,6 +122,7 @@ stream_t rate(const int interval, const children_t& children) {
         VLOG(3) << "rate-timer()";
         Event e;
         e.set_metric_f(*rate / interval);
+        e.set_time(time(0));
         *rate = 0;
         VLOG(3) << "rate-timer() value: " << e.metric_f();
         call_rescue(e, children);
