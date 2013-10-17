@@ -6,12 +6,39 @@
 #include "streams.h"
 #include "util.h"
 #include "pubsub.h"
+#include "driver.h"
+#include "expression.h"
+
 
 int main(int argc, char **argv)
 {
   google::InitGoogleLogging(argv[0]);
   Streams streams;
   PubSub pubsub;
+
+  QueryContext calc;
+  queryparser::Driver driver(calc);
+  (void)(argc);
+  (void)(argv);
+
+  std::cout << "Reading expressions from stdin" << std::endl;
+
+  std::string line;
+  while( std::cout << "input: " &&
+      std::getline(std::cin, line) &&
+      !line.empty() )
+  {
+    calc.clearExpressions();
+    bool result = driver.parse_string(line, "input");
+    if (result)
+    {
+      for (unsigned int ei = 0; ei < calc.expressions.size(); ++ei)
+      {
+        std::cout << "tree:" << std::endl;
+        calc.expressions[ei]->print(std::cout);
+      }
+    }
+  }
 
   /* Stream example */
   streams.add_stream(
