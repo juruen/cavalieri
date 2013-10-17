@@ -16,6 +16,9 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/tcpserver.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket.cpp
+    ${CMAKE_SOURCE_DIR}/src/parser.cpp
+    ${CMAKE_SOURCE_DIR}/src/scanner.cpp
+    ${CMAKE_SOURCE_DIR}/src/driver.cpp
   )
 
 SET(MINIRIEMANN_HDRS
