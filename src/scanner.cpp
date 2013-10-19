@@ -1,6 +1,6 @@
-#line 2 "scanner.cc"
+#line 2 "scanner.cpp"
 
-#line 4 "scanner.cc"
+#line 4 "scanner.cpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -541,7 +541,7 @@ typedef queryparser::Parser::token_type token_type;
  * yylex is invoked, the begin position is moved onto the end position. */
 #line 45 "scanner.ll"
 #define YY_USER_ACTION  yylloc->columns(yyleng);
-#line 545 "scanner.cc"
+#line 545 "scanner.cpp"
 
 #define INITIAL 0
 
@@ -712,7 +712,7 @@ YY_DECL
     yylloc->step();
 
 
-#line 716 "scanner.cc"
+#line 716 "scanner.cpp"
 
 	if ( !(yy_init) )
 		{
@@ -899,7 +899,7 @@ YY_RULE_SETUP
 #line 101 "scanner.ll"
 ECHO;
 	YY_BREAK
-#line 903 "scanner.cc"
+#line 903 "scanner.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 

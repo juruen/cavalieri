@@ -1,17 +1,20 @@
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
 
-#include <map>
 #include <vector>
 #include <ostream>
-#include <iostream>
+#include <functional>
+#include <proto.pb.h>
+
+typedef std::function<bool(const Event&)> query_f_t;
 
 class QueryNode
 {
-  public:
-    virtual void print(std::ostream &os, unsigned int depth=0) const = 0;
-    static inline std::string indent(unsigned int d);
-    virtual ~QueryNode();
+public:
+  virtual void print(std::ostream &os, unsigned int depth=0) const = 0;
+  static inline std::string indent(unsigned int d);
+  virtual query_f_t evaluate() const = 0;
+  virtual ~QueryNode();
 };
 
 class QueryTagged : public QueryNode
@@ -21,6 +24,7 @@ class QueryTagged : public QueryNode
 public:
   QueryTagged(std::string* string);
   virtual void print(std::ostream &os, unsigned int depth=0) const;
+  virtual query_f_t evaluate() const;
 };
 
 class QueryAnd : public QueryNode
@@ -31,7 +35,7 @@ class QueryAnd : public QueryNode
 public:
  QueryAnd(QueryNode* left, QueryNode* right);
  virtual void print(std::ostream &os, unsigned int depth=0) const;
-
+ virtual query_f_t evaluate() const;
 };
 
 class QueryOr : public QueryNode
@@ -42,14 +46,12 @@ class QueryOr : public QueryNode
 public:
   QueryOr(QueryNode* left, QueryNode* right);
   virtual void print(std::ostream &os, unsigned int depth=0) const;
+  virtual query_f_t evaluate() const;
 };
 
 class QueryContext
 {
   public:
-
-    typedef std::map<std::string, double> variablemap_type;
-    variablemap_type		variables;
     std::vector<QueryNode*> expressions;
 
     ~QueryContext();

@@ -48,7 +48,7 @@
 
 
 /* Line 293 of lalr1.cc  */
-#line 52 "parser.cc"
+#line 52 "parser.cpp"
 
 
 #include "parser.h"
@@ -68,7 +68,7 @@
 
 
 /* Line 299 of lalr1.cc  */
-#line 72 "parser.cc"
+#line 72 "parser.cpp"
 
 #ifndef YY_
 # if defined YYENABLE_NLS && YYENABLE_NLS
@@ -154,7 +154,7 @@ do {					\
 namespace queryparser {
 
 /* Line 382 of lalr1.cc  */
-#line 158 "parser.cc"
+#line 158 "parser.cpp"
 
   /* Return YYSTR after stripping away unnecessary quotes and
      backslashes, so that it's suitable for yyerror.  The heuristic is
@@ -348,7 +348,7 @@ namespace queryparser {
 }
 
 /* Line 565 of lalr1.cc  */
-#line 352 "parser.cc"
+#line 352 "parser.cpp"
 
     /* Initialize the stacks.  The initial state will be pushed in
        yynewstate, since the latter expects the semantical and the
@@ -521,7 +521,7 @@ namespace queryparser {
 
 
 /* Line 690 of lalr1.cc  */
-#line 525 "parser.cc"
+#line 525 "parser.cpp"
 	default:
           break;
       }
@@ -1004,7 +1004,7 @@ namespace queryparser {
 } // queryparser
 
 /* Line 1136 of lalr1.cc  */
-#line 1008 "parser.cc"
+#line 1008 "parser.cpp"
 
 
 /* Line 1138 of lalr1.cc  */

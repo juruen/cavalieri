@@ -1,5 +1,6 @@
 #include <ev++.h>
 #include <glog/logging.h>
+#include <iostream>
 #include "index.h"
 #include "tcpserver.h"
 #include "websocket.h"
@@ -36,6 +37,12 @@ int main(int argc, char **argv)
       {
         std::cout << "tree:" << std::endl;
         calc.expressions[ei]->print(std::cout);
+        query_f_t query_f = calc.expressions[ei]->evaluate();
+        Event e;
+        e.add_tags("foo");
+        e.add_tags("bar");
+        e.add_tags("baz");
+        std::cout << "evaluate: " << query_f(e) << std::endl;
       }
     }
   }
