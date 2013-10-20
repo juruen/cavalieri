@@ -514,7 +514,7 @@ namespace queryparser {
 /* Line 690 of lalr1.cc  */
 #line 99 "parser.yy"
     {
-            driver.query.expressions.push_back((yysemantic_stack_[(1) - (1)].querynode));
+            driver.query.expression = (yysemantic_stack_[(1) - (1)].querynode);
           }
     break;
 

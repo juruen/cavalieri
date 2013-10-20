@@ -52,7 +52,7 @@ public:
 class QueryContext
 {
   public:
-    std::vector<QueryNode*> expressions;
+    QueryNode* expression;
 
     ~QueryContext();
     void	clearExpressions();

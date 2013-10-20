@@ -75,9 +75,5 @@ QueryContext::~QueryContext()
 
 void	QueryContext::clearExpressions()
 {
-  for(unsigned int i = 0; i < expressions.size(); ++i)
-  {
-    delete expressions[i];
-  }
-  expressions.clear();
+  delete expression;
 }

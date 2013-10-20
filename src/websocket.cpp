@@ -12,6 +12,8 @@
 #include "proto.pb.h"
 #include "util.h"
 #include "websocket.h"
+#include "driver.h"
+#include "expression.h"
 
 namespace {
   const uint32_t buffer_size = 1024 * 3;
@@ -48,11 +50,31 @@ static std::vector<std::string> get_lines(const std::string &s) {
   return lines;
 }
 
+std::function<bool(const Event&)> filter_query(const std::string uri) {
+  std::string index;
+  std::map<std::string, std::string> params;
+
+  query_f_t true_query = [](const Event&) -> bool { return true; };
+  if (!parse_uri(uri, index, params)) {
+    return true_query;
+  }
+
+  QueryContext query_ctx;
+  queryparser::Driver driver(query_ctx);
+  if (driver.parse_string(params["query"], "query")) {
+    query_ctx.expression->print(std::cout);
+    return  query_ctx.expression->evaluate();
+  } else {
+    return true_query;
+  }
+}
+
 WSConnection::WSConnection(int socket_fd, PubSub& pubsub) :
     sfd(socket_fd), bytes_read(0), bytes_written(0),
     pubsub(pubsub), state(READ_HTTP_HEADER)
+
 {
- }
+}
 
 bool WSConnection::write_cb() {
   VLOG(3) << "write_cb()";
@@ -81,19 +103,16 @@ bool WSConnection::write_cb() {
     VLOG(3) << "response sent";
     if (old_state & WRITE_HTTP_HEADER) {
       VLOG(3) << "Header send. Subscribing...";
+      auto query_f = filter_query(header_vals.uri);
       pubsub.subscribe(
           "index",
-          [&](const evstr_list_t& evs, const std::string ev)
+          [=](const evs_list_t& evs)
           {
             VLOG(3) << "Subscribe notification";
-            if (evs.size() > 0) {
-              VLOG(3) << "Sending all events";
-              for (auto &e : evs) {
-                this->try_send_frame(e);
+            for (auto &e: evs) {
+              if (query_f(e)) {
+                this->try_send_frame(event_to_json(e));
               }
-            } else {
-              VLOG(3) << "Sending one event";
-              this->try_send_frame(ev);
             }
           },
           reinterpret_cast<uintptr_t>(this)
@@ -405,10 +424,13 @@ void Websocket::callback(ev::io &watcher, int revents) {
 }
 
 void Websocket::signal_cb(ev::sig &signal, int revents) {
+  UNUSED_VAR(revents);
   signal.loop.break_loop();
 }
 
 void Websocket::timer_cb(ev::timer &timer, int revents) {
+  UNUSED_VAR(timer);
+  UNUSED_VAR(revents);
 }
 
 Websocket::Websocket(int port, PubSub& pubsub) : s(port), pubsub(pubsub) {
