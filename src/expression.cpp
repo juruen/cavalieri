@@ -68,6 +68,8 @@ query_f_t QueryOr::evaluate() const {
   };
 }
 
+QueryContext::QueryContext() : expression(0) {};
+
 QueryContext::~QueryContext()
 {
   clearExpressions();
@@ -75,5 +77,8 @@ QueryContext::~QueryContext()
 
 void	QueryContext::clearExpressions()
 {
-  delete expression;
+  if (!expression) {
+    delete expression;
+    expression = 0;
+  }
 }
