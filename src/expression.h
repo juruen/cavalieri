@@ -54,6 +54,7 @@ class QueryContext
   public:
     QueryNode* expression;
 
+     QueryContext();
     ~QueryContext();
     void	clearExpressions();
 };
