@@ -19,10 +19,10 @@ Index::Index(
 {
   pubsub.add_publisher(
       "index",
-      [&]() -> std::list<std::string> {
-              std::list<std::string> evs;
+      [&]() -> std::vector<Event> {
+              std::vector<Event> evs;
               for (auto &kv: index) {
-                evs.push_back(event_to_json(kv.second.first));
+                evs.push_back(kv.second.first);
               }
               return evs;
             }
@@ -67,13 +67,14 @@ void Index::add_event(const Event& e) {
   VLOG(3) << "add_event() idx size: " << index.size();
   VLOG(3) << "add_event() expire size: " << expire.size();
 
-  pubsub.publish("index", event_to_json(e));
+  pubsub.publish("index", e);
 
 }
 
 void Index::expire_events() {
   VLOG(3) << "expire_events() expire size: " << expire.size();
   int64_t now = static_cast<int64_t>(time(0));
+  std::vector<expire_t::iterator> to_remove;
   for (auto it = expire.begin(); it != expire.end(); it++) {
     const Event& event = **it;
     if ((event.time() + static_cast<int64_t>(event.ttl())) > now) {
@@ -84,8 +85,13 @@ void Index::expire_events() {
     nevent.set_state("expired");
     VLOG(3) << "pushing expired event to streams";
     push_event(nevent);
+    to_remove.push_back(it);
+  }
+  VLOG(3) << "removing events";
+  for (auto it : to_remove) {
+    std::string key_to_remove = key(**it);
     expire.erase(it);
-    index.erase(key(event));
+    index.erase(key_to_remove);
   }
   VLOG(3) << "expire_events() --";
 }

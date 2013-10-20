@@ -17,36 +17,6 @@ int main(int argc, char **argv)
   Streams streams;
   PubSub pubsub;
 
-  QueryContext calc;
-  queryparser::Driver driver(calc);
-  (void)(argc);
-  (void)(argv);
-
-  std::cout << "Reading expressions from stdin" << std::endl;
-
-  std::string line;
-  while( std::cout << "input: " &&
-      std::getline(std::cin, line) &&
-      !line.empty() )
-  {
-    calc.clearExpressions();
-    bool result = driver.parse_string(line, "input");
-    if (result)
-    {
-      for (unsigned int ei = 0; ei < calc.expressions.size(); ++ei)
-      {
-        std::cout << "tree:" << std::endl;
-        calc.expressions[ei]->print(std::cout);
-        query_f_t query_f = calc.expressions[ei]->evaluate();
-        Event e;
-        e.add_tags("foo");
-        e.add_tags("bar");
-        e.add_tags("baz");
-        std::cout << "evaluate: " << query_f(e) << std::endl;
-      }
-    }
-  }
-
   /* Stream example */
   streams.add_stream(
 

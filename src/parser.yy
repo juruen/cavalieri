@@ -97,7 +97,7 @@ expr: '(' expr ')'
 
 start : expr
           {
-            driver.query.expressions.push_back($1);
+            driver.query.expression = $1;
           }
 
 %%

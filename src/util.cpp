@@ -3,6 +3,7 @@
 #include <sstream>
 #include <glog/logging.h>
 #include <openssl/sha.h>
+#include <curl/curl.h>
 
 
 CallbackTimer::CallbackTimer(const int interval, const std::function<void()> f)
@@ -208,3 +209,84 @@ std::basic_string<char> base64Encode(std::vector<unsigned char> inputBuffer)
   }
   return encodedString;
 }
+
+std::string uri_unescape(const std::string& uri) {
+  VLOG(3) << "uri_unescape() uri: " << uri;
+  CURL *curl = curl_easy_init();
+
+  if (curl == NULL) {
+    LOG(ERROR) << "uri_unescape(): curl_easy_init() failed";
+    return uri;
+  }
+
+  char *ret =  curl_easy_unescape(curl, uri.c_str(), uri.size(), 0);
+  VLOG(3) << "*ret " << ret;
+  const std::string unescaped(ret);
+  curl_free(ret);
+  curl_easy_cleanup(curl);
+  return unescaped;
+}
+
+bool parse_uri(
+    const std::string& escaped_uri,
+    std::string& index,
+    std::map<std::string, std::string>& params )
+{
+  VLOG(3) << "parse_uri() escaped_uri: " << escaped_uri;
+  std::string uri = uri_unescape(escaped_uri);
+  VLOG(3) << "parse_uri() uri: " << uri;
+
+  auto it = uri.begin();
+  if (*it != '/') {
+    LOG(ERROR) << "uri doesn't start with /";
+    return false;
+  }
+
+  while (it != uri.end() && *it != '?') {
+    index += *it;
+    it++;
+  }
+
+  if (it == uri.end()) {
+    LOG(ERROR) << "uri doesn't contain '?'";
+    return false;
+  }
+  it++;
+
+  VLOG(3) << "index name: " << index;
+
+  while(true) {
+    std::string key;
+    while (it != uri.end() && *it != '=') {
+      key += *it;
+      it++;
+    }
+
+    if (it == uri.end()) {
+      LOG(ERROR) << "uri doesn't contain '='";
+      return false;
+    }
+    it++;
+
+    VLOG(3) << "key: " << key;
+
+    std::string value;
+    while (it != uri.end() && *it != '&') {
+      value += *it;
+      it++;
+    }
+
+    VLOG(3) << "value: " << value;
+    params.insert({key, value});
+
+    if (it == uri.end()) {
+      break;
+    } else if (*it == '&') {
+      it++;
+    }
+  }
+
+  return true;
+}
+
+

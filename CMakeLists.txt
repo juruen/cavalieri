@@ -65,6 +65,7 @@ IF(PROTOBUF_FOUND)
       ${Glog_LIBRARIES}
       ssl
       crypto
+      curl
     )
 
 ENDIF(PROTOBUF_FOUND)

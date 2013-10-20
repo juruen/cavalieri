@@ -5,6 +5,8 @@
 #include <ev++.h>
 #include <functional>
 
+#define UNUSED_VAR(x) (void)x
+
 class CallbackTimer {
   private:
     ev::timer tio_;
@@ -34,6 +36,11 @@ void set_event_value(
 std::basic_string<char> base64Encode(std::vector<unsigned char> inputBuffer);
 
 std::string sha1(const std::string& str);
+
+bool parse_uri(
+    const std::string& escaped_uri,
+    std::string& index,
+    std::map<std::string, std::string>& params );
 
 #endif
 
