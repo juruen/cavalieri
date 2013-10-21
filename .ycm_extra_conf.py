@@ -74,6 +74,8 @@ flags = [
 '-I',
 '/usr/include/i386-linux-gnu/c++/4.7',
 '-I',
+'/usr/include/python2.7',
+'-I',
 '.',
 '-I',
 './ClangCompleter',
