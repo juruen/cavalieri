@@ -20,6 +20,7 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/scanner.cpp
     ${CMAKE_SOURCE_DIR}/src/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/expression.cpp
+    ${CMAKE_SOURCE_DIR}/src/pythoninterpreter.cpp
   )
 
 SET(MINIRIEMANN_HDRS

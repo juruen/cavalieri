@@ -1,6 +1,7 @@
 #include <ev++.h>
 #include <glog/logging.h>
 #include <iostream>
+#include <thread>
 #include "index.h"
 #include "tcpserver.h"
 #include "websocket.h"
@@ -9,6 +10,7 @@
 #include "pubsub.h"
 #include "driver.h"
 #include "expression.h"
+#include "pythoninterpreter.h"
 
 
 int main(int argc, char **argv)
@@ -16,6 +18,12 @@ int main(int argc, char **argv)
   google::InitGoogleLogging(argv[0]);
   Streams streams;
   PubSub pubsub;
+
+  std::thread py_thread([](){
+    python_interpreter python;
+    python.run_function("py_function", "multiply", "foobar");
+  });
+  py_thread.detach();
 
   /* Stream example */
   streams.add_stream(
