@@ -9,8 +9,7 @@
 #include "util.h"
 #include "pubsub.h"
 #include "driver.h"
-#include "expression.h"
-#include "pythoninterpreter.h"
+#include "pagerduty.h"
 
 
 int main(int argc, char **argv)
@@ -18,12 +17,6 @@ int main(int argc, char **argv)
   google::InitGoogleLogging(argv[0]);
   Streams streams;
   PubSub pubsub;
-
-  std::thread py_thread([](){
-    python_interpreter python;
-    python.run_function("py_function", "multiply", "foobar");
-  });
-  py_thread.detach();
 
   /* Stream example */
   streams.add_stream(
@@ -49,7 +42,7 @@ int main(int argc, char **argv)
 
                 CHILD(with({{"description", "metric > 0.8"}},
 
-                      CHILD(prn())))
+                      CHILD(prn() )))
 
               },
               {
@@ -105,6 +98,16 @@ int main(int argc, char **argv)
 
         /* Push it to index */
         CHILD(send_index(index))));
+
+  streams.add_stream(
+
+          where(PRED(e.host() == "host0"),
+
+                {where(PRED(metric_to_double(e) > 0.5),
+
+                        {pd_trigger("foobar1234")},
+
+                        {pd_resolve("foobar124")})}));
 
   ev::default_loop  loop;
   TCPServer tcp(5555, streams);
