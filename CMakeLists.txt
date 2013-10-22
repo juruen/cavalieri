@@ -21,6 +21,7 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/expression.cpp
     ${CMAKE_SOURCE_DIR}/src/pythoninterpreter.cpp
+    ${CMAKE_SOURCE_DIR}/src/pagerduty.cpp
   )
 
 SET(MINIRIEMANN_HDRS
