@@ -3,45 +3,26 @@
 
 #include <ev++.h>
 #include <map>
-#include "streams.h"
+#include <functional>
 
-struct TCPConnection {
-    int sfd;
-    size_t bytes_read;
-    size_t bytes_written;
-    bool reading_header;
-    bool write_response;
-    uint32_t protobuf_size;
-    char buffer[1024*8];
-    ev::io io;
-    Streams& streams;
+class tcp_connection;
+typedef std::function<tcp_connection*(int)> create_tcp_connection_f_t;
 
-    TCPConnection(int socket_fd, Streams& streams);
-    virtual ~TCPConnection();
-    void set_io();
-    bool read_cb();
-    bool write_cb();
-    bool try_read_header();
-    bool try_read_message();
-};
-
-class TCPServer {
+class tcp_server {
   private:
+    create_tcp_connection_f_t create_tcp_connection_f;
+    int socket_fd;
     ev::io io;
     ev::sig sio;
-    ev::timer tio;
-    int s;
-    std::map<const int, TCPConnection*> conn_map;
-    Streams& streams;
+    std::map<const int, tcp_connection*> conn_map;
 
   public:
-    TCPServer(int port, Streams& streams);
+    tcp_server(int port, create_tcp_connection_f_t create_tcp_connection_f);
+    virtual ~tcp_server();
     void io_accept(ev::io &watcher, int revents);
-    void remove_connection(TCPConnection* conn);
+    void remove_connection(tcp_connection* conn);
     void callback(ev::io &watcher, int revents);
     static void signal_cb(ev::sig &signal, int revents);
-    void timer_cb(ev::timer &timer, int revents);
-    virtual ~TCPServer();
 };
 
 #endif

@@ -14,6 +14,8 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
     ${CMAKE_SOURCE_DIR}/src/tcpserver.cpp
+    ${CMAKE_SOURCE_DIR}/src/tcpconnection.cpp
+    ${CMAKE_SOURCE_DIR}/src/riemanntcpconnection.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket.cpp
     ${CMAKE_SOURCE_DIR}/src/parser.cpp
@@ -22,6 +24,7 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/expression.cpp
     ${CMAKE_SOURCE_DIR}/src/pythoninterpreter.cpp
     ${CMAKE_SOURCE_DIR}/src/pagerduty.cpp
+    ${CMAKE_SOURCE_DIR}/src/wsutil.cpp
   )
 
 SET(MINIRIEMANN_HDRS
