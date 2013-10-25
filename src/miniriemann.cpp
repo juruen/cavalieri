@@ -4,12 +4,15 @@
 #include <thread>
 #include "index.h"
 #include "tcpserver.h"
+#include "riemanntcpconnection.h"
 #include "websocket.h"
 #include "streams.h"
 #include "util.h"
 #include "pubsub.h"
 #include "driver.h"
 #include "pagerduty.h"
+#include "websocket.h"
+#include "wsutil.h"
 
 
 int main(int argc, char **argv)
@@ -17,6 +20,7 @@ int main(int argc, char **argv)
   google::InitGoogleLogging(argv[0]);
   Streams streams;
   PubSub pubsub;
+  UNUSED_VAR(argc);
 
   /* Stream example */
   streams.add_stream(
@@ -99,6 +103,7 @@ int main(int argc, char **argv)
         /* Push it to index */
         CHILD(send_index(index))));
 
+  /*
   streams.add_stream(
 
           where(PRED(e.host() == "host0"),
@@ -108,10 +113,25 @@ int main(int argc, char **argv)
                         {pd_trigger("foobar1234")},
 
                         {pd_resolve("foobar124")})}));
+  */
+
 
   ev::default_loop  loop;
-  TCPServer tcp(5555, streams);
-  Websocket ws(5556, pubsub);
+
+  tcp_server tcp_rieman_server(
+      5555,
+      [&](int sfd) {
+        return new riemann_tcp_connection(sfd, streams);
+      }
+  );
+
+  tcp_server websocket(
+      5556,
+      [&](int sfd) {
+        return new ws_connection(sfd, new ws_util(), pubsub);
+      }
+  );
+
 
   loop.run(0);
 
