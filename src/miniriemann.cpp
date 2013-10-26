@@ -121,14 +121,14 @@ int main(int argc, char **argv)
   tcp_server tcp_rieman_server(
       5555,
       [&](int sfd) {
-        return new riemann_tcp_connection(sfd, streams);
+        return std::make_shared<riemann_tcp_connection>(sfd, streams);
       }
   );
 
   tcp_server websocket(
       5556,
       [&](int sfd) {
-        return new ws_connection(sfd, new ws_util(), pubsub);
+        return std::make_shared<ws_connection>(sfd, new ws_util(), pubsub);
       }
   );
 

@@ -31,7 +31,7 @@ void tcp_server::io_accept(ev::io &watcher, int revents) {
     return;
   }
 
-  tcp_connection *conn =  create_tcp_connection_f(client_sd);
+  auto conn=  create_tcp_connection_f(client_sd);
   conn_map.insert({client_sd, conn});
   conn->io.set<tcp_server, &tcp_server::callback>(this);
   conn->io.start(client_sd, ev::READ);
@@ -39,9 +39,8 @@ void tcp_server::io_accept(ev::io &watcher, int revents) {
   VLOG(3) << "io_accept() new connection";
 }
 
-void tcp_server::remove_connection(tcp_connection *conn) {
+void tcp_server::remove_connection(std::shared_ptr<tcp_connection> conn) {
   conn_map.erase(conn->sfd);
-  delete conn;
 }
 
 void tcp_server::callback(ev::io &watcher, int revents) {
@@ -52,7 +51,7 @@ void tcp_server::callback(ev::io &watcher, int revents) {
     return;
   }
 
-  tcp_connection *conn = conn_map[watcher.fd];
+  auto conn = conn_map[watcher.fd];
   conn->callback(revents);
 
   if (conn->close_connection) {
