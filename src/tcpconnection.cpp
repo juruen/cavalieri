@@ -75,6 +75,7 @@ void tcp_connection::set_io() {
 }
 
 tcp_connection::~tcp_connection() {
+  VLOG(3) << "~tcp_connection()";
   io.stop();
   close(sfd);
 }
