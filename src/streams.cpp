@@ -66,8 +66,9 @@ stream_t split(const split_clauses_t clauses,
 typedef std::unordered_map<std::string, const children_t> by_streams_map_t;
 
 stream_t by(const by_keys_t& keys, const by_streams_t& streams) {
-  by_streams_map_t* streams_map = new by_streams_map_t();
-  return [=](e_t e) {
+  by_streams_map_t streams_map;
+
+  return [=](e_t e) mutable {
     VLOG(3) << "by()";
 
     if (keys.size() == 0) {
@@ -84,15 +85,15 @@ stream_t by(const by_keys_t& keys, const by_streams_t& streams) {
     }
 
     VLOG(3) << "by() key: " << key;
-    auto it = streams_map->find(key);
-    if (it == streams_map->end()) {
+    auto it = streams_map.find(key);
+    if (it == streams_map.end()) {
       VLOG(3) << "by() key not found. Creating stream.";
       children_t children;
       for (auto &s: streams) {
         children.push_back(s());
       }
-      streams_map->insert({key, children});
-      call_rescue(e, streams_map->find(key)->second);
+      streams_map.insert({key, children});
+      call_rescue(e, streams_map.find(key)->second);
     } else {
       VLOG(3) << "by() stream exists. ";
       call_rescue(e, it->second);
@@ -114,37 +115,37 @@ stream_t where(const predicate_t& predicate, const children_t& children,
 
 
 stream_t rate(const int interval, const children_t& children) {
-  double* rate = new double(0);
+  double rate = 0;
 
   CallbackTimer* callbackTimer = new CallbackTimer(interval,
-      [=]()
+     [=]() mutable
       {
         VLOG(3) << "rate-timer()";
         Event e;
-        e.set_metric_f(*rate / interval);
+        e.set_metric_f(rate / interval);
         e.set_time(time(0));
-        *rate = 0;
+        rate = 0;
         VLOG(3) << "rate-timer() value: " << e.metric_f();
         call_rescue(e, children);
       });
 
   (void)(callbackTimer);
 
-  return [=](e_t e) {
+  return [=](e_t e) mutable {
     VLOG(3) << "rate() rate += e.metric";
-    *rate += metric_to_double(e);
+    rate += metric_to_double(e);
   };
 }
 
 stream_t changed_state(std::string initial, const children_t& children) {
-  std::string* last_state = new std::string(initial);
+  std::string last_state(initial);
 
-  return [=](e_t e) {
+  return [=](e_t e) mutable {
     VLOG(3) << "changed_state() last_state: "
             << last_state << " new state " << e.state();
-    if (*last_state != e.state()) {
+    if (last_state != e.state()) {
       VLOG(3) << "changed_state() state change";
-      last_state->assign(e.state());
+      last_state.assign(e.state());
       call_rescue(e, children);
     }
   };
