@@ -17,6 +17,11 @@ void CallbackTimer::callback() {
   f_();
 }
 
+CallbackTimer::~CallbackTimer() {
+  VLOG(3) << "~CallbackTimer";
+  tio_.stop();
+}
+
 std::string metric_to_string(const Event& e) {
   std::ostringstream ss;
   if (e.has_metric_f()) {
