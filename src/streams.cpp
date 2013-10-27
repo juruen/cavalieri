@@ -1,8 +1,8 @@
+#include <unordered_map>
+#include <memory>
+#include <glog/logging.h>
 #include "streams.h"
 #include "util.h"
-#include <glog/logging.h>
-#include <unordered_map>
-
 
 void call_rescue(e_t e, const children_t& children) {
   for (auto& s: children) {
@@ -117,7 +117,8 @@ stream_t where(const predicate_t& predicate, const children_t& children,
 stream_t rate(const int interval, const children_t& children) {
   double rate = 0;
 
-  CallbackTimer* callbackTimer = new CallbackTimer(interval,
+  std::shared_ptr<CallbackTimer> callbackTimer(std::make_shared<CallbackTimer>(
+      interval,
      [=]() mutable
       {
         VLOG(3) << "rate-timer()";
@@ -127,13 +128,12 @@ stream_t rate(const int interval, const children_t& children) {
         rate = 0;
         VLOG(3) << "rate-timer() value: " << e.metric_f();
         call_rescue(e, children);
-      });
-
-  (void)(callbackTimer);
+      }));
 
   return [=](e_t e) mutable {
     VLOG(3) << "rate() rate += e.metric";
     rate += metric_to_double(e);
+    (void)(callbackTimer);
   };
 }
 

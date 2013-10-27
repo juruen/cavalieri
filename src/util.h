@@ -13,6 +13,7 @@ class CallbackTimer {
     std::function<void()> f_;
   public:
     CallbackTimer(const int interval, const std::function<void()> f);
+    ~CallbackTimer();
     void callback();
 };
 
