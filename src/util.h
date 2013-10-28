@@ -7,13 +7,13 @@
 
 #define UNUSED_VAR(x) (void)x
 
-class CallbackTimer {
+class callback_timer {
   private:
     ev::timer tio_;
     std::function<void()> f_;
   public:
-    CallbackTimer(const int interval, const std::function<void()> f);
-    ~CallbackTimer();
+    callback_timer(const int interval, const std::function<void()> f);
+    ~callback_timer();
     void callback();
 };
 

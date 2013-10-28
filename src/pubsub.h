@@ -15,7 +15,7 @@ typedef std::vector<notify_f_t> notify_f_list_t;
 typedef std::unordered_map<std::string, notify_f_list_t> subscribers_t;
 typedef std::unordered_map<uintptr_t, notify_f_list_t::iterator> subscribers_iterators_t;
 
-class PubSub {
+class pub_sub {
 private:
   publishers_t publishers;
   subscribers_t subscribers;

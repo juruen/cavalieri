@@ -6,19 +6,19 @@
 #include <curl/curl.h>
 
 
-CallbackTimer::CallbackTimer(const int interval, const std::function<void()> f)
+callback_timer::callback_timer(const int interval, const std::function<void()> f)
   : f_(f)
 {
-      tio_.set<CallbackTimer, &CallbackTimer::callback>(this);
+      tio_.set<callback_timer, &callback_timer::callback>(this);
       tio_.start(0, interval);
 }
 
-void CallbackTimer::callback() {
+void callback_timer::callback() {
   f_();
 }
 
-CallbackTimer::~CallbackTimer() {
-  VLOG(3) << "~CallbackTimer";
+callback_timer::~callback_timer() {
+  VLOG(3) << "~callback_timer";
   tio_.stop();
 }
 

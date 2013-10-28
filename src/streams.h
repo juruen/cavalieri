@@ -47,16 +47,16 @@ stream_t tagged_any(const tags_t& tags, const children_t& children);
 
 stream_t tagged_all(const tags_t& tags, const children_t& children);
 
-stream_t send_index(Index& index);
+stream_t send_index(class index&);
 
 bool tagged_any_(e_t e, const tags_t& tags);
 
 bool tagged_all_(e_t e, const tags_t& tags);
 
 
-class Streams {
+class streams {
 private:
-  std::list<stream_t> streams;
+  std::list<stream_t> streams_;
 
 public:
   void add_stream(stream_t stream);

@@ -18,12 +18,12 @@
 int main(int argc, char **argv)
 {
   google::InitGoogleLogging(argv[0]);
-  Streams streams;
-  PubSub pubsub;
+  streams all_streams;
+  pub_sub pubsub;
   UNUSED_VAR(argc);
 
   /* Stream example */
-  streams.add_stream(
+  all_streams.add_stream(
 
       /* Set metric to 1 */
       with({{"metric", "1"}},
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
                        {prn()}))))));
 
   /* Another stream example using split */
-  streams.add_stream(
+  all_streams.add_stream(
 
       split({
               {
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
                   CHILD(prn())))));
 
   /* Yet another example using by() */
-  streams.add_stream(
+  all_streams.add_stream(
 
       by({"host", "service"},
 
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 
 
   /* Example using checking tags */
-  streams.add_stream(
+  all_streams.add_stream(
 
       tagged_all({"stress-test", "baz"},
 
@@ -93,9 +93,9 @@ int main(int argc, char **argv)
                CHILD(prn())))));
 
   /* Everything goes to the index. Check for expired events every 3 seconds */
-  Index index(pubsub, [&](const Event& e){ streams.push_event (e);  }, 3);
+  class index index(pubsub, [&](const Event& e){ all_streams.push_event (e);  }, 3);
 
-  streams.add_stream(
+  all_streams.add_stream(
 
       /* Set default tt to 9 sec */
       with_ifempty({{"ttl", "9"}},
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
         CHILD(send_index(index))));
 
   /*
-  streams.add_stream(
+  all_streams.add_stream(
 
           where(PRED(e.host() == "host0"),
 
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
   tcp_server tcp_rieman_server(
       5555,
       [&](int sfd) {
-        return std::make_shared<riemann_tcp_connection>(sfd, streams);
+        return std::make_shared<riemann_tcp_connection>(sfd, all_streams);
       }
   );
 

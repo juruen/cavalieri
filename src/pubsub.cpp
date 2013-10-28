@@ -2,12 +2,12 @@
 #include <glog/logging.h>
 #include <util.h>
 
-void PubSub::add_publisher(const std::string& topic, const allevents_f_t& allevents_f) {
+void pub_sub::add_publisher(const std::string& topic, const allevents_f_t& allevents_f) {
   VLOG(3) << "add_publisher() topic: " << topic;
   publishers.insert({topic, allevents_f});
 }
 
-void PubSub::publish(const std::string& topic, const Event& event) {
+void pub_sub::publish(const std::string& topic, const Event& event) {
   std::string eventstr = event_to_json(event);
   VLOG(3) << "publish() topic: " << topic << " event: " << eventstr;
   auto it = subscribers.find(topic);
@@ -21,7 +21,7 @@ void PubSub::publish(const std::string& topic, const Event& event) {
   }
 }
 
-void PubSub::subscribe(
+void pub_sub::subscribe(
     const std::string& topic,
     const notify_f_t notify_f,
     const uintptr_t id)
@@ -49,7 +49,7 @@ void PubSub::subscribe(
   notify_f(evs);
 }
 
-void PubSub::unsubscribe(const std::string& topic, const uintptr_t id) {
+void pub_sub::unsubscribe(const std::string& topic, const uintptr_t id) {
   VLOG(3) << "unsubscribe() id: " << id << " from topic: " << topic;
 
   auto sub_it_it = subscribers_iterators.find(id);

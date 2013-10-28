@@ -1,6 +1,6 @@
-#include <index.h>
 #include <util.h>
 #include <glog/logging.h>
+#include <index.h>
 
 compare_t time_compare() {
   return [](const Event* lhs, const Event* rhs){
@@ -8,8 +8,8 @@ compare_t time_compare() {
   };
 }
 
-Index::Index(
-    PubSub& pubsub,
+index::index(
+    pub_sub& pubsub,
     push_event_f_t push_event,
     const int64_t expire_interval)
   :
@@ -18,38 +18,38 @@ Index::Index(
   push_event(push_event)
 {
   pubsub.add_publisher(
-      "index",
+      "index_map",
       [&]() -> std::vector<Event> {
               std::vector<Event> evs;
-              for (auto &kv: index) {
+              for (auto &kv: index_map) {
                 evs.push_back(kv.second.first);
               }
               return evs;
             }
   );
 
-  timer = new CallbackTimer(
+  timer = new callback_timer(
       expire_interval,
       [&]() {
-        VLOG(3) << "callback timer index";
+        VLOG(3) << "callback timer index_map";
         this->expire_events();
       });
 }
 
-Index::~Index() {
-
+index::~index() {
+  delete timer;
 }
 
-const std::string Index::key(const Event& e) const {
+const std::string index::key(const Event& e) const {
   return e.host() + "-" + e.service();
 }
 
-void Index::add_event(const Event& e) {
+void index::add_event(const Event& e) {
   VLOG(3) << "add_event()";
 
-  auto idx_pair = index.insert({key(e), {e, expire.end()}});
+  auto idx_pair = index_map.insert({key(e), {e, expire.end()}});
   if (!idx_pair.second) {
-    VLOG(3) << "updating event in index";
+    VLOG(3) << "updating event in index_map";
     idx_pair.first->second.first = e;
     VLOG(3) << "removing event from expire";
     expire.erase(idx_pair.first->second.second);
@@ -64,14 +64,14 @@ void Index::add_event(const Event& e) {
   }
   idx_pair.first->second.second = exp_pair.first;
 
-  VLOG(3) << "add_event() idx size: " << index.size();
+  VLOG(3) << "add_event() idx size: " << index_map.size();
   VLOG(3) << "add_event() expire size: " << expire.size();
 
-  pubsub.publish("index", e);
+  pubsub.publish("index_map", e);
 
 }
 
-void Index::expire_events() {
+void index::expire_events() {
   VLOG(3) << "expire_events() expire size: " << expire.size();
   int64_t now = static_cast<int64_t>(time(0));
   std::vector<expire_t::iterator> to_remove;
@@ -91,7 +91,7 @@ void Index::expire_events() {
   for (auto it : to_remove) {
     std::string key_to_remove = key(**it);
     expire.erase(it);
-    index.erase(key_to_remove);
+    index_map.erase(key_to_remove);
   }
   VLOG(3) << "expire_events() --";
 }
