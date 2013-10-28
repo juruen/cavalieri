@@ -116,8 +116,7 @@ stream_t where(const predicate_t& predicate, const children_t& children,
 
 stream_t rate(const int interval, const children_t& children) {
   double rate = 0;
-
-  std::shared_ptr<CallbackTimer> callbackTimer(std::make_shared<CallbackTimer>(
+  std::shared_ptr<callback_timer> timer(std::make_shared<callback_timer>(
       interval,
      [=]() mutable
       {
@@ -133,7 +132,7 @@ stream_t rate(const int interval, const children_t& children) {
   return [=](e_t e) mutable {
     VLOG(3) << "rate() rate += e.metric";
     rate += metric_to_double(e);
-    (void)(callbackTimer);
+    (void)(timer);
   };
 }
 
@@ -189,21 +188,21 @@ bool tagged_all_(e_t e, const tags_t& tags) {
   return true;
 }
 
-stream_t send_index(Index& index) {
+stream_t send_index(class index& idx) {
   return [&](e_t e) {
     if (e.state() != "expired") {
-      index.add_event(e);
+      idx.add_event(e);
     }
   };
 }
 
-void Streams::add_stream(stream_t stream) {
+void streams::add_stream(stream_t stream) {
   VLOG(3) << "adding stream";
-  streams.push_back(stream);
+  streams_.push_back(stream);
 }
 
-void Streams::process_message(const Msg& message) {
-  VLOG(3) << "process message. num of streams " << streams.size();
+void streams::process_message(const Msg& message) {
+  VLOG(3) << "process message. num of streams " << streams_.size();
   unsigned long int sec = time(0);
   for (int i = 0; i < message.events_size(); i++) {
     const Event &event = message.events(i);
@@ -217,8 +216,8 @@ void Streams::process_message(const Msg& message) {
   }
 }
 
-inline void Streams::push_event(const Event& e) {
-  for (auto& s: streams) {
+inline void streams::push_event(const Event& e) {
+  for (auto& s: streams_) {
     s(e);
   }
 }

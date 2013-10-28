@@ -27,11 +27,11 @@ static void generate_msg_ok()
   ok_response_size = sizeof(nsize) + msg_ok.ByteSize();
 }
 
-riemann_tcp_connection::riemann_tcp_connection(int sfd, Streams& streams) :
+riemann_tcp_connection::riemann_tcp_connection(int sfd, streams& all_streams) :
   tcp_connection(sfd),
   reading_header(true),
   protobuf_size(0),
-  streams(streams)
+  all_streams(all_streams)
 {
   io.set(ev::READ);
 
@@ -131,7 +131,7 @@ void riemann_tcp_connection::read_message() {
 
   VLOG(2) << "protobuf payload parsed ok. nevents: " << message.events_size();
   events += message.events_size();
-  streams.process_message(message);
+  all_streams.process_message(message);
 
   bytes_to_write = ok_response_size;
 }

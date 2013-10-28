@@ -14,21 +14,21 @@ typedef expire_t::iterator expire_it_t;
 typedef std::unordered_map<std::string, std::pair<Event, expire_it_t>> index_t;
 typedef std::function<void(const Event&)> push_event_f_t;
 
-class Index {
+class index {
 private:
   expire_t expire;
-  PubSub& pubsub;
-  index_t index;
+  pub_sub& pubsub;
+  index_t index_map;
   push_event_f_t push_event;
-  CallbackTimer* timer;
+  callback_timer* timer;
 
 public:
-  Index(
-      PubSub& pubsub,
+  index(
+      pub_sub& pubsub,
       push_event_f_t push_event,
       const int64_t expire_interval
     );
-  ~Index();
+  ~index();
   void add_event(const Event& e);
 
 private:

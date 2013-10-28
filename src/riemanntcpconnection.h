@@ -8,9 +8,9 @@ class riemann_tcp_connection : public tcp_connection {
   public:
     bool reading_header;
     uint32_t protobuf_size;
-    Streams& streams;
+    streams& all_streams;
 
-    riemann_tcp_connection(int socket_fd, Streams& streams);
+    riemann_tcp_connection(int socket_fd, streams& all_streams);
     void callback(int revents);
     void read_cb();
     void write_cb();

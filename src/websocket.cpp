@@ -43,7 +43,7 @@ static std::function<bool(const Event&)> filter_query(const std::string uri) {
 ws_connection::ws_connection(
   int socket_fd,
   class ws_util* ws_util,
-  PubSub& pubsub
+  pub_sub& pubsub
 ) :
   tcp_connection(socket_fd),
   ws_util(ws_util),
