@@ -12,7 +12,6 @@ void call_rescue(e_t e, const children_t& children) {
 
 stream_t prn() {
   return [](e_t e) {
-    VLOG(3) << "prn()";
     LOG(INFO) << "prn() " <<  event_to_json(e);
   };
 }
@@ -47,9 +46,7 @@ stream_t split(const split_clauses_t clauses,
 {
   return [=](e_t e) {
     VLOG(3) << "split()";
-    for (auto &pair: clauses) {
-      predicate_t predicate = pair.first;
-      predicate(e);
+    for (auto const &pair: clauses) {
       if (pair.first(e)) {
         VLOG(3) << "split() clause found";
         call_rescue(e, pair.second);
@@ -92,7 +89,7 @@ stream_t by(const by_keys_t& keys, const by_streams_t& streams) {
       for (auto &s: streams) {
         children.push_back(s());
       }
-      streams_map.insert({key, children});
+      streams_map.insert({key, std::move(children)});
       call_rescue(e, streams_map.find(key)->second);
     } else {
       VLOG(3) << "by() stream exists. ";
@@ -209,7 +206,7 @@ void streams::process_message(const Msg& message) {
     if (!event.has_time()) {
       Event nevent(event);
       nevent.set_time(sec);
-      push_event(nevent);
+      push_event(std::move(nevent));
     } else {
       push_event(event);
     }
