@@ -21,7 +21,7 @@ index::index(
       "index_map",
       [&]() -> std::vector<Event> {
               std::vector<Event> evs;
-              for (auto &kv: index_map) {
+              for (auto const &kv: index_map) {
                 evs.push_back(kv.second.first);
               }
               return evs;
