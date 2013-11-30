@@ -1,8 +1,8 @@
 FIND_PACKAGE(GTest REQUIRED)
 FIND_PACKAGE(Threads REQUIRED)
 
-# Code coverage options
-#ADD_DEFINITIONS( -fprofile-arcs -ftest-coverage -g -O0)
+SET(CMAKE_CXX_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
 
 SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/util.cpp
@@ -41,7 +41,6 @@ GTEST_ADD_TESTS(
 
 TARGET_LINK_LIBRARIES(
     test_plan
-    gcov
     ${GTEST_BOTH_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${PROTOBUF_LIBRARY}
@@ -53,3 +52,11 @@ TARGET_LINK_LIBRARIES(
     curl
     pthread
   )
+
+INCLUDE(CodeCoverage)
+
+SETUP_TARGET_FOR_COVERAGE(
+    test_plan_coverage
+    test_plan
+    coverage
+)
