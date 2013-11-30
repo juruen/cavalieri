@@ -5,7 +5,6 @@
 #include <riemanntcpconnection.h>
 
 namespace {
-  uint32_t events = 0;
   char ok_response[1024];
   uint32_t ok_response_size = 0;
 }
@@ -27,11 +26,14 @@ static void generate_msg_ok()
   ok_response_size = sizeof(nsize) + msg_ok.ByteSize();
 }
 
-riemann_tcp_connection::riemann_tcp_connection(int sfd, streams& all_streams) :
+riemann_tcp_connection::riemann_tcp_connection(
+  int sfd,
+  incoming_events& income_events
+) :
   tcp_connection(sfd),
   reading_header(true),
   protobuf_size(0),
-  all_streams(all_streams)
+  income_events(income_events)
 {
   io.set(ev::READ);
 
@@ -39,7 +41,7 @@ riemann_tcp_connection::riemann_tcp_connection(int sfd, streams& all_streams) :
   if (ok_response_size == 0) {
     generate_msg_ok();
   }
-  memcpy((void*)&w_buffer,ok_response, ok_response_size);
+  memcpy((void*)&w_buffer, ok_response, ok_response_size);
 }
 
 void riemann_tcp_connection::callback(int revents) {
@@ -89,7 +91,7 @@ void riemann_tcp_connection::write_cb() {
 void riemann_tcp_connection::read_header() {
   VLOG(3) << "read_header()";
 
-  if (!read(buffer_size - bytes_to_read)) {
+  if (!read(buffer_size)) {
     return;
   }
 
@@ -102,8 +104,13 @@ void riemann_tcp_connection::read_header() {
   protobuf_size = ntohl(header);
 
   VLOG(2) << "header read. protobuf msg size: " << protobuf_size << " bytes";
-  reading_header = false;
+  if (protobuf_size + 4 > buffer_size) {
+    VLOG(2) << "protobuf_size too big: " << protobuf_size;
+    close_connection = true;
+    return;
+  }
 
+  reading_header = false;
   read_message();
 }
 
@@ -111,7 +118,7 @@ void riemann_tcp_connection::read_message() {
   VLOG(3) << "read_message()";
 
   if (bytes_read < protobuf_size + 4) {
-    if (!read(protobuf_size - bytes_to_read + 4)) {
+    if (!read(protobuf_size + 4)) {
       return;
     }
 
@@ -122,18 +129,18 @@ void riemann_tcp_connection::read_message() {
 
   reading_header = true;
   bytes_read = 0;
+  bytes_to_write = ok_response_size;
 
-  Msg message;
-  if (!message.ParseFromArray(r_buffer + 4, protobuf_size)) {
-    VLOG(2) << "error parsing protobuf payload";
+  if (bytes_to_write > buffer_size) {
+    VLOG(2) << "bytes to write too big: " << bytes_to_write;
+    close_connection = true;
     return;
   }
 
-  VLOG(2) << "protobuf payload parsed ok. nevents: " << message.events_size();
-  events += message.events_size();
-  all_streams.process_message(message);
+  std::vector<unsigned char> msg(protobuf_size);
+  memcpy(&msg[0], r_buffer + 4, protobuf_size);
 
-  bytes_to_write = ok_response_size;
+  income_events.add_undecoded_msg(std::move(msg));
 }
 
 

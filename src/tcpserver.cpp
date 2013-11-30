@@ -31,46 +31,20 @@ void tcp_server::io_accept(ev::io &watcher, int revents) {
     return;
   }
 
-  auto conn=  create_tcp_connection_f(client_sd);
-  conn_map.insert({client_sd, conn});
-  conn->io.set<tcp_server, &tcp_server::callback>(this);
-  conn->io.start(client_sd, ev::READ);
+  add_client_fn(client_sd);
 
   VLOG(3) << "io_accept() new connection";
 }
 
-void tcp_server::remove_connection(std::shared_ptr<tcp_connection> conn) {
-  conn_map.erase(conn->sfd);
-}
-
-void tcp_server::callback(ev::io &watcher, int revents) {
-  VLOG(3) << "callback() revents: " << revents;
-
-  if (EV_ERROR & revents) {
-    VLOG(3) << "got invalid event: " << strerror(errno);
-    return;
-  }
-
-  auto conn = conn_map[watcher.fd];
-  conn->callback(revents);
-
-  if (conn->close_connection) {
-    remove_connection(conn);
-    return;
-  }
-
-  conn->set_io();
-}
-
 void tcp_server::signal_cb(ev::sig &signal, int revents) {
+  VLOG(3) << "signal reciived";
   signal.loop.break_loop();
   UNUSED_VAR(revents);
 }
 
-tcp_server::tcp_server(
-    int port,
-    create_tcp_connection_f_t create_tcp_connection_f
-) : create_tcp_connection_f(create_tcp_connection_f)
+tcp_server::tcp_server( int port, add_client_fn_t add_client_fn)
+    :
+  add_client_fn(add_client_fn)
 {
   VLOG(1) << "tcp_server() port: " << port;
 

@@ -5,8 +5,15 @@
 #include <openssl/sha.h>
 #include <curl/curl.h>
 
+namespace {
+  const uint32_t buff_size = 1024;
+  const uint32_t json_buff_size = 1024 * 4;
+  const char *json_base =
+      "{\"host\": \"%s\", \"service\": \"%s\", \"description\": \"%s\""
+      ",\"state\": \"%s\", \"metric\": %f, \"tags\": [%s] %s}";
+}
 
-callback_timer::callback_timer(const int interval, const std::function<void()> f)
+callback_timer::callback_timer(const double interval, const std::function<void()> f)
   : f_(f)
 {
       tio_.set<callback_timer, &callback_timer::callback>(this);
@@ -74,48 +81,51 @@ std::string string_to_value(const Event& e, const std::string& key) {
 }
 
 std::string event_to_json(const Event &e) {
-  //XXX Use std::string instead of ostringstream.
-  //    This is slow as fuck and not even necessary.
-  std::ostringstream tags;
-  tags << "[ ";
+  char tags[buff_size] =  "";
+  char attrs[buff_size] = "";
+
   for (int i = 0; i < e.tags_size(); i++) {
     if (i != 0) {
-      tags << ", "; // I miss ",".join() :(
+      strncat(tags, ", ", buff_size- strlen(tags));
     }
-    tags << "\"" << e.tags(i) << "\"";
-
+    strncat(tags, "\"", buff_size - strlen(tags));
+    strncat(tags, e.tags(i).c_str(), buff_size - strlen(tags));
+    strncat(tags, "\"", buff_size - strlen(tags));
   }
-  tags << " ]";
 
-  std::ostringstream attrs;
   for (int i = 0; i < e.attributes_size(); i++) {
-    if (i != 0) {
-      attrs << ", ";
-    }
-    attrs << "\"" << e.attributes(i).key() << "\": ";
-    attrs << "\"" << e.attributes(i).value() << "\"";
+    strncat(attrs, ", ", buff_size - strlen(attrs));
+    strncat(attrs, "\"", buff_size - strlen(attrs));
+    strncat(attrs, e.attributes(i).key().c_str(), buff_size - strlen(attrs));
+    strncat(attrs, "\": ", buff_size - strlen(attrs));
+    strncat(attrs, "\"", buff_size - strlen(attrs));
+    strncat(attrs, e.attributes(i).value().c_str(), buff_size - strlen(attrs));
+    strncat(attrs, "\"", buff_size - strlen(attrs));
   }
 
-  std::ostringstream json;
-  json << "{ ";
-
-  json << "\"host\": " << "\"" << e.host() << "\", ";
-  json << "\"service\": " << "\"" << e.service() << "\", ";
-  json << "\"description\": " << "\"" << e.description() << "\", ";
-  json << "\"state\": " << "\"" << e.state() << "\", ";
-  json << "\"metric\": " << metric_to_string(e) << " , ";
-  json << "\"ttl\": " << e.ttl() << " , ";
-  json << "\"tags\": " << tags.str();
-
-  if (e.attributes_size() > 0) {
-    json << ", " << attrs.str();
+ double metric;
+ if (e.has_metric_f()) {
+    metric = (double)e.metric_f();
+  } else if (e.has_metric_d()) {
+    metric =  e.metric_d();
+  } else if (e.has_metric_sint64()) {
+    metric = (double) e.metric_sint64();
+  } else {
+    metric = 0;
   }
 
-  json << " }";
+  char json_buffer[json_buff_size];
+  size_t r = snprintf(json_buffer, json_buff_size, json_base,
+                e.host().c_str(), e.service().c_str(), e.description().c_str(),
+                e.state().c_str(), metric, tags, attrs);
 
-  return json.str();
+  if (r >= json_buff_size) {
+    VLOG(1) << "json string is too big";
+    return "";
+  } else {
+    return json_buffer;
+  }
 }
-
 
 void set_event_value(
     Event& e,

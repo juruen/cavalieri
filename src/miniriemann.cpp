@@ -11,8 +11,10 @@
 #include "pubsub.h"
 #include "driver.h"
 #include "pagerduty.h"
-#include "websocket.h"
 #include "wsutil.h"
+#include "incomingevents.h"
+#include "riemann_tcp_pool.h"
+#include "websocket_pool.h"
 
 
 int main(int argc, char **argv)
@@ -93,8 +95,7 @@ int main(int argc, char **argv)
                CHILD(prn())))));
 
   /* Everything goes to the index. Check for expired events every 3 seconds */
-  class index index(pubsub, [&](const Event& e){ all_streams.push_event (e);  }, 3);
-
+  class index index{pubsub, [&](const Event& e){ all_streams.push_event (e);  }, 10};
   all_streams.add_stream(
 
       /* Set default tt to 9 sec */
@@ -115,23 +116,20 @@ int main(int argc, char **argv)
                         {pd_resolve("foobar124")})}));
   */
 
-
   ev::default_loop  loop;
 
+  incoming_events income_events(all_streams);
+  riemann_tcp_pool riemann_tcp_pool{5, income_events};
   tcp_server tcp_rieman_server(
       5555,
-      [&](int sfd) {
-        return std::make_shared<riemann_tcp_connection>(sfd, all_streams);
-      }
+      [&] (int sfd) {riemann_tcp_pool.add_client(sfd);}
   );
 
+  websocket_pool websocket_pool(1, pubsub);
   tcp_server websocket(
       5556,
-      [&](int sfd) {
-        return std::make_shared<ws_connection>(sfd, new ws_util(), pubsub);
-      }
+      [&] (int sfd) {websocket_pool.add_client(sfd);}
   );
-
 
   loop.run(0);
 
