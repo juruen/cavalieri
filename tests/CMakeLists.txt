@@ -37,6 +37,7 @@ GTEST_ADD_TESTS(
     test_plan
     NONE
     ${CMAKE_SOURCE_DIR}/tests/basic_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/decode_thread_pool_test_case.hpp
   )
 
 TARGET_LINK_LIBRARIES(

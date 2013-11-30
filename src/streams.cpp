@@ -112,23 +112,23 @@ stream_t where(const predicate_t& predicate, const children_t& children,
 
 
 stream_t rate(const int interval, const children_t& children) {
-  double rate = 0;
+  std::shared_ptr<double> rate(std::make_shared<double>(0));
   std::shared_ptr<callback_timer> timer(std::make_shared<callback_timer>(
       interval,
      [=]() mutable
       {
         VLOG(3) << "rate-timer()";
         Event e;
-        e.set_metric_f(rate / interval);
+        e.set_metric_f(*rate / interval);
         e.set_time(time(0));
-        rate = 0;
+        *rate = 0;
         VLOG(3) << "rate-timer() value: " << e.metric_f();
         call_rescue(e, children);
       }));
 
   return [=](e_t e) mutable {
     VLOG(3) << "rate() rate += e.metric";
-    rate += metric_to_double(e);
+    (*rate) += metric_to_double(e);
     (void)(timer);
   };
 }
@@ -213,7 +213,7 @@ void streams::process_message(const Msg& message) {
   }
 }
 
-inline void streams::push_event(const Event& e) {
+void streams::push_event(const Event& e) {
   for (auto& s: streams_) {
     s(e);
   }

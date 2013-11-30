@@ -11,11 +11,11 @@
 class ws_connection : public tcp_connection {
   public:
     class ws_util* ws_util;
-    pub_sub& pubsub;
+    allevents_f_t all_events_;
     uint32_t state;
     ev::io io;
 
-    ws_connection(int socket_fd, class ws_util* ws_util, pub_sub& pubsub);
+    ws_connection(int socket_fd, class ws_util* ws_util, allevents_f_t all_events);
     virtual ~ws_connection();
     void callback(int revents);
     void read_cb();

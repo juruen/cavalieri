@@ -43,11 +43,11 @@ static std::function<bool(const Event&)> filter_query(const std::string uri) {
 ws_connection::ws_connection(
   int socket_fd,
   class ws_util* ws_util,
-  pub_sub& pubsub
+  allevents_f_t all_events
 ) :
   tcp_connection(socket_fd),
   ws_util(ws_util),
-  pubsub(pubsub),
+  all_events_(all_events),
   state(READ_HTTP_HEADER)
 {
 }
@@ -57,14 +57,18 @@ void ws_connection::write_cb() {
 
   if (!(state & (WRITE_HTTP_HEADER | WRITE_FRAME))) {
       io.set(ev::READ);
+
+      VLOG(3) << "write_cb() 1";
       return;
   }
 
   if (!write()) {
+    VLOG(3) << "write_cb() 2";
     return;
   }
 
   if (bytes_to_write > 0) {
+    VLOG(3) << "write_cb() 3";
     return;
   }
 
@@ -72,22 +76,16 @@ void ws_connection::write_cb() {
 
   if (state & WRITE_HTTP_HEADER) {
     VLOG(3) << "header response sent. subscribing client.";
-    auto query_f = filter_query(ws_util->header_vals.uri);
-    pubsub.subscribe(
-        "index",
-        [=](const evs_list_t& evs)
-        {
-          VLOG(3) << "Subscribe notification";
-          for (auto &e: evs) {
-            if (query_f(e)) {
-              this->send_frame(event_to_json(e));
-            }
-          }
-        },
-        reinterpret_cast<uintptr_t>(this)
-        );
+    auto query_fn = filter_query(ws_util->header_vals.uri);
+    for (auto & event : all_events_()) {
+      if (query_fn(event)) {
+        send_frame(event_to_json(event));
+      }
+    }
+    state = WRITE_FRAME | READ_FRAME_HEADER;
+  } else {
+    state = READ_FRAME_HEADER;
   }
-  state = READ_FRAME_HEADER;
   bytes_written = 0;
 }
 
@@ -290,7 +288,6 @@ void ws_connection::callback(int revents) {
 ws_connection::~ws_connection() {
   io.stop();
   close(sfd);
-  pubsub.unsubscribe("index", reinterpret_cast<uintptr_t>(this));
   if (ws_util) {
     delete ws_util;
   }

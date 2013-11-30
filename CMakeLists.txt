@@ -25,10 +25,16 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/pythoninterpreter.cpp
     ${CMAKE_SOURCE_DIR}/src/pagerduty.cpp
     ${CMAKE_SOURCE_DIR}/src/wsutil.cpp
+    ${CMAKE_SOURCE_DIR}/src/incomingevents.cpp
+    ${CMAKE_SOURCE_DIR}/src/thread_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/tcp_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
   )
 
 SET(MINIRIEMANN_HDRS
     ${CMAKE_SOURCE_DIR}/src/
+    /usr/include/i386-linux-gnu/c++/4.7
   )
 
 SET(MINIRIEMANN_PROTOFILES
@@ -76,6 +82,7 @@ IF(PROTOBUF_FOUND)
       crypto
       curl
       pthread
+      tbb
     )
 
   ENABLE_TESTING()
