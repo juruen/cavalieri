@@ -1,0 +1,11 @@
+Code Coverage
+-------------
+
+Dependences: lcov
+
+With a Debug build type (cmake -DCMAKE_BUILD_TYPE=Debug ..) call:
+
+  make test_plan_coverage
+
+This command will create a "coverage" directory with an HTML output (index.html)
+with coverage information, open your favorite browser and enjoy it.
