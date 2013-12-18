@@ -75,6 +75,11 @@ IF(PROTOBUF_FOUND)
       ssl
       crypto
       curl
+      pthread
     )
+
+  ENABLE_TESTING()
+
+  ADD_SUBDIRECTORY(tests)
 
 ENDIF(PROTOBUF_FOUND)
