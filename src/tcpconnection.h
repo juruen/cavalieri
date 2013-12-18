@@ -3,6 +3,8 @@
 
 #include <ev++.h>
 
+const uint32_t buffer_size = 1024 * 64;
+
 class tcp_connection {
   public:
     int sfd;
@@ -11,7 +13,6 @@ class tcp_connection {
     size_t bytes_read;
     size_t bytes_written;
     bool close_connection;
-    static const uint32_t buffer_size = 1024 * 64;
     char r_buffer[buffer_size];
     char w_buffer[buffer_size];
     ev::io io;

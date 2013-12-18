@@ -2,7 +2,9 @@
 #define STREAMS_H
 
 #include <list>
+#include <vector>
 #include <functional>
+#include <memory>
 #include <proto.pb.h>
 #include <index.h>
 
@@ -55,13 +57,15 @@ bool tagged_all_(e_t e, const tags_t& tags);
 
 
 class streams {
-private:
-  std::list<stream_t> streams_;
-
 public:
   void add_stream(stream_t stream);
   void process_message(const Msg& message);
   void push_event(const Event& e);
-};
+
+private:
+  std::list<stream_t> streams_;
+}
+
+;
 
 #endif
