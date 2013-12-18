@@ -12,7 +12,7 @@ class callback_timer {
     ev::timer tio_;
     std::function<void()> f_;
   public:
-    callback_timer(const int interval, const std::function<void()> f);
+    callback_timer(const double interval, const std::function<void()> f);
     ~callback_timer();
     void callback();
 };

@@ -3,6 +3,8 @@ FIND_PACKAGE(Threads REQUIRED)
 
 SET(CMAKE_CXX_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
 SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+# Code coverage options
+#ADD_DEFINITIONS( -fprofile-arcs -ftest-coverage -g -O0)
 
 SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/util.cpp
@@ -35,12 +37,13 @@ ADD_EXECUTABLE(
 
 GTEST_ADD_TESTS(
     test_plan
-    NONE
     ${CMAKE_SOURCE_DIR}/tests/basic_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/decode_thread_pool_test_case.hpp
   )
 
 TARGET_LINK_LIBRARIES(
     test_plan
+    gcov
     ${GTEST_BOTH_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${PROTOBUF_LIBRARY}

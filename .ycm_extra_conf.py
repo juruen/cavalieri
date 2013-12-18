@@ -76,6 +76,8 @@ flags = [
 '-I',
 '/usr/include/python2.7',
 '-I',
+'/usr/include/gtest',
+'-I',
 '.',
 '-I',
 './ClangCompleter',
