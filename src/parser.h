@@ -81,12 +81,13 @@ namespace queryparser {
     int integerVal;
     double doubleVal;
     std::string*		stringVal;
+    std::string*		unquotedstringVal;
     class QueryNode*	querynode;
 
 
 
 /* Line 35 of lalr1.cc  */
-#line 90 "parser.h"
+#line 91 "parser.h"
     };
 #else
     typedef YYSTYPE semantic_type;
@@ -103,11 +104,12 @@ namespace queryparser {
      INTEGER = 259,
      DOUBLE = 260,
      STRING = 261,
-     TRUE = 262,
-     TAGGED = 263,
-     NOT = 264,
-     AND = 265,
-     OR = 266
+     UNQUOTEDSTRING = 262,
+     TRUE = 263,
+     TAGGED = 264,
+     NOT = 265,
+     AND = 266,
+     OR = 267
    };
 
     };
@@ -287,7 +289,7 @@ namespace queryparser {
 } // queryparser
 
 /* Line 35 of lalr1.cc  */
-#line 291 "parser.h"
+#line 293 "parser.h"
 
 
 

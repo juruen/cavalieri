@@ -136,4 +136,62 @@ TEST(query_grammar_tagged_test_case, test)
   ASSERT_FALSE(eval_fn(e));
 }
 
+TEST(query_grammar_fields_test_case, test)
+{
+  QueryContext query_ctx;
+  queryparser::Driver driver(query_ctx);
+
+  std::string query = "(service = \"foo\")";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  auto eval_fn = query_ctx.expression->evaluate();
+
+  Event e;
+  // Check empty tags do not match anything
+  ASSERT_FALSE(eval_fn(e));
+
+  // Check foo matches
+  e.set_service("foo");
+  ASSERT_TRUE(eval_fn(e));
+
+  query = "(host = \"foo\")";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  // Check empty tags do not match anything
+  ASSERT_FALSE(eval_fn(e));
+
+  // Check foo matches
+  e.clear_service();
+  e.set_host("foo");
+  ASSERT_TRUE(eval_fn(e));
+
+  query = "(state = \"foo\")";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  // Check empty tags do not match anything
+  ASSERT_FALSE(eval_fn(e));
+
+  // Check foo matches
+  e.clear_host();
+  e.set_state("foo");
+  ASSERT_TRUE(eval_fn(e));
+
+  query = "(description = \"foo\")";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  // Check empty tags do not match anything
+  ASSERT_FALSE(eval_fn(e));
+
+  // Check foo matches
+  e.clear_state();
+  e.set_description("foo");
+  ASSERT_TRUE(eval_fn(e));
+}
+
 #endif

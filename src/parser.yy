@@ -47,14 +47,16 @@
     int integerVal;
     double doubleVal;
     std::string*		stringVal;
+    std::string*		unquotedstringVal;
     class QueryNode*	querynode;
 }
 
 %token			END	     0	"end of file"
 %token			EOL		"end of line"
-%token <integerVal> 	INTEGER		"integer"
+%token <integerVal> INTEGER		"integer"
 %token <doubleVal> 	DOUBLE		"double"
 %token <stringVal> 	STRING		"string"
+%token <unquotedstringVal> 	UNQUOTEDSTRING		"unquotedstring"
 
 %token TRUE
 %token TAGGED
@@ -82,6 +84,10 @@ all : '(' TRUE ')'
 action : TAGGED '=' STRING
           {
             $$ = new QueryTagged($3);
+          }
+        | UNQUOTEDSTRING '=' STRING
+          {
+            $$ = new QueryField($1, $3);
           }
 
 expr: '(' expr ')'
