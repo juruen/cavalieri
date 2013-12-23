@@ -75,9 +75,14 @@ TEST(query_grammar_tagged_test_case, test)
   query = "((tagged = \"foo\" or tagged = \"bar\") and (tagged = \"baz\"))";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
+  eval_fn = query_ctx.expression->evaluate();
+
   // Check that missing baz doesn't match
-  ASSERT_TRUE(eval_fn(e));
-  
+  e.clear_tags();
+  *(e.add_tags()) = "foo";
+  *(e.add_tags()) = "bar";
+  ASSERT_FALSE(eval_fn(e));
+
   // Check that only foo and baz match
   e.clear_tags();
   *(e.add_tags()) = "foo";
@@ -96,6 +101,39 @@ TEST(query_grammar_tagged_test_case, test)
   *(e.add_tags()) = "bar";
   *(e.add_tags()) = "baz";
   ASSERT_TRUE(eval_fn(e));
+
+  query = "(not tagged = \"foo\")";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  // Check that missing foo matches
+  e.clear_tags();
+  *(e.add_tags()) = "bar";
+  ASSERT_TRUE(eval_fn(e));
+
+  // Check that foo doesn't match
+  e.clear_tags();
+  *(e.add_tags()) = "foo";
+  ASSERT_FALSE(eval_fn(e));
+
+  query = "((tagged = \"foo\" or tagged = \"bar\") and not (tagged = \"baz\"))";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  // Check that missing baz matches
+  e.clear_tags();
+  *(e.add_tags()) = "foo";
+  *(e.add_tags()) = "bar";
+  ASSERT_TRUE(eval_fn(e));
+
+  // Check thatbaz doesn't match
+  e.clear_tags();
+  *(e.add_tags()) = "foo";
+  *(e.add_tags()) = "bar";
+  *(e.add_tags()) = "baz";
+  ASSERT_FALSE(eval_fn(e));
 }
 
 #endif

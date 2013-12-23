@@ -8,6 +8,22 @@ inline std::string QueryNode::indent(unsigned int d) {
 
 QueryNode::~QueryNode() {};
 
+QueryTrue::QueryTrue() : QueryNode()
+{
+}
+
+void QueryTrue::print(std::ostream &os, unsigned int depth) const {
+  os << indent(depth) << "true" << std::endl;
+}
+
+query_f_t QueryTrue::evaluate() const {
+  return [=](const Event& e) {
+    UNUSED_VAR(e);
+    VLOG(3) << "QueryTrue()::evaluate()";
+    return true;
+  };
+}
+
 QueryTagged::QueryTagged(std::string* string) : QueryNode(), string(string)
 {
 }
@@ -67,6 +83,26 @@ query_f_t QueryOr::evaluate() const {
     return (left_f(e) || right_f(e));
   };
 }
+
+QueryNot::QueryNot(QueryNode* right) :
+  QueryNode(),
+  right(right)
+{
+}
+
+void QueryNot::print(std::ostream &os, unsigned int depth) const {
+  os << indent(depth) << " not" << std::endl;
+  right->print(os, depth + 1);
+}
+
+query_f_t QueryNot::evaluate() const {
+  query_f_t right_f = right->evaluate();
+  return [=](const Event& e) {
+    VLOG(3) << "QueryNot()::evaluate()";
+    return (!right_f(e));
+  };
+}
+
 
 QueryContext::QueryContext() : expression(0) {};
 

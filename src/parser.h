@@ -103,9 +103,11 @@ namespace queryparser {
      INTEGER = 259,
      DOUBLE = 260,
      STRING = 261,
-     TAGGED = 262,
-     AND = 263,
-     OR = 264
+     TRUE = 262,
+     TAGGED = 263,
+     NOT = 264,
+     AND = 265,
+     OR = 266
    };
 
     };
@@ -210,7 +212,7 @@ namespace queryparser {
     static const unsigned char yytable_[];
     static const signed char yytable_ninf_;
 
-    static const unsigned char yycheck_[];
+    static const signed char yycheck_[];
 
     /// For a state, its accessing symbol.
     static const unsigned char yystos_[];
@@ -285,7 +287,7 @@ namespace queryparser {
 } // queryparser
 
 /* Line 35 of lalr1.cc  */
-#line 289 "parser.h"
+#line 291 "parser.h"
 
 
 
