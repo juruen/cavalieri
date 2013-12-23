@@ -36,6 +36,17 @@ public:
   virtual query_f_t evaluate() const;
 };
 
+class QueryField : public QueryNode
+{
+  std::string* field;
+  std::string* value;
+
+public:
+  QueryField(std::string* field, std::string* value);
+  virtual void print(std::ostream &os, unsigned int depth=0) const;
+  virtual query_f_t evaluate() const;
+};
+
 class QueryAnd : public QueryNode
 {
   QueryNode* left;

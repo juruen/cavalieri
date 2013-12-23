@@ -56,7 +56,7 @@
 /* User implementation prologue.  */
 
 /* Line 299 of lalr1.cc  */
-#line 65 "parser.yy"
+#line 67 "parser.yy"
 
 
 #include "driver.h"
@@ -467,7 +467,7 @@ namespace queryparser {
 	  case 2:
 
 /* Line 690 of lalr1.cc  */
-#line 78 "parser.yy"
+#line 80 "parser.yy"
     {
         (yyval.querynode) = new QueryTrue();
       }
@@ -476,7 +476,7 @@ namespace queryparser {
   case 3:
 
 /* Line 690 of lalr1.cc  */
-#line 83 "parser.yy"
+#line 85 "parser.yy"
     {
             (yyval.querynode) = new QueryTagged((yysemantic_stack_[(3) - (3)].stringVal));
           }
@@ -485,61 +485,70 @@ namespace queryparser {
   case 4:
 
 /* Line 690 of lalr1.cc  */
-#line 88 "parser.yy"
+#line 89 "parser.yy"
     {
-          (yyval.querynode) = (yysemantic_stack_[(3) - (2)].querynode);
-        }
+            (yyval.querynode) = new QueryField((yysemantic_stack_[(3) - (1)].unquotedstringVal), (yysemantic_stack_[(3) - (3)].stringVal));
+          }
     break;
 
   case 5:
 
 /* Line 690 of lalr1.cc  */
-#line 92 "parser.yy"
+#line 94 "parser.yy"
     {
-          (yyval.querynode) = new QueryAnd((yysemantic_stack_[(3) - (1)].querynode), (yysemantic_stack_[(3) - (3)].querynode));
+          (yyval.querynode) = (yysemantic_stack_[(3) - (2)].querynode);
         }
     break;
 
   case 6:
 
 /* Line 690 of lalr1.cc  */
-#line 96 "parser.yy"
+#line 98 "parser.yy"
     {
-          (yyval.querynode) = new QueryOr((yysemantic_stack_[(3) - (1)].querynode), (yysemantic_stack_[(3) - (3)].querynode));
+          (yyval.querynode) = new QueryAnd((yysemantic_stack_[(3) - (1)].querynode), (yysemantic_stack_[(3) - (3)].querynode));
         }
     break;
 
   case 7:
 
 /* Line 690 of lalr1.cc  */
-#line 100 "parser.yy"
+#line 102 "parser.yy"
     {
-          (yyval.querynode) = new QueryNot((yysemantic_stack_[(2) - (2)].querynode));
+          (yyval.querynode) = new QueryOr((yysemantic_stack_[(3) - (1)].querynode), (yysemantic_stack_[(3) - (3)].querynode));
         }
     break;
 
   case 8:
 
 /* Line 690 of lalr1.cc  */
-#line 104 "parser.yy"
+#line 106 "parser.yy"
     {
-          (yyval.querynode) = (yysemantic_stack_[(1) - (1)].querynode);
+          (yyval.querynode) = new QueryNot((yysemantic_stack_[(2) - (2)].querynode));
         }
     break;
 
   case 9:
 
 /* Line 690 of lalr1.cc  */
-#line 109 "parser.yy"
+#line 110 "parser.yy"
     {
-            driver.query.expression = (yysemantic_stack_[(1) - (1)].querynode);
-          }
+          (yyval.querynode) = (yysemantic_stack_[(1) - (1)].querynode);
+        }
     break;
 
   case 10:
 
 /* Line 690 of lalr1.cc  */
-#line 113 "parser.yy"
+#line 115 "parser.yy"
+    {
+            driver.query.expression = (yysemantic_stack_[(1) - (1)].querynode);
+          }
+    break;
+
+  case 11:
+
+/* Line 690 of lalr1.cc  */
+#line 119 "parser.yy"
     {
             driver.query.expression = (yysemantic_stack_[(1) - (1)].querynode);
           }
@@ -548,7 +557,7 @@ namespace queryparser {
 
 
 /* Line 690 of lalr1.cc  */
-#line 552 "parser.cpp"
+#line 561 "parser.cpp"
 	default:
           break;
       }
@@ -822,13 +831,13 @@ namespace queryparser {
 
   /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
      STATE-NUM.  */
-  const signed char Parser::yypact_ninf_ = -14;
+  const signed char Parser::yypact_ninf_ = -11;
   const signed char
   Parser::yypact_[] =
   {
-        -2,   -13,     3,    -4,   -14,   -14,    10,     9,    12,     3,
-     -14,    11,     6,     3,     3,   -14,   -14,   -14,   -14,   -14,
-     -14
+         4,    -7,    -6,    11,    -3,   -11,   -11,   -10,    12,    13,
+      16,    11,   -11,     9,    14,    11,    11,   -11,   -11,   -11,
+     -11,   -11,   -11,   -11
   };
 
   /* YYDEFACT[S] -- default reduction number in state S.  Performed when
@@ -837,23 +846,23 @@ namespace queryparser {
   const unsigned char
   Parser::yydefact_[] =
   {
-         0,     0,     0,     0,     9,     8,    10,     0,     0,     0,
-       7,     0,     0,     0,     0,     1,     3,     2,     4,     5,
-       6
+         0,     0,     0,     0,     0,    10,     9,    11,     0,     0,
+       0,     0,     8,     0,     0,     0,     0,     1,     4,     3,
+       2,     5,     6,     7
   };
 
   /* YYPGOTO[NTERM-NUM].  */
   const signed char
   Parser::yypgoto_[] =
   {
-       -14,   -14,   -14,     0,   -14
+       -11,   -11,   -11,     0,   -11
   };
 
   /* YYDEFGOTO[NTERM-NUM].  */
   const signed char
   Parser::yydefgoto_[] =
   {
-        -1,     4,     5,    12,     7
+        -1,     5,     6,    14,     8
   };
 
   /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -863,18 +872,18 @@ namespace queryparser {
   const unsigned char
   Parser::yytable_[] =
   {
-         6,     8,    10,    11,     1,     2,     1,     2,     9,    15,
-       3,     1,     2,    19,    20,     9,    13,    14,    16,    18,
-      13,    14,     0,     0,    17
+         7,    15,    16,    12,     1,    13,     2,     3,     9,    10,
+      11,     1,    17,     2,     3,    22,    23,     4,     1,    18,
+       2,     3,    19,    20,    11,    15,    16,     0,    21
   };
 
   /* YYCHECK.  */
   const signed char
   Parser::yycheck_[] =
   {
-         0,    14,     2,     7,     8,     9,     8,     9,    12,     0,
-      12,     8,     9,    13,    14,    12,    10,    11,     6,    13,
-      10,    11,    -1,    -1,    13
+         0,    11,    12,     3,     7,     8,     9,    10,    15,    15,
+      13,     7,     0,     9,    10,    15,    16,    13,     7,     6,
+       9,    10,     6,    14,    13,    11,    12,    -1,    14
   };
 
   /* STOS_[STATE-NUM] -- The (internal number of the) accessing
@@ -882,9 +891,9 @@ namespace queryparser {
   const unsigned char
   Parser::yystos_[] =
   {
-         0,     8,     9,    12,    16,    17,    18,    19,    14,    12,
-      18,     7,    18,    10,    11,     0,     6,    13,    13,    18,
-      18
+         0,     7,     9,    10,    13,    17,    18,    19,    20,    15,
+      15,    13,    19,     8,    19,    11,    12,     0,     6,     6,
+      14,    14,    19,    19
   };
 
 #if YYDEBUG
@@ -894,7 +903,7 @@ namespace queryparser {
   Parser::yytoken_number_[] =
   {
          0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     265,   266,    40,    41,    61
+     265,   266,   267,    40,    41,    61
   };
 #endif
 
@@ -902,16 +911,16 @@ namespace queryparser {
   const unsigned char
   Parser::yyr1_[] =
   {
-         0,    15,    16,    17,    18,    18,    18,    18,    18,    19,
-      19
+         0,    16,    17,    18,    18,    19,    19,    19,    19,    19,
+      20,    20
   };
 
   /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
   const unsigned char
   Parser::yyr2_[] =
   {
-         0,     2,     3,     3,     3,     3,     3,     2,     1,     1,
-       1
+         0,     2,     3,     3,     3,     3,     3,     3,     2,     1,
+       1,     1
   };
 
 #if YYDEBUG || YYERROR_VERBOSE || YYTOKEN_TABLE
@@ -921,9 +930,9 @@ namespace queryparser {
   const Parser::yytname_[] =
   {
     "\"end of file\"", "error", "$undefined", "\"end of line\"",
-  "\"integer\"", "\"double\"", "\"string\"", "TRUE", "TAGGED", "NOT",
-  "AND", "OR", "'('", "')'", "'='", "$accept", "all", "action", "expr",
-  "start", 0
+  "\"integer\"", "\"double\"", "\"string\"", "\"unquotedstring\"", "TRUE",
+  "TAGGED", "NOT", "AND", "OR", "'('", "')'", "'='", "$accept", "all",
+  "action", "expr", "start", 0
   };
 #endif
 
@@ -932,10 +941,10 @@ namespace queryparser {
   const Parser::rhs_number_type
   Parser::yyrhs_[] =
   {
-        19,     0,    -1,    12,     7,    13,    -1,     8,    14,     6,
-      -1,    12,    18,    13,    -1,    18,    10,    18,    -1,    18,
-      11,    18,    -1,     9,    18,    -1,    17,    -1,    16,    -1,
-      18,    -1
+        20,     0,    -1,    13,     8,    14,    -1,     9,    15,     6,
+      -1,     7,    15,     6,    -1,    13,    19,    14,    -1,    19,
+      11,    19,    -1,    19,    12,    19,    -1,    10,    19,    -1,
+      18,    -1,    17,    -1,    19,    -1
   };
 
   /* YYPRHS[YYN] -- Index of the first RHS symbol of rule number YYN in
@@ -943,16 +952,16 @@ namespace queryparser {
   const unsigned char
   Parser::yyprhs_[] =
   {
-         0,     0,     3,     7,    11,    15,    19,    23,    26,    28,
-      30
+         0,     0,     3,     7,    11,    15,    19,    23,    27,    30,
+      32,    34
   };
 
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
   const unsigned char
   Parser::yyrline_[] =
   {
-         0,    77,    77,    82,    87,    91,    95,    99,   103,   108,
-     112
+         0,    79,    79,    84,    88,    93,    97,   101,   105,   109,
+     114,   118
   };
 
   // Print the state stack on the debug stream.
@@ -996,9 +1005,9 @@ namespace queryparser {
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      12,    13,     2,     2,     2,     2,     2,     2,     2,     2,
+      13,    14,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,    14,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,    15,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -1018,7 +1027,7 @@ namespace queryparser {
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    10,    11
+       5,     6,     7,     8,     9,    10,    11,    12
     };
     if ((unsigned int) t <= yyuser_token_number_max_)
       return translate_table[t];
@@ -1027,26 +1036,26 @@ namespace queryparser {
   }
 
   const int Parser::yyeof_ = 0;
-  const int Parser::yylast_ = 24;
+  const int Parser::yylast_ = 28;
   const int Parser::yynnts_ = 5;
   const int Parser::yyempty_ = -2;
-  const int Parser::yyfinal_ = 15;
+  const int Parser::yyfinal_ = 17;
   const int Parser::yyterror_ = 1;
   const int Parser::yyerrcode_ = 256;
-  const int Parser::yyntokens_ = 15;
+  const int Parser::yyntokens_ = 16;
 
-  const unsigned int Parser::yyuser_token_number_max_ = 266;
+  const unsigned int Parser::yyuser_token_number_max_ = 267;
   const Parser::token_number_type Parser::yyundef_token_ = 2;
 
 
 } // queryparser
 
 /* Line 1136 of lalr1.cc  */
-#line 1046 "parser.cpp"
+#line 1055 "parser.cpp"
 
 
 /* Line 1138 of lalr1.cc  */
-#line 117 "parser.yy"
+#line 123 "parser.yy"
 
 
 void queryparser::Parser::error(const Parser::location_type& l,

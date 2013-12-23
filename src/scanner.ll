@@ -88,6 +88,12 @@ true {
     return token::STRING;
 }
 
+[a-zA-Z0-9]+ {
+    yylval->unquotedstringVal = new std::string(yytext, yyleng);
+    return token::UNQUOTEDSTRING;
+}
+
+
  /* gobble up white-spaces */
 [ \t\r]+ {
     yylloc->step();

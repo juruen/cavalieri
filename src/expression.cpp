@@ -40,6 +40,59 @@ query_f_t QueryTagged::evaluate() const {
   };
 }
 
+QueryField::QueryField(std::string* field, std::string* value)
+:
+  QueryNode(),
+  field(field),
+  value(value)
+{
+}
+
+void QueryField::print(std::ostream &os, unsigned int depth) const {
+  os << indent(depth) << *field << " = "  << *value << std::endl;
+}
+
+query_f_t QueryField::evaluate() const {
+  std::string val(*value);
+
+  std::string strip_val;
+  if (val.size() > 3) {
+    strip_val = val.substr(1, val.size() - 2);
+  }
+
+  if (*field == "host") {
+    return [=](const Event& e) { return (e.host() == strip_val); };
+  } else if (*field == "service") {
+    return [=](const Event& e) { return (e.service() == strip_val); };
+  } else if (*field == "state") {
+    return [=](const Event& e) { return (e.state() == strip_val); };
+  } else if (*field == "description") {
+    return [=](const Event& e) { return (e.description() == strip_val); };
+  } else if (*field == "time") {
+    auto ival = std::stoi(val);
+    return [=](const Event& e) { return (e.time() == ival); };
+  } else if (*field == "ttl") {
+    auto ival = std::stoi(val);
+    return [=](const Event& e) { return (e.ttl() == ival); };
+  } else if (*field == "metric") {
+    auto dval = std::stod(val);
+    return [=](const Event& e) { return (metric_to_double(e) == dval); };
+  } else {
+    std::string key(*field);
+    return [=](const Event& e)
+      {
+        for (int i = 0; i < e.attributes_size(); i++) {
+          if (e.attributes(i).has_key() &&
+              e.attributes(i).key() == key)
+          {
+            return (e.attributes(i).value() == strip_val);
+          }
+        }
+        return false;
+      };
+  }
+}
+
 QueryAnd::QueryAnd(QueryNode* left, QueryNode* right) :
   QueryNode(),
   left(left),
