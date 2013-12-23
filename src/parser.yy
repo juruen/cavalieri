@@ -56,10 +56,11 @@
 %token <doubleVal> 	DOUBLE		"double"
 %token <stringVal> 	STRING		"string"
 
+%token TRUE
 %token TAGGED
-%left OR AND
+%left OR AND NOT
 
-%type <querynode> action expr
+%type <querynode> all action expr
 
 %{
 
@@ -72,6 +73,11 @@
 %}
 
 %% /*** Grammar Rules ***/
+
+all : '(' TRUE ')'
+      {
+        $$ = new QueryTrue();
+      }
 
 action : TAGGED '=' STRING
           {
@@ -90,12 +96,20 @@ expr: '(' expr ')'
         {
           $$ = new QueryOr($1, $3);
         }
+      | NOT expr
+        {
+          $$ = new QueryNot($2);
+        }
       | action
         {
           $$ = $1;
         }
 
-start : expr
+start :   all
+          {
+            driver.query.expression = $1;
+          }
+        | expr
           {
             driver.query.expression = $1;
           }

@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 
 #include "basic_test_case.hpp"
+#include "query_grammar_test_case.hpp"
 
 int main(int argc, char **argv)
 {

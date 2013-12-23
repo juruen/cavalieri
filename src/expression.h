@@ -17,6 +17,15 @@ public:
   virtual ~QueryNode();
 };
 
+class QueryTrue : public QueryNode
+{
+public:
+  QueryTrue();
+  virtual void print(std::ostream &os, unsigned int depth=0) const;
+  virtual query_f_t evaluate() const;
+};
+
+
 class QueryTagged : public QueryNode
 {
   std::string* string;
@@ -48,6 +57,17 @@ public:
   virtual void print(std::ostream &os, unsigned int depth=0) const;
   virtual query_f_t evaluate() const;
 };
+
+class QueryNot : public QueryNode
+{
+  QueryNode* right;
+
+public:
+  QueryNot(QueryNode* right);
+  virtual void print(std::ostream &os, unsigned int depth=0) const;
+  virtual query_f_t evaluate() const;
+};
+
 
 class QueryContext
 {

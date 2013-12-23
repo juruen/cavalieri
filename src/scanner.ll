@@ -61,8 +61,16 @@ or {
   return token::OR;
 }
 
+not {
+  return token::NOT;
+}
+
 tagged {
   return token::TAGGED;
+}
+
+true {
+  return token::TRUE;
 }
 
 [0-9]+ {

@@ -8,6 +8,10 @@ SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
 
 SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/driver.cpp
+    ${CMAKE_SOURCE_DIR}/src/scanner.cpp
+    ${CMAKE_SOURCE_DIR}/src/parser.cpp
+    ${CMAKE_SOURCE_DIR}/src/expression.cpp
   )
 
 SET(MINIRIEMANN_PROTOFILES
@@ -38,7 +42,7 @@ ADD_EXECUTABLE(
 GTEST_ADD_TESTS(
     test_plan
     ${CMAKE_SOURCE_DIR}/tests/basic_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/decode_thread_pool_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/query_grammar_test_case.hpp
   )
 
 TARGET_LINK_LIBRARIES(
