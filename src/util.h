@@ -27,6 +27,9 @@ std::string event_to_json(const Event &e);
 
 bool tag_exists(const Event& e, const std::string& tag);
 
+bool attribute_exists(const Event& e, const std::string& attribute);
+std::string attribute_value(const Event& e, const std::string& attribute);
+
 void set_event_value(
     Event& e,
     const std::string& key,

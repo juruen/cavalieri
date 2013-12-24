@@ -147,10 +147,8 @@ TEST(query_grammar_fields_test_case, test)
   auto eval_fn = query_ctx.expression->evaluate();
 
   Event e;
-  // Check empty tags do not match anything
   ASSERT_FALSE(eval_fn(e));
 
-  // Check foo matches
   e.set_service("foo");
   ASSERT_TRUE(eval_fn(e));
 
@@ -159,10 +157,8 @@ TEST(query_grammar_fields_test_case, test)
 
   eval_fn = query_ctx.expression->evaluate();
 
-  // Check empty tags do not match anything
   ASSERT_FALSE(eval_fn(e));
 
-  // Check foo matches
   e.clear_service();
   e.set_host("foo");
   ASSERT_TRUE(eval_fn(e));
@@ -172,10 +168,8 @@ TEST(query_grammar_fields_test_case, test)
 
   eval_fn = query_ctx.expression->evaluate();
 
-  // Check empty tags do not match anything
   ASSERT_FALSE(eval_fn(e));
 
-  // Check foo matches
   e.clear_host();
   e.set_state("foo");
   ASSERT_TRUE(eval_fn(e));
@@ -185,12 +179,71 @@ TEST(query_grammar_fields_test_case, test)
 
   eval_fn = query_ctx.expression->evaluate();
 
-  // Check empty tags do not match anything
   ASSERT_FALSE(eval_fn(e));
 
-  // Check foo matches
   e.clear_state();
   e.set_description("foo");
+  ASSERT_TRUE(eval_fn(e));
+
+  query = "(time = 7)";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  ASSERT_FALSE(eval_fn(e));
+
+  e.clear_description();
+  e.set_time(7);
+  ASSERT_TRUE(eval_fn(e));
+
+  query = "(ttl = 7)";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  ASSERT_FALSE(eval_fn(e));
+
+  e.clear_time();
+  e.set_ttl(7);
+  ASSERT_TRUE(eval_fn(e));
+
+  query = "(metric = 7.1)";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  ASSERT_FALSE(eval_fn(e));
+
+  e.clear_ttl();
+  e.set_metric_d(7.1);
+  ASSERT_TRUE(eval_fn(e));
+
+  query = "(foo = \"bar\")";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  ASSERT_FALSE(eval_fn(e));
+
+  e.clear_metric_d();
+  auto att = e.add_attributes();
+  att->set_key("foo");
+  att->set_value("bar");
+  ASSERT_TRUE(eval_fn(e));
+
+  std::cout << "aura co" << std::endl;
+  query = "(foo = 7.1)";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+
+  ASSERT_FALSE(eval_fn(e));
+
+  e.clear_attributes();
+  att = e.add_attributes();
+  att->set_key("foo");
+  att->set_value("7.1");
   ASSERT_TRUE(eval_fn(e));
 }
 

@@ -174,8 +174,28 @@ bool tag_exists(const Event& e, const std::string& tag) {
       return true;
     }
   }
-
   return false;
+}
+
+bool attribute_exists(const Event& e, const std::string& attribute) {
+  for (int i = 0; i < e.attributes_size(); i++) {
+    if (e.attributes(i).key() == attribute) {
+      return true;
+    }
+  }
+  return false;
+}
+
+#include <iostream>
+std::string attribute_value(const Event& e, const std::string& attribute) {
+  if (attribute_exists(e, attribute)) {
+    for (int i = 0; i < e.attributes_size(); i++) {
+      if (e.attributes(i).key() == attribute) {
+        return e.attributes(i).value();
+      }
+    }
+  }
+  return "";
 }
 
 std::string sha1(const std::string& str) {

@@ -1,6 +1,8 @@
+#include <boost/variant/get.hpp>
+#include <glog/logging.h>
 #include <expression.h>
 #include <util.h>
-#include <glog/logging.h>
+
 
 inline std::string QueryNode::indent(unsigned int d) {
   return std::string(d * 2, ' ');
@@ -44,22 +46,55 @@ QueryField::QueryField(std::string* field, std::string* value)
 :
   QueryNode(),
   field(field),
+  value(*value)
+{
+}
+
+QueryField::QueryField(std::string* field, const int  & value)
+:
+  QueryNode(),
+  field(field),
   value(value)
 {
 }
 
+QueryField::QueryField(std::string* field, const double & value)
+:
+  QueryNode(),
+  field(field),
+  value(value)
+{
+}
+
+
 void QueryField::print(std::ostream &os, unsigned int depth) const {
-  os << indent(depth) << *field << " = "  << *value << std::endl;
+  os << indent(depth) << *field << " = "  << value << std::endl;
 }
 
 query_f_t QueryField::evaluate() const {
-  std::string val(*value);
-
-  std::string strip_val;
-  if (val.size() > 3) {
-    strip_val = val.substr(1, val.size() - 2);
+  switch (value.which()) {
+    case 0:
+      return evaluate(boost::get<std::string>(value));
+      break;
+    case 1:
+      return evaluate(boost::get<int>(value));
+      break;
+    case 2:
+      return evaluate(boost::get<double>(value));
+      break;
+    default:
+      VLOG(2) << "QueryField::evluate() unknown rvalue";
+      return [=](const Event&) { return false; };
+      break;
   }
+}
 
+query_f_t QueryField::evaluate(const std::string & value) const {
+  const std::string key(*field);
+  std::string strip_val(value);
+  if (value.size() > 2 && value[0] == '"') {
+    strip_val = value.substr(1, value.size() - 2);
+  }
   if (*field == "host") {
     return [=](const Event& e) { return (e.host() == strip_val); };
   } else if (*field == "service") {
@@ -68,28 +103,55 @@ query_f_t QueryField::evaluate() const {
     return [=](const Event& e) { return (e.state() == strip_val); };
   } else if (*field == "description") {
     return [=](const Event& e) { return (e.description() == strip_val); };
-  } else if (*field == "time") {
-    auto ival = std::stoi(val);
+  } else {
+    return [=](const Event& e) {
+      if (attribute_exists(e, key)) {
+        return (attribute_value(e, key) == strip_val);
+      }
+      return false;
+    };
+  }
+}
+
+query_f_t QueryField::evaluate(const int & value) const {
+  const std::string key(*field);
+  const int ival = value; // XXX gcc bug workaround
+  if (*field == "time") {
     return [=](const Event& e) { return (e.time() == ival); };
   } else if (*field == "ttl") {
-    auto ival = std::stoi(val);
     return [=](const Event& e) { return (e.ttl() == ival); };
   } else if (*field == "metric") {
-    auto dval = std::stod(val);
-    return [=](const Event& e) { return (metric_to_double(e) == dval); };
+    return [=](const Event& e) { return (e.metric_sint64() == ival); };
   } else {
-    std::string key(*field);
-    return [=](const Event& e)
-      {
-        for (int i = 0; i < e.attributes_size(); i++) {
-          if (e.attributes(i).has_key() &&
-              e.attributes(i).key() == key)
-          {
-            return (e.attributes(i).value() == strip_val);
-          }
+    return [=](const Event& e) {
+      if (attribute_exists(e, key)) {
+        try {
+          return (std::stoi(attribute_value(e, key)) == ival);
+        } catch (std::invalid_argument & ex) {
+          UNUSED_VAR(ex);
         }
-        return false;
-      };
+      }
+      return false;
+    };
+  }
+}
+
+query_f_t QueryField::evaluate(const double & value) const {
+  const std::string key(*field);
+  const double ival = value; // XXX gcc bug workaround
+  if (*field == "metric") {
+    return [=](const Event& e) { return (metric_to_double(e) == ival); };
+  } else {
+    return [=](const Event& e) {
+      if (attribute_exists(e, key)) {
+        try {
+          return (std::stod(attribute_value(e, key)) == ival);
+        } catch (std::invalid_argument & ex) {
+          UNUSED_VAR(ex);
+        }
+      }
+      return false;
+    };
   }
 }
 

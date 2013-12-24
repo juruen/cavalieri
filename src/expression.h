@@ -4,6 +4,7 @@
 #include <vector>
 #include <ostream>
 #include <functional>
+#include <boost/variant/variant.hpp>
 #include <proto.pb.h>
 
 typedef std::function<bool(const Event&)> query_f_t;
@@ -39,12 +40,19 @@ public:
 class QueryField : public QueryNode
 {
   std::string* field;
-  std::string* value;
+  boost::variant<std::string, int, double> value;
 
 public:
   QueryField(std::string* field, std::string* value);
+  QueryField(std::string* field, const int &  value);
+  QueryField(std::string* field, const double & value);
   virtual void print(std::ostream &os, unsigned int depth=0) const;
   virtual query_f_t evaluate() const;
+
+private:
+  query_f_t evaluate(const std::string & value) const;
+  query_f_t evaluate(const int & value) const;
+  query_f_t evaluate(const double & value) const;
 };
 
 class QueryAnd : public QueryNode
