@@ -18,12 +18,12 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/riemanntcpconnection.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket.cpp
-    ${CMAKE_SOURCE_DIR}/src/parser.cpp
-    ${CMAKE_SOURCE_DIR}/src/scanner.cpp
-    ${CMAKE_SOURCE_DIR}/src/driver.cpp
-    ${CMAKE_SOURCE_DIR}/src/expression.cpp
+    ${CMAKE_SOURCE_DIR}/src/query/parser.cpp
+    ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
+    ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
+    ${CMAKE_SOURCE_DIR}/src/query/expression.cpp
     ${CMAKE_SOURCE_DIR}/src/pythoninterpreter.cpp
-    ${CMAKE_SOURCE_DIR}/src/pagerduty.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
     ${CMAKE_SOURCE_DIR}/src/wsutil.cpp
     ${CMAKE_SOURCE_DIR}/src/incomingevents.cpp
     ${CMAKE_SOURCE_DIR}/src/thread_pool.cpp
@@ -34,6 +34,8 @@ SET(MINIRIEMANN_SRCS
 
 SET(MINIRIEMANN_HDRS
     ${CMAKE_SOURCE_DIR}/src/
+    ${CMAKE_SOURCE_DIR}/src/query/
+    ${CMAKE_SOURCE_DIR}/src/external/
     /usr/include/i386-linux-gnu/c++/4.7
   )
 
