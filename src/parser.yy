@@ -89,6 +89,14 @@ action : TAGGED '=' STRING
           {
             $$ = new QueryField($1, $3);
           }
+        | UNQUOTEDSTRING '=' INTEGER
+          {
+            $$ = new QueryField($1, $3);
+          }
+        | UNQUOTEDSTRING '=' DOUBLE
+          {
+            $$ = new QueryField($1, $3);
+          }
 
 expr: '(' expr ')'
         {
