@@ -231,12 +231,10 @@ TEST(query_grammar_fields_test_case, test)
   att->set_value("bar");
   ASSERT_TRUE(eval_fn(e));
 
-  std::cout << "aura co" << std::endl;
   query = "(foo = 7.1)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
   eval_fn = query_ctx.expression->evaluate();
-
 
   ASSERT_FALSE(eval_fn(e));
 
