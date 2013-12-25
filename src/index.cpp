@@ -1,8 +1,9 @@
-#include <util.h>
-#include <glog/logging.h>
-#include <index.h>
 #include <thread>
 #include <queue>
+#include <glog/logging.h>
+#include <util.h>
+#include <index.h>
+#include <scheduler.h>
 
 index::index(
     pub_sub& pubsub,
@@ -24,16 +25,16 @@ index::index(
   );
 
 
-  timer = new callback_timer(
-      expire_interval,
+  g_scheduler.add_periodic_task(
       [&]() {
         VLOG(3) << "callback timer index_map";
         this->expire_events();
-      });
+      },
+      expire_interval
+  );
 }
 
 index::~index() {
-  delete timer;
 }
 
 const std::string index::key(const Event& e) const {

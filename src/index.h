@@ -16,7 +16,6 @@ private:
   pub_sub& pubsub;
   index_t index_map;
   push_event_f_t push_event;
-  callback_timer* timer;
 
 public:
   index(

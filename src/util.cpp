@@ -13,22 +13,6 @@ namespace {
       ",\"state\": \"%s\", \"metric\": %f, \"tags\": [%s] %s}";
 }
 
-callback_timer::callback_timer(const double interval, const std::function<void()> f)
-  : f_(f)
-{
-      tio_.set<callback_timer, &callback_timer::callback>(this);
-      tio_.start(0, interval);
-}
-
-void callback_timer::callback() {
-  f_();
-}
-
-callback_timer::~callback_timer() {
-  VLOG(3) << "~callback_timer";
-  tio_.stop();
-}
-
 std::string metric_to_string(const Event& e) {
   std::ostringstream ss;
   if (e.has_metric_f()) {

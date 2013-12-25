@@ -7,16 +7,6 @@
 
 #define UNUSED_VAR(x) (void)x
 
-class callback_timer {
-  private:
-    ev::timer tio_;
-    std::function<void()> f_;
-  public:
-    callback_timer(const double interval, const std::function<void()> f);
-    ~callback_timer();
-    void callback();
-};
-
 std::string metric_to_string(const Event& e);
 
 double metric_to_double(const Event &e);
