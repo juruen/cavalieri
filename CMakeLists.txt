@@ -30,6 +30,7 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/real_scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
   )
