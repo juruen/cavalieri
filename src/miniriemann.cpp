@@ -15,6 +15,7 @@
 #include "incomingevents.h"
 #include "riemann_tcp_pool.h"
 #include "websocket_pool.h"
+#include "scheduler.h"
 
 
 int main(int argc, char **argv)
@@ -23,6 +24,8 @@ int main(int argc, char **argv)
   streams all_streams;
   pub_sub pubsub;
   UNUSED_VAR(argc);
+
+  g_scheduler.add_periodic_task([]() { VLOG(3) << "new sched!";}, 5);
 
   /* Stream example */
   all_streams.add_stream(

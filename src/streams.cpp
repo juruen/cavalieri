@@ -3,6 +3,7 @@
 #include <glog/logging.h>
 #include "streams.h"
 #include "util.h"
+#include <scheduler.h>
 
 void call_rescue(e_t e, const children_t& children) {
   for (auto& s: children) {
@@ -110,11 +111,9 @@ stream_t where(const predicate_t& predicate, const children_t& children,
   };
 }
 
-
 stream_t rate(const int interval, const children_t& children) {
   std::shared_ptr<double> rate(std::make_shared<double>(0));
-  std::shared_ptr<callback_timer> timer(std::make_shared<callback_timer>(
-      interval,
+  g_scheduler.add_periodic_task(
      [=]() mutable
       {
         VLOG(3) << "rate-timer()";
@@ -124,12 +123,13 @@ stream_t rate(const int interval, const children_t& children) {
         *rate = 0;
         VLOG(3) << "rate-timer() value: " << e.metric_f();
         call_rescue(e, children);
-      }));
+      },
+      interval
+  );
 
   return [=](e_t e) mutable {
     VLOG(3) << "rate() rate += e.metric";
     (*rate) += metric_to_double(e);
-    (void)(timer);
   };
 }
 
