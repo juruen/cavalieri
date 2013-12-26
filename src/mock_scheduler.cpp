@@ -22,9 +22,18 @@ void mock_scheduler::process_event_time(time_t event_time) {
     if (lowest > event_time) {
       break;
     }
+    set_forward_time(lowest);
     auto interval = std::get<1>(tasks_.top());
     auto fn = std::get<2>(tasks_.top());
+    tasks_.pop();
     fn();
     tasks_.push(std::make_tuple(unix_time_ + interval, interval, fn));
+  }
+  set_forward_time(event_time);
+}
+
+void mock_scheduler::set_forward_time(time_t time) {
+  if (time > unix_time_) {
+    unix_time_ = time;
   }
 }
