@@ -3,6 +3,7 @@
 
 #include "basic_test_case.hpp"
 #include "query_grammar_test_case.hpp"
+#include "mock_scheduler_test_case.hpp"
 
 int main(int argc, char **argv)
 {

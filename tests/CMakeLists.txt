@@ -7,6 +7,7 @@ SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
 #ADD_DEFINITIONS( -fprofile-arcs -ftest-coverage -g -O0)
 
 SET(MINIRIEMANN_TEST_SRCS
+    ${CMAKE_SOURCE_DIR}/src/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
@@ -43,6 +44,7 @@ GTEST_ADD_TESTS(
     test_plan
     ${CMAKE_SOURCE_DIR}/tests/basic_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/query_grammar_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/mock_scheduler_test_case.hpp
   )
 
 TARGET_LINK_LIBRARIES(

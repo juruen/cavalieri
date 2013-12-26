@@ -24,6 +24,9 @@ public:
   void process_event_time(time_t event_time);
 
 private:
+  void set_forward_time(time_t time);
+
+private:
   time_t unix_time_;
   std::priority_queue<
       queue_element_t,
