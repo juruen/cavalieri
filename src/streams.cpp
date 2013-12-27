@@ -18,29 +18,28 @@ stream_t prn() {
   };
 }
 
-stream_t with(const with_changes_t& changes, const children_t& children) {
+stream_t with(const with_changes_t & changes,
+              const bool & replace,
+              const children_t & children)
+{
   return [=](e_t e) {
     Event ne(e);
     for (auto &kv: changes) {
-      VLOG(3) << "with()  first: " << kv.first << " second: " << kv.second;
-      set_event_value(ne, kv.first, kv.second, true);
+      set_event_value(ne, kv.first, kv.second, replace);
     }
     call_rescue(ne, children);
   };
+}
+
+stream_t with(const with_changes_t& changes, const children_t& children) {
+  return with(changes, true, children);
 }
 
 stream_t with_ifempty(
     const with_changes_t& changes,
     const children_t& children)
 {
-  return [=](e_t e) {
-    Event ne(e);
-    for (auto &kv: changes) {
-      VLOG(3) << "default()  first: " << kv.first << " second: " << kv.second;
-      set_event_value(ne, kv.first, kv.second, false);
-    }
-    call_rescue(ne, children);
-  };
+  return with(changes, false, children);
 }
 
 stream_t split(const split_clauses_t clauses,
