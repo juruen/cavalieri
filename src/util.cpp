@@ -1,6 +1,7 @@
 #include "util.h"
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include <glog/logging.h>
 #include <openssl/sha.h>
 #include <curl/curl.h>
@@ -133,22 +134,76 @@ void set_event_value(
     if (replace || (!e.has_state())) {
       e.set_state(value);
     }
-  } else if (key == "metric") {
-    if (e.has_metric_d() && replace) {
-      e.set_metric_d(atof(value.c_str()));
-    } else if (e.has_metric_sint64() && replace) {
-      e.set_metric_sint64(atoi(value.c_str()));
-    } else {
-      if (replace || !e.has_metric_f()) {
-        e.set_metric_f(atof(value.c_str()));
-      }
+  } else {
+    auto att = e.add_attributes();
+    att->set_key(key);
+    att->set_value(value);
+  }
+}
+
+bool any_metric_set(const Event & e) {
+  auto mset = {e.has_metric_d(), e.has_metric_f(), e.has_metric_sint64()};
+  return (std::count(begin(mset), end(mset), true) == 0);
+}
+
+void set_event_value(
+    Event& e,
+    const std::string & key,
+    const int & value,
+    const bool & replace)
+{
+  if (key == "metric") {
+   if (replace) {
+      e.clear_metric_d();
+      e.clear_metric_f();
+      e.set_metric_sint64(value);
+    } else if (!any_metric_set(e)) {
+      e.set_metric_sint64(value);
     }
   } else if (key == "ttl") {
     if (replace || (!e.has_ttl())) {
-      e.set_ttl(atof(value.c_str()));
+      e.set_ttl(value);
     }
   } else {
-    LOG(ERROR) << "string_to_value() wrong key: " << key;
+    LOG(ERROR) << "set_event_value() wrong key: " << key;
+  }
+}
+
+void set_event_value(
+    Event& e,
+    const std::string & key,
+    const double & value,
+    const bool & replace)
+{
+  if (key == "metric") {
+    if (replace) {
+      e.clear_metric_sint64();
+      e.clear_metric_f();
+      e.set_metric_d(value);
+    } else if (!any_metric_set(e)) {
+      e.set_metric_d(value);
+    }
+  } else {
+    LOG(ERROR) << "set_event_value() wrong key: " << key;
+  }
+}
+
+void set_event_value(
+    Event & e,
+    const std::string & key,
+    const boost::variant<std::string, int, double> & val,
+    const bool & replace)
+{
+  switch (val.which()) {
+    case 0:
+      set_event_value(e, key, boost::get<std::string>(val), replace);
+      break;
+    case 1:
+      set_event_value(e, key, boost::get<int>(val), replace);
+      break;
+    case 2:
+      set_event_value(e, key, boost::get<double>(val), replace);
+      break;
   }
 }
 

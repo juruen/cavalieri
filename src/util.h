@@ -4,6 +4,7 @@
 #include "proto.pb.h"
 #include <ev++.h>
 #include <functional>
+#include <boost/variant.hpp>
 
 #define UNUSED_VAR(x) (void)x
 
@@ -21,11 +22,34 @@ bool attribute_exists(const Event& e, const std::string& attribute);
 std::string attribute_value(const Event& e, const std::string& attribute);
 
 void set_event_value(
-    Event& e,
-    const std::string& key,
-    const std::string& value,
+    Event & e,
+    const std::string & key,
+    const std::string & value,
+    const bool & replace
+);
+
+void set_event_value(
+    Event & e,
+    const std::string & key,
+    const int & value,
     const bool& replace
 );
+
+void set_event_value(
+    Event & e,
+    const std::string & key,
+    const double & value,
+    const bool & replace
+);
+
+void set_event_value(
+    Event & e,
+    const std::string & key,
+    const boost::variant<std::string, int, double> & val,
+    const bool & replace
+);
+
+
 
 std::basic_string<char> base64Encode(std::vector<unsigned char> inputBuffer);
 
