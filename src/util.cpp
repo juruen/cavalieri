@@ -141,9 +141,10 @@ void set_event_value(
   }
 }
 
-bool any_metric_set(const Event & e) {
-  auto mset = {e.has_metric_d(), e.has_metric_f(), e.has_metric_sint64()};
-  return (std::count(begin(mset), end(mset), true) == 0);
+#include <iostream>
+bool no_metric_set(const Event & e) {
+  bool f = (!e.has_metric_sint64() && !e.has_metric_d() && ! e.has_metric_f());
+  return f;
 }
 
 void set_event_value(
@@ -157,7 +158,7 @@ void set_event_value(
       e.clear_metric_d();
       e.clear_metric_f();
       e.set_metric_sint64(value);
-    } else if (!any_metric_set(e)) {
+    } else if (no_metric_set(e)) {
       e.set_metric_sint64(value);
     }
   } else if (key == "ttl") {
@@ -180,7 +181,7 @@ void set_event_value(
       e.clear_metric_sint64();
       e.clear_metric_f();
       e.set_metric_d(value);
-    } else if (!any_metric_set(e)) {
+    } else if (no_metric_set(e)) {
       e.set_metric_d(value);
     }
   } else {
