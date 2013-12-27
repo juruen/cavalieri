@@ -8,6 +8,10 @@ SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
 
 SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/mock_scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams.cpp
+    ${CMAKE_SOURCE_DIR}/src/index.cpp
+    ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
@@ -45,6 +49,7 @@ GTEST_ADD_TESTS(
     ${CMAKE_SOURCE_DIR}/tests/basic_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/query_grammar_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/mock_scheduler_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/streams_test_case.hpp
   )
 
 TARGET_LINK_LIBRARIES(
@@ -60,6 +65,7 @@ TARGET_LINK_LIBRARIES(
     crypto
     curl
     pthread
+    tbb
   )
 
 INCLUDE(CodeCoverage)

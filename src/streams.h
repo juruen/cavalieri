@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include <boost/variant.hpp>
 #include <proto.pb.h>
 #include <index.h>
 
@@ -18,7 +19,8 @@ typedef std::function<void(e_t)> stream_t;
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::list<stream_t> children_t;
 typedef std::pair<const predicate_t, const children_t> split_pair_t;
-typedef std::map<std::string, std::string> with_changes_t;
+typedef boost::variant<std::string, int, double> change_value_t;
+typedef std::map<std::string, change_value_t> with_changes_t;
 typedef std::list<std::string> by_keys_t;
 typedef std::function<stream_t()> by_stream_t;
 typedef std::list<by_stream_t> by_streams_t;

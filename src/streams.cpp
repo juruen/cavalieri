@@ -5,6 +5,7 @@
 #include "util.h"
 #include <scheduler.h>
 
+
 void call_rescue(e_t e, const children_t& children) {
   for (auto& s: children) {
     s(e);
