@@ -141,10 +141,8 @@ void set_event_value(
   }
 }
 
-#include <iostream>
 bool no_metric_set(const Event & e) {
-  bool f = (!e.has_metric_sint64() && !e.has_metric_d() && ! e.has_metric_f());
-  return f;
+  return (!e.has_metric_sint64() && !e.has_metric_d() && ! e.has_metric_f());
 }
 
 void set_event_value(
