@@ -43,20 +43,17 @@ stream_t with_ifempty(
 }
 
 stream_t split(const split_clauses_t clauses,
-               const children_t& default_children)
+               const stream_t& default_stream)
 {
   return [=](e_t e) {
-    VLOG(3) << "split()";
     for (auto const &pair: clauses) {
       if (pair.first(e)) {
-        VLOG(3) << "split() clause found";
-        call_rescue(e, pair.second);
+        call_rescue(e, {pair.second});
         return;
       }
     }
-    if (default_children.size() > 0) {
-      VLOG(3) << "split() default";
-      call_rescue(e, default_children);
+    if (default_stream) {
+      call_rescue(e, {default_stream});
     }
   };
 }

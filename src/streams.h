@@ -18,7 +18,7 @@ typedef const Event& e_t;
 typedef std::function<void(e_t)> stream_t;
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::list<stream_t> children_t;
-typedef std::pair<const predicate_t, const children_t> split_pair_t;
+typedef std::pair<const predicate_t, const stream_t> split_pair_t;
 typedef boost::variant<std::string, int, double> change_value_t;
 typedef std::map<std::string, change_value_t> with_changes_t;
 typedef std::list<std::string> by_keys_t;
@@ -39,7 +39,7 @@ stream_t where(const predicate_t& predicate, const children_t& children,
                const children_t& else_children={});
 
 stream_t split(const split_clauses_t clauses,
-               const children_t& default_children={});
+               const stream_t& default_stream={});
 
 stream_t by(const by_keys_t& keys, const by_streams_t& streams);
 
