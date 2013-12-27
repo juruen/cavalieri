@@ -117,4 +117,58 @@ TEST(with_ifempty_test_case, test)
   ASSERT_FALSE(v[0].has_metric_f());
 }
 
+TEST(split_test_case, test)
+{
+  std::vector<Event> v1, v2, v3;
+
+  split_clauses_t clauses =
+                            {
+
+                              {PRED(e.host() == "host1"), sink(v1)},
+
+                              {PRED(metric_to_double(e) > 3.3), sink(v2)}
+
+                            };
+
+  Event e;
+  call_rescue(e, {split(clauses)});
+  ASSERT_EQ(0, v1.size());
+  ASSERT_EQ(0, v2.size());
+
+  e.set_host("host2");
+  call_rescue(e, {split(clauses)});
+  ASSERT_EQ(0, v1.size());
+  ASSERT_EQ(0, v2.size());
+
+  e.set_host("host1");
+  call_rescue(e, {split(clauses)});
+  ASSERT_EQ(1, v1.size());
+  ASSERT_EQ(0, v2.size());
+
+  v1.clear();
+
+  e.set_host("host1");
+  e.set_metric_d(3.4);
+  call_rescue(e, {split(clauses)});
+  ASSERT_EQ(1, v1.size());
+  ASSERT_EQ(0, v2.size());
+
+  v1.clear();
+
+  e.set_host("host2");
+  e.set_metric_d(3.4);
+  call_rescue(e, {split(clauses)});
+  ASSERT_EQ(0, v1.size());
+  ASSERT_EQ(1, v2.size());
+
+  v2.clear();
+
+  e.set_host("host3");
+  e.set_metric_d(1.0);
+  call_rescue(e, {split(clauses, sink(v3))});
+  ASSERT_EQ(0, v1.size());
+  ASSERT_EQ(0, v2.size());
+  ASSERT_EQ(1, v3.size());
+}
+
 #endif
