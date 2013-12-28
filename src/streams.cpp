@@ -5,7 +5,7 @@
 #include "util.h"
 #include <scheduler.h>
 
-
+#include <iostream>
 void call_rescue(e_t e, const children_t& children) {
   for (auto& s: children) {
     s(e);
@@ -60,37 +60,28 @@ stream_t split(const split_clauses_t clauses,
 
 typedef std::unordered_map<std::string, const children_t> by_streams_map_t;
 
-stream_t by(const by_keys_t& keys, const by_streams_t& streams) {
-  by_streams_map_t streams_map;
+stream_t by(const by_keys_t & keys, const by_streams_t & streams) {
+  auto streams_map = std::make_shared<by_streams_map_t>();
 
   return [=](e_t e) mutable {
-    VLOG(3) << "by()";
-
-    if (keys.size() == 0) {
+    if (keys.empty()) {
       return;
     }
 
-    std::string key("");
-    for (auto &k: keys) {
-      std::string value = string_to_value(e, k);
-      if (value == "__nil__") {
-        LOG(ERROR) << "by() field empty: " << k;
-      }
-      key += value + "-";
+    std::string key;
+    for (const auto & k: keys) {
+      key += string_to_value(e, k) + " ";
     }
 
-    VLOG(3) << "by() key: " << key;
-    auto it = streams_map.find(key);
-    if (it == streams_map.end()) {
-      VLOG(3) << "by() key not found. Creating stream.";
+    auto it = streams_map->find(key);
+    if (it == streams_map->end()) {
       children_t children;
-      for (auto &s: streams) {
+      for (auto & s: streams) {
         children.push_back(s());
       }
-      streams_map.insert({key, std::move(children)});
-      call_rescue(e, streams_map.find(key)->second);
+      auto p =  streams_map->insert({key, std::move(children)});
+      call_rescue(e, p.first->second);
     } else {
-      VLOG(3) << "by() stream exists. ";
       call_rescue(e, it->second);
     }
   };
@@ -115,10 +106,10 @@ stream_t rate(const int interval, const children_t& children) {
       {
         VLOG(3) << "rate-timer()";
         Event e;
-        e.set_metric_f(*rate / interval);
-        e.set_time(time(0));
+        e.set_metric_d(*rate / interval);
+        e.set_time(g_scheduler.unix_time());
         *rate = 0;
-        VLOG(3) << "rate-timer() value: " << e.metric_f();
+        VLOG(3) << "rate-timer() value: " << e.metric_d();
         call_rescue(e, children);
       },
       interval
