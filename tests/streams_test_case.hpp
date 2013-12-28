@@ -171,4 +171,43 @@ TEST(split_test_case, test)
   ASSERT_EQ(1, v3.size());
 }
 
+#include <iostream>
+TEST(by_test_case, test)
+{
+  std::vector<std::vector<Event>> v;
+  int i = 0;
+  auto by_sink = [&]()
+  {
+    v.resize(++i);
+    return [=,&v](e_t e) { v[i-1].push_back(e);};
+  };
+
+  by_keys_t by_keys = {"host", "service"};
+
+  auto by_stream = by(by_keys, {by_sink});
+
+  Event e1, e2, e3;
+  e1.set_host("host1"); e1.set_service("service1");
+  e2.set_host("host2"); e2.set_service("service2");
+  e3.set_host("host3"); e3.set_service("service3");
+
+  call_rescue(e1, {by_stream});
+  call_rescue(e2, {by_stream});
+  call_rescue(e3, {by_stream});
+
+  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(1, v[0].size());
+  ASSERT_EQ(1, v[1].size());
+  ASSERT_EQ(1, v[2].size());
+
+  call_rescue(e1, {by_stream});
+  call_rescue(e2, {by_stream});
+  call_rescue(e3, {by_stream});
+
+  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(2, v[0].size());
+  ASSERT_EQ(2, v[1].size());
+  ASSERT_EQ(2, v[2].size());
+}
+
 #endif
