@@ -2,6 +2,7 @@
 #include <glog/logging.h>
 #include <util.h>
 #include <thread_pool.h>
+#include <atom.h>
 
 namespace {
   uintptr_t to_uintptr(const ev::loop_ref & loop) {
@@ -41,7 +42,13 @@ void thread_pool::set_async_hook(hook_fn_t hook) {
 }
 
 void thread_pool::start_threads() {
-  auto run_fn = [=](size_t i) { this->run(i); };
+  auto run_fn = [=](size_t i)
+  {
+    atom<bool>::attach_thread();
+    this->run(i);
+    atom<bool>::detach_thread();
+  };
+
   for (size_t i = 0; i < thread_num_; i++) {
     threads_.push_back(std::move(std::thread(run_fn, i)));
   }

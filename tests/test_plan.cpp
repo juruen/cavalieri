@@ -5,16 +5,28 @@
 #include "query_grammar_test_case.hpp"
 #include "mock_scheduler_test_case.hpp"
 #include "streams_test_case.hpp"
+#include "atom_test_case.hpp"
 #include "scheduler.h"
 #include "mock_scheduler.h"
+#include "atom.h"
 
 mock_scheduler mock_sched;
 scheduler g_scheduler{mock_sched};
 
 int main(int argc, char **argv)
 {
-  ::testing::InitGoogleTest(&argc, argv);
-  google::InitGoogleLogging(argv[0]);
+  cds::Initialize();
+  int ret;
+  {
+    cds::gc::HP hpGC;
+    atom<bool>::attach_thread();
 
-  return RUN_ALL_TESTS();
+    ::testing::InitGoogleTest(&argc, argv);
+    google::InitGoogleLogging(argv[0]);
+
+    ret = RUN_ALL_TESTS();
+  }
+  cds::Terminate();
+
+  return ret;
 }

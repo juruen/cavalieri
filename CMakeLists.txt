@@ -55,7 +55,6 @@ FIND_PACKAGE(Glog REQUIRED)
 FIND_PACKAGE(LibEv REQUIRED)
 FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
 
-
 IF(PROTOBUF_FOUND)
   PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${MINIRIEMANN_PROTOFILES})
 
@@ -88,6 +87,7 @@ IF(PROTOBUF_FOUND)
       curl
       pthread
       tbb
+      cds
     )
 
   ENABLE_TESTING()
