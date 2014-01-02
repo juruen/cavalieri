@@ -1,11 +1,11 @@
 #include <unordered_map>
 #include <memory>
 #include <glog/logging.h>
-#include "streams.h"
-#include "util.h"
+#include <streams.h>
+#include <util.h>
 #include <scheduler.h>
+#include <atom.h>
 
-#include <iostream>
 void call_rescue(e_t e, const children_t& children) {
   for (auto& s: children) {
     s(e);
@@ -61,7 +61,7 @@ stream_t split(const split_clauses_t clauses,
 typedef std::unordered_map<std::string, const children_t> by_streams_map_t;
 
 stream_t by(const by_keys_t & keys, const by_streams_t & streams) {
-  auto streams_map = std::make_shared<by_streams_map_t>();
+  auto atom_streams = make_shared_atom<by_streams_map_t>();
 
   return [=](e_t e) mutable {
     if (keys.empty()) {
@@ -73,17 +73,20 @@ stream_t by(const by_keys_t & keys, const by_streams_t & streams) {
       key += string_to_value(e, k) + " ";
     }
 
-    auto it = streams_map->find(key);
-    if (it == streams_map->end()) {
+    auto fn_value = [&]() {
       children_t children;
       for (auto & s: streams) {
         children.push_back(s());
       }
-      auto p =  streams_map->insert({key, std::move(children)});
-      call_rescue(e, p.first->second);
-    } else {
-      call_rescue(e, it->second);
-    }
+      return children;
+    };
+
+    map_on_sync_insert<std::string, const children_t>(
+        atom_streams,
+        key,
+        fn_value,
+        [&](const children_t & c) { call_rescue(e, c); }
+    );
   };
 }
 

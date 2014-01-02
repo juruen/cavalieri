@@ -84,6 +84,8 @@ flags = [
 '-I',
 '.',
 '-I',
+'/home/juruen/dev/cds-1.5.0',
+'-I',
 './ClangCompleter',
 '-isystem',
 './tests/gmock/gtest',

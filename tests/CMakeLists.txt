@@ -50,6 +50,7 @@ GTEST_ADD_TESTS(
     ${CMAKE_SOURCE_DIR}/tests/query_grammar_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/mock_scheduler_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/streams_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/atom_test_case.hpp
   )
 
 TARGET_LINK_LIBRARIES(
@@ -66,6 +67,7 @@ TARGET_LINK_LIBRARIES(
     curl
     pthread
     tbb
+    cds
   )
 
 INCLUDE(CodeCoverage)
