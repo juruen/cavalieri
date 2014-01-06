@@ -11,18 +11,19 @@ template <class T>
 class atom {
 public:
   atom(T* ptr) : atomic_ptr_(ptr) {};
+  atom() : atomic_ptr_(new T()) {};
 
   void update(std::function<T(const T&)> update_fn) {
     update_(update_fn, {});
   }
 
-  void update(const T& t, std::function<void(const T&)> success_fn) {
+  void update(const T& t, std::function<void(const T&, const T&)> success_fn) {
     update_([&](const T&) { return t; }, success_fn);
   }
 
   void update(
       std::function<T(const T&)> update_fn,
-      std::function<void(const T&)> success_fn
+      std::function<void(const T&, const T&)> success_fn
   )
   {
     update_(update_fn, success_fn);
@@ -30,24 +31,27 @@ public:
 
   void update_(
       std::function<T(const T&)> update_fn,
-      std::function<void(const T&)> success_fn
+      std::function<void(const T&, const T&)> success_fn
   ) {
 
     T* nptr = nullptr;
     T* optr = nullptr;
 
+    cds::gc::HP::Guard new_guard;
+
     do {
-      cds::gc::HP::Guard guard;
-      guard.assign(atomic_ptr_.load());
+      cds::gc::HP::Guard old_guard;
+      old_guard.assign(atomic_ptr_.load());
       if (nptr != nullptr) {
         delete nptr;
       }
-      optr = (T*)(guard.get_native());
+      optr = (T*)(old_guard.get_native());
       nptr = new T(update_fn(*optr));
+      new_guard.assign(nptr);
     } while (!atomic_ptr_.compare_exchange_strong(optr, nptr));
 
     if (success_fn) {
-      success_fn(*optr);
+      success_fn(*optr, *nptr);
     }
 
     cds::gc::HP::retire(optr, retire);
