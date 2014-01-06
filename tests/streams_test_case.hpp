@@ -1,7 +1,16 @@
 #ifndef STREAMS_TEST_CASE
 #define STREAMS_TEST_CASE
 
+#include <thread>
 #include <streams.h>
+#include <scheduler.h>
+
+extern mock_scheduler mock_sched;
+
+namespace {
+const size_t thread_num = 4;
+const size_t iterations = 10000;
+}
 
 std::function<void(e_t e)> sink(std::vector<Event> & v) {
   return [&](e_t e) { v.push_back(e); };
@@ -171,7 +180,26 @@ TEST(split_test_case, test)
   ASSERT_EQ(1, v3.size());
 }
 
-#include <iostream>
+TEST(where_test_case, test)
+{
+  std::vector<Event> v1, v2;
+
+  Event e;
+  predicate_t predicate = PRED(e.host() == "foo");
+
+  call_rescue(e, {where(predicate, {sink(v1)})});
+  ASSERT_EQ(0, v1.size());
+
+  e.set_host("foo");
+  call_rescue(e, {where(predicate, {sink(v1)})});
+  ASSERT_EQ(1, v1.size());
+
+  e.set_host("bar");
+  call_rescue(e, {where(predicate, {sink(v1)}, {sink(v2)})});
+  ASSERT_EQ(1, v1.size());
+  ASSERT_EQ(1, v2.size());
+}
+
 TEST(by_test_case, test)
 {
   std::vector<std::vector<Event>> v;
@@ -209,5 +237,83 @@ TEST(by_test_case, test)
   ASSERT_EQ(2, v[1].size());
   ASSERT_EQ(2, v[2].size());
 }
+
+TEST(rate_test_case, test)
+{
+  std::vector<Event> v;
+  mock_sched.clear();
+
+  Event e1, e2, e3;
+
+  auto rate_stream = rate(5, {sink(v)});
+
+  // Check that we send a 0-valued metric if no event is received
+  call_rescue(e1, {rate_stream});
+  mock_sched.process_event_time(5);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(0, v[0].metric_d());
+
+
+  // Check {e1.metric_d=10.0, e2.metric_d=20.0, e3.metric_d=30.0}
+  // gives us ((10.0 + 20.0 + 30.0) / 5) = 12
+  e1.set_metric_d(10.0);
+  e2.set_metric_d(20.0);
+  e3.set_metric_d(30.0);
+  call_rescue(e1, {rate_stream});
+  call_rescue(e2, {rate_stream});
+  call_rescue(e3, {rate_stream});
+  mock_sched.process_event_time(10);
+  ASSERT_EQ(2, v.size());
+  ASSERT_EQ(12, v[1].metric_d());
+
+  e1.clear_metric_d();
+  e2.clear_metric_d();
+  e3.clear_metric_d();
+
+  // Same as above but mixing different metric types
+  e1.set_metric_d(10.0);
+  e2.set_metric_f(20.0);
+  e3.set_metric_sint64(30);
+  call_rescue(e1, {rate_stream});
+  call_rescue(e2, {rate_stream});
+  call_rescue(e3, {rate_stream});
+  mock_sched.process_event_time(15);
+  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(12, v[1].metric_d());
+
+  mock_sched.clear();
+}
+
+TEST(rate_thread_test_case, test)
+{
+  std::vector<Event> v;
+  mock_sched.clear();
+
+  auto rate_stream = rate(5, {sink(v)});
+
+  auto run_fn = [&]() {
+    for (size_t i = 0; i < iterations; i++) {
+      Event e;
+      e.set_metric_sint64(1);
+      call_rescue(e, {rate_stream});
+    }
+  };
+
+  std::vector<std::thread> threads;
+  for (size_t i = 0; i < thread_num; i++) {
+    threads.push_back(std::move(std::thread(run_fn)));
+  }
+
+  for (size_t i = 0; i < thread_num; i++) {
+    threads[i].join();
+  }
+
+  mock_sched.process_event_time(5);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(iterations * thread_num / 5.0, v[0].metric_d());
+
+  mock_sched.clear();
+}
+
 
 #endif
