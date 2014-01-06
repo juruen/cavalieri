@@ -315,5 +315,86 @@ TEST(rate_thread_test_case, test)
   mock_sched.clear();
 }
 
+TEST(changed_state_test_case, test)
+{
+  std::vector<Event> v;
 
+  auto changed_stream = changed_state("a", {sink(v)});
+
+  Event e;
+  for (auto s : {"a", "a", "b", "b", "a", "b", "b"}) {
+    e.set_state(s);
+    call_rescue(e, {changed_stream});
+  }
+
+  ASSERT_EQ(3, v.size());
+  ASSERT_EQ("b", v[0].state());
+  ASSERT_EQ("a", v[1].state());
+  ASSERT_EQ("b", v[2].state());
+}
+
+TEST(tagged_any_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto tag_stream = tagged_any({"foo", "bar"}, {sink(v)});
+
+  Event e;
+
+  call_rescue(e,  {tag_stream});
+  ASSERT_EQ(0, v.size());
+
+  *(e.add_tags()) = "baz";
+  call_rescue(e,  {tag_stream});
+  ASSERT_EQ(0, v.size());
+
+ *(e.add_tags()) = "foo";
+  call_rescue(e,  {tag_stream});
+  ASSERT_EQ(1, v.size());
+
+ *(e.add_tags()) = "bar";
+  call_rescue(e,  {tag_stream});
+  ASSERT_EQ(2, v.size());
+}
+
+TEST(tagged_all_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto tag_stream = tagged_all({"foo", "bar", "baz"}, {sink(v)});
+
+  Event e;
+
+  call_rescue(e,  {tag_stream});
+  ASSERT_EQ(0, v.size());
+
+  *(e.add_tags()) = "baz";
+  call_rescue(e,  {tag_stream});
+  ASSERT_EQ(0, v.size());
+
+ *(e.add_tags()) = "foo";
+  call_rescue(e,  {tag_stream});
+  ASSERT_EQ(0, v.size());
+
+ *(e.add_tags()) = "bar";
+  call_rescue(e,  {tag_stream});
+  ASSERT_EQ(1, v.size());
+}
+
+TEST(streams_test_case, test)
+{
+ std::vector<Event> v;
+
+ streams s;
+ s.add_stream(sink(v));
+
+ Msg message;
+ message.add_events();
+
+ s.process_message(message);
+ ASSERT_EQ(1, v.size());
+
+ s.push_event({});
+ ASSERT_EQ(2, v.size());
+}
 #endif
