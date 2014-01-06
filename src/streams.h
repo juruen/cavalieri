@@ -12,11 +12,13 @@
 typedef const Event& e_t;
 
 #define PRED(EXP) [](e_t e) { return (EXP); }
+#define TR(EXP) [](Event & e) {(EXP); }
 #define CHILD(EXP) {EXP}
 #define BY(EXP) []() { return (EXP); }
 
 typedef std::function<void(e_t)> stream_t;
 typedef std::function<bool(e_t)> predicate_t;
+typedef std::function<void(Event &)> smap_fn_t;
 typedef std::list<stream_t> children_t;
 typedef std::pair<const predicate_t, const stream_t> split_pair_t;
 typedef boost::variant<std::string, int, double> change_value_t;
@@ -50,6 +52,10 @@ stream_t changed_state(std::string initial, const children_t& children);
 stream_t tagged_any(const tags_t& tags, const children_t& children);
 
 stream_t tagged_all(const tags_t& tags, const children_t& children);
+
+stream_t smap(smap_fn_t f, const children_t& children);
+
+stream_t moving_event_window(size_t window, const children_t& children);
 
 stream_t send_index(class index&);
 

@@ -381,6 +381,20 @@ TEST(tagged_all_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
+TEST(smap_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto smap_stream = smap(TR(e.set_host("foo")), {sink(v)});
+
+  Event e;
+  e.set_host("bar");
+
+  call_rescue(e, {smap_stream});
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("foo", v[0].host());
+}
+
 TEST(streams_test_case, test)
 {
  std::vector<Event> v;
@@ -397,4 +411,39 @@ TEST(streams_test_case, test)
  s.push_event({});
  ASSERT_EQ(2, v.size());
 }
+
+TEST(moving_event_window_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto moving_stream = moving_event_window(3, {sink(v)});
+
+
+  Event e;
+
+  e.set_metric_sint64(0);
+  call_rescue(e, {moving_stream});
+  ASSERT_EQ(1, v.size());
+  v.clear();
+
+  e.set_metric_sint64(1);
+  call_rescue(e, {moving_stream});
+  ASSERT_EQ(2, v.size());
+  v.clear();
+
+  e.set_metric_sint64(2);
+  call_rescue(e, {moving_stream});
+  ASSERT_EQ(3, v.size());
+  v.clear();
+
+  e.set_metric_sint64(3);
+  call_rescue(e, {moving_stream});
+  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(1, v[0].metric_sint64());
+  ASSERT_EQ(2, v[1].metric_sint64());
+  ASSERT_EQ(3, v[2].metric_sint64());
+
+  v.clear();
+}
+
 #endif
