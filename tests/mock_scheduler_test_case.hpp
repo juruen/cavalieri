@@ -62,5 +62,13 @@ TEST(mock_scheduler_add_periodic_task_test_case, test)
   sched.process_event_time(100);
   ASSERT_EQ(20, calls1);
   ASSERT_EQ(42, calls2);
+
+  int calls3 = 0;
+  auto t3 = [&]() { calls3++; };
+  sched.add_periodic_task(t3, 5);
+  sched.clear();
+  ASSERT_EQ(0, calls3);
+  ASSERT_EQ(0, sched.unix_time());
 }
+
 #endif

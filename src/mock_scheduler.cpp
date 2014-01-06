@@ -37,3 +37,10 @@ void mock_scheduler::set_forward_time(time_t time) {
     unix_time_ = time;
   }
 }
+
+void mock_scheduler::clear() {
+  while (!tasks_.empty()) {
+    tasks_.pop();
+  }
+  unix_time_ = 0;
+}
