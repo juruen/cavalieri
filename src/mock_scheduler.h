@@ -22,6 +22,7 @@ public:
   void add_periodic_task(task_fn_t task, float interval);
   time_t unix_time();
   void process_event_time(time_t event_time);
+  void clear();
 
 private:
   void set_forward_time(time_t time);
