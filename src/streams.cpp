@@ -1,5 +1,6 @@
 #include <unordered_map>
 #include <memory>
+#include <atomic>
 #include <glog/logging.h>
 #include <streams.h>
 #include <util.h>
@@ -103,15 +104,14 @@ stream_t where(const predicate_t& predicate, const children_t& children,
 }
 
 stream_t rate(const int interval, const children_t& children) {
-  std::shared_ptr<double> rate(std::make_shared<double>(0));
+  auto rate = std::make_shared<std::atomic<double>>(0);
   g_scheduler.add_periodic_task(
      [=]() mutable
       {
         VLOG(3) << "rate-timer()";
         Event e;
-        e.set_metric_d(*rate / interval);
+        e.set_metric_d(rate->exchange(0) / interval);
         e.set_time(g_scheduler.unix_time());
-        *rate = 0;
         VLOG(3) << "rate-timer() value: " << e.metric_d();
         call_rescue(e, children);
       },
@@ -119,8 +119,11 @@ stream_t rate(const int interval, const children_t& children) {
   );
 
   return [=](e_t e) mutable {
-    VLOG(3) << "rate() rate += e.metric";
-    (*rate) += metric_to_double(e);
+    double expected, newval;
+    do {
+      expected = rate->load();
+      newval = expected + metric_to_double(e);
+    } while (!rate->compare_exchange_strong(expected, newval));
   };
 }
 
