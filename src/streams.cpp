@@ -133,9 +133,9 @@ stream_t changed_state(std::string initial, const children_t& children) {
   return [=](e_t e) mutable {
     prev->update(
         e.state(),
-        [&](const std::string & prev_state)
+        [&](const std::string & prev, const std::string & curr)
           {
-            if (prev_state != e.state())
+            if (prev != e.state())
               call_rescue(e, children);
           }
     );
@@ -185,6 +185,39 @@ stream_t send_index(class index& idx) {
     if (e.state() != "expired") {
       idx.add_event(e);
     }
+  };
+}
+
+
+stream_t smap(smap_fn_t f, const children_t& children) {
+  return [=](e_t e) {
+    Event ne(e);
+    f(ne);
+    call_rescue(ne, children);
+  };
+}
+
+
+stream_t moving_event_window(size_t n, const children_t& children) {
+  auto window = make_shared_atom<std::list<Event>>();
+
+  return [=](e_t e) {
+    window->update(
+      [&](const std::list<Event> window)
+        {
+          auto c(window);
+          c.push_back(e);
+          if (c.size() == (n + 1)) {
+            c.pop_front();
+          }
+          return std::move(c);
+        },
+      [&](const std::list<Event> & prev, const std::list<Event> & curr) {
+        for (const auto & ev : curr) {
+          call_rescue(ev, children);
+        }
+      }
+    );
   };
 }
 
