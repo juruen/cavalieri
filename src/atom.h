@@ -12,9 +12,30 @@ class atom {
 public:
   atom(T* ptr) : atomic_ptr_(ptr) {};
 
-  void update(std::function<T(const T&)> fn) {
+  void update(std::function<T(const T&)> update_fn) {
+    update_(update_fn, {});
+  }
+
+  void update(const T& t, std::function<void(const T&)> success_fn) {
+    update_([&](const T&) { return t; }, success_fn);
+  }
+
+  void update(
+      std::function<T(const T&)> update_fn,
+      std::function<void(const T&)> success_fn
+  )
+  {
+    update_(update_fn, success_fn);
+  }
+
+  void update_(
+      std::function<T(const T&)> update_fn,
+      std::function<void(const T&)> success_fn
+  ) {
+
     T* nptr = nullptr;
     T* optr = nullptr;
+
     do {
       cds::gc::HP::Guard guard;
       guard.assign(atomic_ptr_.load());
@@ -22,10 +43,17 @@ public:
         delete nptr;
       }
       optr = (T*)(guard.get_native());
-      nptr = new T(fn(*optr));
+      nptr = new T(update_fn(*optr));
     } while (!atomic_ptr_.compare_exchange_strong(optr, nptr));
+
+    if (success_fn) {
+      success_fn(*optr);
+    }
+
     cds::gc::HP::retire(optr, retire);
   }
+
+
 
   void safe_read(std::function<void(const T&)> fn) {
     cds::gc::HP::Guard guard;
@@ -60,6 +88,12 @@ public:
 template <class T>
 std::shared_ptr<atom<T>> make_shared_atom() {
   std::shared_ptr<atom<T>> s(new atom<T>(new T()));
+  return s;
+}
+
+template <class T>
+std::shared_ptr<atom<T>> make_shared_atom(const T t) {
+  std::shared_ptr<atom<T>> s(new atom<T>(new T(t)));
   return s;
 }
 
