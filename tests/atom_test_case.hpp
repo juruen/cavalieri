@@ -12,7 +12,7 @@ const int atom_test_case_threads = 4;
 TEST(atom_update_test_case, test)
 {
   atom<int> atom_int(new int(0));
-  auto update_fn = [](const int  i) { return i + 1; };
+  auto update_fn = [](const int & i) { return i + 1; };
 
   auto fn = [&]() mutable
   {
@@ -43,7 +43,8 @@ TEST(atom_update_success_test_case, test)
   std::atomic<int> five_count(0);
 
   auto update_fn = [](const int  i) { return i + 1; };
-  auto success_fn = [&](const int i) { if (i % 5 == 0) five_count++;  };
+  auto success_fn = [&](const int & prev, const int & curr)
+    { if (curr % 5 == 0) five_count++;  };
 
   auto fn = [&]() mutable
   {
