@@ -128,16 +128,17 @@ stream_t rate(const int interval, const children_t& children) {
 }
 
 stream_t changed_state(std::string initial, const children_t& children) {
-  std::string last_state(initial);
+  auto prev = make_shared_atom<std::string>(initial);
 
   return [=](e_t e) mutable {
-    VLOG(3) << "changed_state() last_state: "
-            << last_state << " new state " << e.state();
-    if (last_state != e.state()) {
-      VLOG(3) << "changed_state() state change";
-      last_state.assign(e.state());
-      call_rescue(e, children);
-    }
+    prev->update(
+        e.state(),
+        [&](const std::string & prev_state)
+          {
+            if (prev_state != e.state())
+              call_rescue(e, children);
+          }
+    );
   };
 }
 
