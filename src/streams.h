@@ -1,7 +1,7 @@
 #ifndef STREAMS_H
 #define STREAMS_H
 
-#include <list>
+#include <vector>
 #include <vector>
 #include <functional>
 #include <memory>
@@ -19,15 +19,15 @@ typedef const Event& e_t;
 typedef std::function<void(e_t)> stream_t;
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::function<void(Event &)> smap_fn_t;
-typedef std::list<stream_t> children_t;
+typedef std::vector<stream_t> children_t;
 typedef std::pair<const predicate_t, const stream_t> split_pair_t;
 typedef boost::variant<std::string, int, double> change_value_t;
 typedef std::map<std::string, change_value_t> with_changes_t;
-typedef std::list<std::string> by_keys_t;
+typedef std::vector<std::string> by_keys_t;
 typedef std::function<stream_t()> by_stream_t;
-typedef std::list<by_stream_t> by_streams_t;
-typedef std::list<split_pair_t> split_clauses_t;
-typedef std::list<std::string> tags_t;
+typedef std::vector<by_stream_t> by_streams_t;
+typedef std::vector<split_pair_t> split_clauses_t;
+typedef std::vector<std::string> tags_t;
 
 void call_rescue(e_t e, const children_t& children);
 void call_rescue(const std::list<Event> events, const children_t& children);
@@ -77,7 +77,7 @@ public:
   void push_event(const Event& e);
 
 private:
-  std::list<stream_t> streams_;
+  std::vector<stream_t> streams_;
 }
 
 ;
