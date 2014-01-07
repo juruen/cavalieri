@@ -13,6 +13,22 @@ void call_rescue(e_t e, const children_t& children) {
   }
 }
 
+void call_rescue(const std::vector<Event> events, const children_t& children) {
+  for (auto& e: events) {
+    for (auto& s: children) {
+      s(e);
+    }
+  }
+}
+
+void call_rescue(const std::list<Event> events, const children_t& children) {
+  for (auto& e: events) {
+    for (auto& s: children) {
+      s(e);
+    }
+  }
+}
+
 stream_t prn() {
   return [](e_t e) {
     LOG(INFO) << "prn() " <<  event_to_json(e);
