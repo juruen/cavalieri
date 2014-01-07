@@ -262,6 +262,16 @@ stream_t fixed_event_window(size_t n, const children_t& children) {
   };
 }
 
+stream_t tag(tags_t tags, const children_t& children) {
+  return [=](e_t e) {
+    Event ne(e);
+    for (const auto & t: tags) {
+      *(ne.add_tags()) = t;
+    }
+    call_rescue(ne, children);
+  };
+}
+
 void streams::add_stream(stream_t stream) {
   VLOG(3) << "adding stream";
   streams_.push_back(stream);

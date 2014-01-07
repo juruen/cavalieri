@@ -61,6 +61,8 @@ stream_t moving_event_window(size_t window, const children_t& children);
 
 stream_t fixed_event_window(size_t window, const children_t& children);
 
+stream_t tag(tags_t tags, const children_t& children);
+
 stream_t send_index(class index&);
 
 bool tagged_any_(e_t e, const tags_t& tags);
