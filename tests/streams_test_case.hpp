@@ -483,4 +483,17 @@ TEST(fixed_event_window_test_case, test)
   ASSERT_EQ(4, v[1].metric_sint64());
   ASSERT_EQ(5, v[2].metric_sint64());
 }
+
+TEST(tag_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto tag_stream = tag({"foo", "bar"}, {sink(v)});
+
+  Event e;
+  call_rescue(e, {tag_stream});
+  ASSERT_EQ(1, v.size());
+  ASSERT_TRUE(tagged_all_(v[0], {"foo", "bar"}));
+}
+
 #endif
