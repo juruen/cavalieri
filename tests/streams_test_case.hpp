@@ -418,7 +418,6 @@ TEST(moving_event_window_test_case, test)
 
   auto moving_stream = moving_event_window(3, {sink(v)});
 
-
   Event e;
 
   e.set_metric_sint64(0);
@@ -446,4 +445,42 @@ TEST(moving_event_window_test_case, test)
   v.clear();
 }
 
+TEST(fixed_event_window_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto moving_stream = fixed_event_window(3, {sink(v)});
+
+  Event e;
+
+  e.set_metric_sint64(0);
+  call_rescue(e, {moving_stream});
+  e.set_metric_sint64(1);
+  call_rescue(e, {moving_stream});
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_sint64(2);
+  call_rescue(e, {moving_stream});
+
+  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(0, v[0].metric_sint64());
+  ASSERT_EQ(1, v[1].metric_sint64());
+  ASSERT_EQ(2, v[2].metric_sint64());
+
+  v.clear();
+
+  e.set_metric_sint64(3);
+  call_rescue(e, {moving_stream});
+  e.set_metric_sint64(4);
+  call_rescue(e, {moving_stream});
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_sint64(5);
+  call_rescue(e, {moving_stream});
+  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3, v[0].metric_sint64());
+  ASSERT_EQ(4, v[1].metric_sint64());
+  ASSERT_EQ(5, v[2].metric_sint64());
+}
 #endif
