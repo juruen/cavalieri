@@ -237,6 +237,31 @@ stream_t moving_event_window(size_t n, const children_t& children) {
   };
 }
 
+stream_t fixed_event_window(size_t n, const children_t& children) {
+  auto window = make_shared_atom<std::list<Event>>();
+
+  return [=](e_t e) {
+    std::list<Event> event_list;
+    bool forward;
+    window->update(
+      [&](const std::list<Event> window)->std::list<Event>
+        {
+          event_list = conj(window, e);
+          if ((forward = (event_list.size() == n))) {
+            return {};
+          } else {
+            return event_list;
+          }
+        },
+      [&](const std::list<Event> & prev, const std::list<Event> & curr) {
+        if (forward) {
+          call_rescue(event_list, children);
+        }
+      }
+    );
+  };
+}
+
 void streams::add_stream(stream_t stream) {
   VLOG(3) << "adding stream";
   streams_.push_back(stream);
