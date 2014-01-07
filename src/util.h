@@ -4,6 +4,8 @@
 #include "proto.pb.h"
 #include <ev++.h>
 #include <functional>
+#include <vector>
+#include <list>
 #include <boost/variant.hpp>
 
 #define UNUSED_VAR(x) (void)x
@@ -59,6 +61,20 @@ bool parse_uri(
     const std::string& escaped_uri,
     std::string& index,
     std::map<std::string, std::string>& params );
+
+template <class T>
+std::vector<T> conj(const std::vector<T> &v, T t) {
+  std::vector<T> nv(v);
+  nv.push_back(t);
+  return std::move(nv);
+}
+
+template <class T>
+std::list<T> conj(const std::list<T> &v, T t) {
+  std::list<T> nv(v);
+  nv.push_back(t);
+  return std::move(nv);
+}
 
 #endif
 
