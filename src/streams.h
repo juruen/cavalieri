@@ -30,7 +30,6 @@ typedef std::vector<split_pair_t> split_clauses_t;
 typedef std::vector<std::string> tags_t;
 
 void call_rescue(e_t e, const children_t& children);
-void call_rescue(const std::list<Event> events, const children_t& children);
 void call_rescue(const std::vector<Event> events, const children_t& children);
 
 stream_t prn();
