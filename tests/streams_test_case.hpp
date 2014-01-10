@@ -484,6 +484,60 @@ TEST(fixed_event_window_test_case, test)
   ASSERT_EQ(5, v[2].metric_sint64());
 }
 
+TEST(moving_time_window_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto moving_stream = moving_time_window(3, {sink(v)});
+
+  Event e;
+
+  // Push 3 events
+  for (auto i = 0; i < 3; i++) {
+    e.set_metric_sint64(i);
+    e.set_time(i);
+    call_rescue(e, {moving_stream});
+
+    ASSERT_EQ(i + 1, v.size());
+    v.clear();
+  }
+
+  e.set_metric_sint64(3);
+  e.set_time(3);
+  call_rescue(e, {moving_stream});
+
+  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(1, v[0].metric_sint64());
+  ASSERT_EQ(2, v[1].metric_sint64());
+  ASSERT_EQ(3, v[2].metric_sint64());
+  v.clear();
+
+
+  e.set_metric_sint64(5);
+  e.set_time(5);
+  call_rescue(e, {moving_stream});
+  ASSERT_EQ(2, v.size());
+  v.clear();
+
+  e.set_metric_sint64(4);
+  e.set_time(4);
+  call_rescue(e, {moving_stream});
+  ASSERT_EQ(3, v.size());
+  v.clear();
+
+  e.set_metric_sint64(10);
+  e.set_time(10);
+  call_rescue(e, {moving_stream});
+  ASSERT_EQ(1, v.size());
+  v.clear();
+
+  e.clear_time();
+  call_rescue(e, {moving_stream});
+  ASSERT_EQ(1, v.size());
+  v.clear();
+ }
+
+
 TEST(tag_test_case, test)
 {
   std::vector<Event> v;
