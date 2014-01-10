@@ -245,9 +245,9 @@ stream_t fixed_event_window(size_t n, const children_t& children) {
     std::list<Event> event_list;
     bool forward;
     window->update(
-      [&](const std::list<Event> window)->std::list<Event>
+      [&](const std::list<Event> w) -> std::list<Event>
         {
-          event_list = conj(window, e);
+          event_list = conj(w, e);
           if ((forward = (event_list.size() == n))) {
             return {};
           } else {
