@@ -316,7 +316,7 @@ typedef struct {
   bool started{false};
 } fixed_time_window_t;
 
-stream_t fixed_time_window(size_t dt, const children_t& children) {
+stream_t fixed_time_window(time_t dt, const children_t& children) {
   auto window = make_shared_atom<fixed_time_window_t>();
 
   return [=](e_t e) {
