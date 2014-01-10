@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include <queue>
 #include <memory>
 #include <atomic>
 #include <glog/logging.h>
@@ -253,6 +254,128 @@ stream_t fixed_event_window(size_t n, const children_t& children) {
     );
   };
 }
+
+struct event_time_cmp
+{
+  bool operator() (const Event & lhs, const Event & rhs) const
+  {
+    return (lhs.time() > rhs.time());
+  }
+};
+
+typedef struct {
+  std::priority_queue<Event, std::vector<Event>, event_time_cmp> pq;
+  time_t max{0};
+} moving_time_window_t;
+
+stream_t moving_time_window(time_t dt, const children_t& children) {
+  auto window = make_shared_atom<moving_time_window_t>();
+
+  return [=](e_t e) {
+    window->update(
+      [&](const moving_time_window_t  w )
+        {
+          auto c(w);
+
+          if (!e.has_time()) {
+            return c;
+          }
+
+          if (e.time() > w.max) {
+            c.max = e.time();
+          }
+
+          c.pq.push(e);
+
+          if (c.max < dt) {
+            return c;
+          }
+
+          while (!c.pq.empty() && c.pq.top().time() <= (c.max - dt)) {
+            c.pq.pop();
+          }
+
+          return c;
+        },
+      [&](const moving_time_window_t &, const moving_time_window_t & curr) {
+        auto c(curr);
+        while (!c.pq.empty()) {
+          call_rescue(c.pq.top(), children);
+          c.pq.pop();
+        }
+      }
+    );
+  };
+}
+
+typedef struct {
+  std::priority_queue<Event, std::vector<Event>, event_time_cmp> pq;
+
+  time_t start;
+  time_t max{0};
+  bool started{false};
+} fixed_time_window_t;
+
+stream_t fixed_time_window(size_t dt, const children_t& children) {
+  auto window = make_shared_atom<fixed_time_window_t>();
+
+  return [=](e_t e) {
+    std::vector<Event> flush;
+    window->update(
+      [&](const fixed_time_window_t  w )
+        {
+          auto c(w);
+          flush.clear();
+
+          // Ignore event with no time
+          if (!e.has_time()) {
+            return c;
+          }
+
+          if (!c.started) {
+            c.started = true;
+            c.start = e.time();
+            c.pq.push(e);
+            c.max = e.time();
+            return c;
+          }
+
+          // Too old
+          if (e.time() < c.start) {
+            return c;
+          }
+
+          if (e.time() > c.max) {
+            c.max = e.time();
+          }
+
+          time_t next_interval = c.start - (c.start % dt) + dt;
+
+          c.pq.push(e);
+
+          if (c.max < next_interval) {
+            return c;
+          }
+
+          // We can flush a window
+          while (!c.pq.empty() && c.pq.top().time() < next_interval) {
+            flush.emplace_back(c.pq.top());
+            c.pq.pop();
+          }
+
+          c.start = next_interval;
+
+          return c;
+        },
+      [&](const fixed_time_window_t &, const fixed_time_window_t &) {
+        for (const auto & e: flush) {
+          call_rescue(e, children);
+        }
+      }
+    );
+  };
+}
+
 
 stream_t tag(tags_t tags, const children_t& children) {
   return [=](e_t e) {
