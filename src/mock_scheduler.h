@@ -5,6 +5,7 @@
 #include <vector>
 #include <scheduler.h>
 
+
 typedef std::tuple<time_t, time_t, task_fn_t> queue_element_t;
 
 class mock_scheduler_queue_cmp
@@ -20,6 +21,7 @@ class mock_scheduler : public scheduler_interface {
 public:
   mock_scheduler();
   void add_periodic_task(task_fn_t task, float interval);
+  void add_once_task(task_fn_t task, float dt);
   time_t unix_time();
   void process_event_time(time_t event_time);
   void clear();
