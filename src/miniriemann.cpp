@@ -35,7 +35,8 @@ int main(int argc, char **argv)
     pub_sub pubsub;
     UNUSED_VAR(argc);
 
-    g_scheduler.add_periodic_task([]() { VLOG(3) << "new sched!";}, 5);
+    g_scheduler.add_periodic_task([]() { VLOG(3) << "new sched! (period)";}, 5);
+    g_scheduler.add_once_task([]() { VLOG(3) << "new sched! (once)";}, 5);
 
     /* Stream example */
     all_streams.add_stream(

@@ -12,6 +12,11 @@ void mock_scheduler::add_periodic_task(task_fn_t task, float interval) {
   tasks_.push(std::make_tuple(unix_time_ + p, p, task));
 }
 
+void mock_scheduler::add_once_task(task_fn_t task, float dt) {
+  auto p = static_cast<time_t>(dt);
+  tasks_.push(std::make_tuple(unix_time_ + p, 0, task));
+}
+
 time_t mock_scheduler::unix_time() {
   return unix_time_;
 }
@@ -27,7 +32,9 @@ void mock_scheduler::process_event_time(time_t event_time) {
     auto fn = std::get<2>(tasks_.top());
     tasks_.pop();
     fn();
-    tasks_.push(std::make_tuple(unix_time_ + interval, interval, fn));
+    if (interval) {
+      tasks_.push(std::make_tuple(unix_time_ + interval, interval, fn));
+    }
   }
   set_forward_time(event_time);
 }
