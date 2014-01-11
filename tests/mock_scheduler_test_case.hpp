@@ -71,4 +71,26 @@ TEST(mock_scheduler_add_periodic_task_test_case, test)
   ASSERT_EQ(0, sched.unix_time());
 }
 
+TEST(mock_scheduler_add_once_task_test_case, test)
+{
+  mock_scheduler sched;
+
+  int calls1 = 0;
+  auto t1 = [&]() { calls1++; };
+  sched.add_once_task(t1, 5);
+
+  sched.process_event_time(1);
+  sched.process_event_time(2);
+  ASSERT_EQ(0, calls1);
+
+  sched.process_event_time(4);
+  sched.process_event_time(5);
+  ASSERT_EQ(1, calls1);
+
+  sched.process_event_time(10);
+  sched.process_event_time(11);
+  ASSERT_EQ(1, calls1);
+}
+
+
 #endif
