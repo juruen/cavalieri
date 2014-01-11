@@ -11,7 +11,7 @@ namespace {
   const uint32_t json_buff_size = 1024 * 4;
   const char *json_base =
       "{\"host\": \"%s\", \"service\": \"%s\", \"description\": \"%s\""
-      ",\"state\": \"%s\", \"metric\": %f, \"tags\": [%s] %s}";
+      ",\"state\": \"%s\", \"metric\": %f, \"time\": %i, \"tags\": [%s] %s}";
 }
 
 std::string metric_to_string(const Event& e) {
@@ -102,7 +102,7 @@ std::string event_to_json(const Event &e) {
   char json_buffer[json_buff_size];
   size_t r = snprintf(json_buffer, json_buff_size, json_base,
                 e.host().c_str(), e.service().c_str(), e.description().c_str(),
-                e.state().c_str(), metric, tags, attrs);
+                e.state().c_str(), metric, e.time(), tags, attrs);
 
   if (r >= json_buff_size) {
     VLOG(1) << "json string is too big";
