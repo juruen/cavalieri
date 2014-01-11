@@ -318,8 +318,7 @@ stream_t moving_time_window(time_t dt, const children_t& children) {
 
 typedef struct {
   std::priority_queue<Event, std::vector<Event>, event_time_cmp> pq;
-
-  time_t start;
+  time_t start{0};
   time_t max{0};
   bool started{false};
 } fixed_time_window_t;
@@ -330,7 +329,7 @@ stream_t fixed_time_window(time_t dt, const children_t& children) {
   return [=](e_t e) {
     std::vector<Event> flush;
     window->update(
-      [&](const fixed_time_window_t  w )
+      [&](const fixed_time_window_t  w)
         {
           auto c(w);
           flush.clear();
@@ -376,9 +375,7 @@ stream_t fixed_time_window(time_t dt, const children_t& children) {
           return c;
         },
       [&](const fixed_time_window_t &, const fixed_time_window_t &) {
-        for (const auto & e: flush) {
-          call_rescue(e, children);
-        }
+          call_rescue(flush, children);
       }
     );
   };
