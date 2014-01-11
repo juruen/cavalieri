@@ -65,6 +65,8 @@ stream_t moving_time_window(time_t dt, const children_t& children);
 
 stream_t fixed_time_window(time_t dt, const children_t& children);
 
+stream_t stable(time_t dt, const children_t& children);
+
 stream_t tag(tags_t tags, const children_t& children);
 
 stream_t send_index(class index&);

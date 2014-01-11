@@ -205,7 +205,6 @@ stream_t send_index(class index& idx) {
   };
 }
 
-
 stream_t smap(smap_fn_t f, const children_t& children) {
   return [=](e_t e) {
     Event ne(e);
@@ -381,6 +380,90 @@ stream_t fixed_time_window(time_t dt, const children_t& children) {
   };
 }
 
+typedef struct {
+  std::string state;
+  std::vector<Event> buffer;
+  time_t start{0};
+} stable_t;
+
+typedef std::shared_ptr<atom<stable_t>> atom_stable_t;
+
+void try_flush_stable(
+    atom_stable_t stable,
+    time_t original_start,
+    std::string original_state,
+    children_t children)
+{
+  std::vector<Event> flush;
+  bool abort = false;
+  stable->update(
+      [&](const stable_t & s) {
+        auto c(s);
+
+        if (abort) {
+          return c;
+        }
+
+        if (c.buffer.empty() ||
+            (c.start != original_start) ||
+            (c.state != original_state))
+        {
+          abort = true;
+          return c;
+        }
+
+        flush = std::move(c.buffer);
+        return c;
+      },
+      [&](const stable_t &, const stable_t) {
+        call_rescue(flush, children);
+      }
+  );
+}
+
+stream_t stable(time_t dt, const children_t& children) {
+  auto stable = make_shared_atom<stable_t>();
+
+  return [=](e_t e) {
+    std::vector<Event> flush;
+    bool schedule_flush;
+    stable->update(
+        [&](const stable_t & s) {
+          auto c(s);
+          flush.clear();
+          schedule_flush = false;
+
+          if (s.state != e.state()) {
+            c.start = e.time();
+            c.buffer.clear();
+            c.buffer.push_back(e);
+            c.state = e.state();
+            schedule_flush = true;
+            return c;
+          }
+
+          if (e.time() < c.start) {
+            return c;
+          }
+
+          if (c.start + dt > e.time()) {
+            c.buffer.push_back(e);
+            return c;
+          }
+
+          if (!c.buffer.empty()) {
+            flush = std::move(c.buffer);
+          }
+          flush.push_back(e);
+
+          return c;
+        },
+        [&](const stable_t &, const stable_t &) {
+          call_rescue(flush, children);
+        }
+    );
+  };
+}
 
 stream_t tag(tags_t tags, const children_t& children) {
   return [=](e_t e) {
