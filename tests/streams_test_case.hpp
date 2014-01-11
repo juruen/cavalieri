@@ -611,6 +611,71 @@ TEST(fixed_time_window_test_case, test)
   v.clear();
 }
 
+TEST(stable_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto stable_stream = stable(3, {sink(v)});
+
+  Event e;
+
+  e.set_metric_sint64(0);
+  e.set_state("ok");
+  e.set_time(0);
+  call_rescue(e, {stable_stream});
+
+  e.set_metric_sint64(1);
+  e.set_state("ok");
+  e.set_time(1);
+  call_rescue(e, {stable_stream});
+
+  ASSERT_EQ(0, v.size());
+  v.clear();
+
+  e.set_metric_sint64(4);
+  e.set_state("ok");
+  e.set_time(4);
+  call_rescue(e, {stable_stream});
+
+  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(0, v[0].metric_sint64());
+  ASSERT_EQ(1, v[1].metric_sint64());
+  ASSERT_EQ(4, v[2].metric_sint64());
+  v.clear();
+
+  e.set_metric_sint64(5);
+  e.set_state("info");
+  e.set_time(5);
+  call_rescue(e, {stable_stream});
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_sint64(6);
+  e.set_state("critical");
+  e.set_time(6);
+  call_rescue(e, {stable_stream});
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_sint64(7);
+  e.set_state("critical");
+  e.set_time(7);
+  call_rescue(e, {stable_stream});
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_sint64(9);
+  e.set_state("critical");
+  e.set_time(9);
+  call_rescue(e, {stable_stream});
+  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(6, v[0].metric_sint64());
+  ASSERT_EQ(7, v[1].metric_sint64());
+  ASSERT_EQ(9, v[2].metric_sint64());
+
+  e.set_metric_sint64(12);
+  e.set_state("warning");
+  e.set_time(12);
+  call_rescue(e, {stable_stream});
+}
+
 TEST(tag_test_case, test)
 {
   std::vector<Event> v;
