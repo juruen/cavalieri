@@ -161,9 +161,7 @@ stream_t changed_state(std::string initial, const children_t& children) {
 
 stream_t tagged_any(const tags_t& tags, const children_t& children) {
   return [=](e_t e) {
-    VLOG(3) << "tagged_any()";
     if (tagged_any_(e, tags)) {
-      VLOG(3) << "tagged_any() match";
       call_rescue(e, children);
     }
   };
@@ -171,9 +169,15 @@ stream_t tagged_any(const tags_t& tags, const children_t& children) {
 
 stream_t tagged_all(const tags_t& tags, const children_t& children) {
   return [=](e_t e) {
-    VLOG(3) << "tagged_all()";
     if (tagged_all_(e, tags)) {
-      VLOG(3) << "tagged_all() match";
+      call_rescue(e, children);
+    }
+  };
+}
+
+stream_t expired(const children_t & children) {
+  return [=](e_t e) {
+    if (expired_(e)) {
       call_rescue(e, children);
     }
   };
@@ -196,6 +200,12 @@ bool tagged_all_(e_t e, const tags_t& tags) {
   }
   return true;
 }
+
+bool expired_(e_t e) {
+  return (e.state() == "expired");
+}
+
+
 
 stream_t send_index(class index& idx) {
   return [&](e_t e) {

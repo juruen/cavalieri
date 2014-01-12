@@ -799,4 +799,23 @@ TEST(tag_test_case, test)
   ASSERT_TRUE(tagged_all_(v[0], {"foo", "bar"}));
 }
 
+TEST(expired_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto expired_stream = expired({sink(v)});
+
+  Event e;
+  call_rescue(e, {expired_stream});
+  ASSERT_EQ(0, v.size());
+
+  e.set_state("critical");
+  call_rescue(e, {expired_stream});
+  ASSERT_EQ(0, v.size());
+
+  e.set_state("expired");
+  call_rescue(e, {expired_stream});
+  ASSERT_EQ(1, v.size());
+}
+
 #endif
