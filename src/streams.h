@@ -71,6 +71,10 @@ stream_t above(double m, const children_t& children);
 
 stream_t under(double m, const children_t& children);
 
+stream_t within(double a, double b, const children_t& children);
+
+stream_t without(double a, double b, const children_t& children);
+
 stream_t tag(tags_t tags, const children_t& children);
 
 stream_t send_index(class index&);

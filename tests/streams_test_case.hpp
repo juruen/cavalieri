@@ -710,6 +710,44 @@ TEST(under_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
+TEST(within_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto within_stream = within(5, 8, {sink(v)});
+
+  Event e;
+
+  e.set_metric_d(2);
+  call_rescue(e, {within_stream});
+  e.set_metric_d(9);
+  call_rescue(e, {within_stream});
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_d(6);
+  call_rescue(e, {within_stream});
+  ASSERT_EQ(1, v.size());
+}
+
+TEST(without_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto without_stream = without(5, 8, {sink(v)});
+
+  Event e;
+
+  e.set_metric_d(6);
+  call_rescue(e, {without_stream});
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_d(2);
+  call_rescue(e, {without_stream});
+  e.set_metric_d(9);
+  call_rescue(e, {without_stream});
+  ASSERT_EQ(2, v.size());
+}
+
 TEST(tag_test_case, test)
 {
   std::vector<Event> v;
