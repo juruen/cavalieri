@@ -503,13 +503,24 @@ stream_t scale(double s, const children_t & children) {
 
       double t = s * metric_to_double(e);
 
-      ne.clear_metric_d();
-      ne.clear_metric_f();
-      ne.clear_metric_sint64();
-
+      clear_metrics(ne);
       ne.set_metric_d(t);
 
       call_rescue(ne, children);
+  };
+}
+
+stream_t counter(const children_t & children) {
+ auto counter = std::make_shared<std::atomic<unsigned int>>(0);
+
+  return [=](e_t e) mutable {
+    if (metric_set(e)) {
+      Event ne(e);
+      ne.set_metric_sint64(counter->fetch_add(1) + 1);
+      call_rescue(ne, children);
+    } else {
+      call_rescue(e, children);
+    }
   };
 }
 

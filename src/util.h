@@ -14,6 +14,10 @@ std::string metric_to_string(const Event& e);
 
 double metric_to_double(const Event &e);
 
+bool metric_set(const Event & e);
+
+void clear_metrics(Event & e);
+
 std::string string_to_value(const Event& e, const std::string& key);
 
 std::string event_to_json(const Event &e);

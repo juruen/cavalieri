@@ -762,6 +762,31 @@ TEST(scale_test_case, test)
   ASSERT_EQ(12, metric_to_double(v[0]));
 }
 
+TEST(counter_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto counter_stream = counter({sink(v)});
+
+  Event e;
+
+  e.set_metric_d(1);
+  call_rescue(e, {counter_stream});
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1, metric_to_double(v[0]));
+  v.clear();
+
+  call_rescue(e, {counter_stream});
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(2, metric_to_double(v[0]));
+  v.clear();
+
+  call_rescue(e, {counter_stream});
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(3, metric_to_double(v[0]));
+  v.clear();
+}
+
 TEST(tag_test_case, test)
 {
   std::vector<Event> v;
