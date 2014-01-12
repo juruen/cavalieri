@@ -465,6 +465,22 @@ stream_t stable(time_t dt, const children_t& children) {
   };
 }
 
+stream_t above(double m, const children_t & children) {
+  return [=](e_t e) {
+    if (metric_to_double(e) > m) {
+      call_rescue(e, children);
+    }
+  };
+}
+
+stream_t under(double m, const children_t & children) {
+  return [=](e_t e) {
+    if (metric_to_double(e) < m) {
+      call_rescue(e, children);
+    }
+  };
+}
+
 stream_t tag(tags_t tags, const children_t& children) {
   return [=](e_t e) {
     Event ne(e);

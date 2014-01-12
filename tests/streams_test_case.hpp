@@ -676,6 +676,40 @@ TEST(stable_test_case, test)
   call_rescue(e, {stable_stream});
 }
 
+TEST(above_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto above_stream = above(5, {sink(v)});
+
+  Event e;
+
+  e.set_metric_d(2);
+  call_rescue(e, {above_stream});
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_d(7);
+  call_rescue(e, {above_stream});
+  ASSERT_EQ(1, v.size());
+}
+
+TEST(under_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto under_stream = under(5, {sink(v)});
+
+  Event e;
+
+  e.set_metric_d(7);
+  call_rescue(e, {under_stream});
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_d(2);
+  call_rescue(e, {under_stream});
+  ASSERT_EQ(1, v.size());
+}
+
 TEST(tag_test_case, test)
 {
   std::vector<Event> v;
