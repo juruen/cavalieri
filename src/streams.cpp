@@ -497,6 +497,22 @@ stream_t without(double a, double b, const children_t & children) {
   };
 }
 
+stream_t scale(double s, const children_t & children) {
+  return [=](e_t e) {
+      Event ne(e);
+
+      double t = s * metric_to_double(e);
+
+      ne.clear_metric_d();
+      ne.clear_metric_f();
+      ne.clear_metric_sint64();
+
+      ne.set_metric_d(t);
+
+      call_rescue(ne, children);
+  };
+}
+
 stream_t tag(tags_t tags, const children_t& children) {
   return [=](e_t e) {
     Event ne(e);
