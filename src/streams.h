@@ -79,6 +79,8 @@ stream_t scale(double s, const children_t& children);
 
 stream_t counter(const children_t& children);
 
+stream_t expired(const children_t& children);
+
 stream_t tag(tags_t tags, const children_t& children);
 
 stream_t send_index(class index&);
@@ -87,6 +89,7 @@ bool tagged_any_(e_t e, const tags_t& tags);
 
 bool tagged_all_(e_t e, const tags_t& tags);
 
+bool expired_(e_t e);
 
 class streams {
 public:
