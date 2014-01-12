@@ -748,6 +748,20 @@ TEST(without_test_case, test)
   ASSERT_EQ(2, v.size());
 }
 
+TEST(scale_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto scale_stream = scale(2, {sink(v)});
+
+  Event e;
+
+  e.set_metric_d(6);
+  call_rescue(e, {scale_stream});
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(12, metric_to_double(v[0]));
+}
+
 TEST(tag_test_case, test)
 {
   std::vector<Event> v;
