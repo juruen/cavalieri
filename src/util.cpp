@@ -46,6 +46,15 @@ double metric_to_double(const Event &e) {
   }
 }
 
+void clear_metrics(Event & e) {
+  e.clear_metric_d();
+  e.clear_metric_f();
+  e.clear_metric_sint64();
+}
+
+bool metric_set(const Event & e) {
+  return (e.has_metric_f() || e.has_metric_d() || e.has_metric_sint64());
+}
 
 std::string string_to_value(const Event& e, const std::string& key) {
   if (key == "host") {
