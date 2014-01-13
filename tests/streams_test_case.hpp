@@ -849,10 +849,13 @@ TEST(tag_test_case, test)
 TEST(expired_test_case, test)
 {
   std::vector<Event> v;
+  mock_sched.clear();
 
   auto expired_stream = expired({sink(v)});
 
   Event e;
+  e.set_time(0);
+
   call_rescue(e, {expired_stream});
   ASSERT_EQ(0, v.size());
 
@@ -861,6 +864,17 @@ TEST(expired_test_case, test)
   ASSERT_EQ(0, v.size());
 
   e.set_state("expired");
+  call_rescue(e, {expired_stream});
+  ASSERT_EQ(1, v.size());
+  v.clear();
+
+  e.set_time(5);
+  e.clear_state();
+  call_rescue(e, {expired_stream});
+  ASSERT_EQ(0, v.size());
+  v.clear();
+
+  mock_sched.process_event_time(100);
   call_rescue(e, {expired_stream});
   ASSERT_EQ(1, v.size());
 }
