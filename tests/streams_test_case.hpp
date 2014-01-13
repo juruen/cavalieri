@@ -320,6 +320,8 @@ TEST(coalesce_test_case, test)
 {
   std::vector<Event> v;
 
+  mock_sched.clear();
+
   auto coalesce_stream = coalesce({sink(v)});
 
   Event e;
@@ -352,7 +354,6 @@ TEST(coalesce_test_case, test)
   ASSERT_EQ(3, v.size());
   bool ok = false;
   for (const auto & p: v) {
-    std::cout << "host: " << p.host() << " time: " << p.time() << " \n";
     if (p.host() == "b" && p.time() == 2) {
       ok = true;
       break;
@@ -360,6 +361,20 @@ TEST(coalesce_test_case, test)
   }
   ASSERT_TRUE(ok);
   v.clear();
+
+  mock_sched.process_event_time(100);
+  e.set_host("b");
+  e.set_service("b");
+  e.set_time(90);
+  call_rescue(e, {coalesce_stream});
+  ASSERT_EQ(3, v.size());
+  v.clear();
+
+  e.set_host("b");
+  e.set_service("b");
+  e.set_time(91);
+  call_rescue(e, {coalesce_stream});
+  ASSERT_EQ(1, v.size());
 }
 
 TEST(changed_state_test_case, test)
