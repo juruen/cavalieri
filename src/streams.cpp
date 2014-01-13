@@ -158,9 +158,13 @@ stream_t coalesce(const children_t & children) {
     coalesce->update(
         [&](const coalesce_events_t & events) {
           coalesce_events_t c;
-          c.insert({e.host() + " " + e.service(), e});
+          std::string key(e.host() + " " +  e.service());
           expired_events.clear();
-          for (auto & it : events) {
+          c[key] = e;
+          for (const auto & it : events) {
+            if (key == it.first) {
+              continue;
+            }
             if (expired_(it.second)) {
               expired_events.push_back(it.second);
             } else {
