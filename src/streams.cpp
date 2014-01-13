@@ -144,6 +144,36 @@ stream_t rate(const int interval, const children_t& children) {
   };
 }
 
+typedef std::unordered_map<std::string, Event> coalesce_events_t;
+
+stream_t coalesce(const children_t & children) {
+  auto coalesce = make_shared_atom<coalesce_events_t>();
+  return [=](e_t e) mutable {
+    std::vector<Event> expired_events;
+    coalesce->update(
+        [&](const coalesce_events_t & events) {
+          coalesce_events_t c;
+          c.insert({e.host() + " " + e.service(), e});
+          expired_events.clear();
+          for (auto & it : events) {
+            if (expired_(it.second)) {
+              expired_events.push_back(it.second);
+            } else {
+              c.insert({it.first, it.second});
+            }
+          }
+          return c;
+        },
+        [&](const coalesce_events_t &, const coalesce_events_t & curr) {
+          call_rescue(expired_events, children);
+          for (const auto & it : curr) {
+            call_rescue(it.second, children);
+          }
+        }
+    );
+  };
+}
+
 stream_t changed_state(std::string initial, const children_t& children) {
   auto prev = make_shared_atom<std::string>(initial);
 
