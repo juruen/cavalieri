@@ -49,6 +49,8 @@ stream_t by(const by_keys_t& keys, const by_streams_t& streams);
 
 stream_t rate(const int seconds, const children_t& children);
 
+stream_t coalesce(const children_t& children);
+
 stream_t changed_state(std::string initial, const children_t& children);
 
 stream_t tagged_any(const tags_t& tags, const children_t& children);

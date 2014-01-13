@@ -315,6 +315,53 @@ TEST(rate_thread_test_case, test)
   mock_sched.clear();
 }
 
+#include <iostream>
+TEST(coalesce_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto coalesce_stream = coalesce({sink(v)});
+
+  Event e;
+
+  e.set_host("a");
+  e.set_service("a");
+  e.set_time(1);
+  call_rescue(e, {coalesce_stream});
+  v.clear();
+
+  e.set_host("b");
+  e.set_service("b");
+  e.set_time(1);
+  call_rescue(e, {coalesce_stream});
+  v.clear();
+
+  e.set_host("c");
+  e.set_service("c");
+  e.set_time(1);
+  call_rescue(e, {coalesce_stream});
+
+  ASSERT_EQ(3, v.size());
+  v.clear();
+
+  e.set_host("b");
+  e.set_service("b");
+  e.set_time(2);
+  call_rescue(e, {coalesce_stream});
+
+  ASSERT_EQ(3, v.size());
+  bool ok = false;
+  for (const auto & p: v) {
+    std::cout << "host: " << p.host() << " time: " << p.time() << " \n";
+    if (p.host() == "b" && p.time() == 2) {
+      ok = true;
+      break;
+    }
+  }
+  ASSERT_TRUE(ok);
+  v.clear();
+}
+
 TEST(changed_state_test_case, test)
 {
   std::vector<Event> v;
