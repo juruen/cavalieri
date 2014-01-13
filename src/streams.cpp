@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include <algorithm>
 #include <queue>
 #include <memory>
 #include <atomic>
@@ -7,6 +8,10 @@
 #include <util.h>
 #include <scheduler.h>
 #include <atom.h>
+
+namespace {
+  const unsigned int default_ttl = 60;
+};
 
 void call_rescue(e_t e, const children_t& children) {
   for (auto& s: children) {
@@ -232,10 +237,18 @@ bool tagged_all_(e_t e, const tags_t& tags) {
 }
 
 bool expired_(e_t e) {
-  return (e.state() == "expired");
+  auto ttl = e.has_ttl() ? e.ttl() : default_ttl;
+
+  if (e.state() == "expired") {
+    return true;
+  }
+
+  if (g_scheduler.unix_time() < e.time()) {
+    return false;
+  }
+
+  return (g_scheduler.unix_time() - e.time() > ttl);
 }
-
-
 
 stream_t send_index(class index& idx) {
   return [&](e_t e) {
