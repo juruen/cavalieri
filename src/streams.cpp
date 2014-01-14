@@ -3,6 +3,7 @@
 #include <queue>
 #include <memory>
 #include <atomic>
+#include <boost/optional.hpp>
 #include <glog/logging.h>
 #include <streams.h>
 #include <util.h>
@@ -177,6 +178,43 @@ stream_t coalesce(const children_t & children) {
           call_rescue(expired_events, children);
           for (const auto & it : curr) {
             call_rescue(it.second, children);
+          }
+        }
+    );
+  };
+}
+
+typedef std::vector<boost::optional<Event>> project_events_t;
+
+stream_t project(const predicates_t predicates, const children_t& children) {
+  auto events = make_shared_atom<project_events_t>({predicates.size(),
+                                                    boost::none});
+  return [=](e_t e) mutable {
+    std::vector<Event> expired_events;
+    events->update(
+        [&](const project_events_t & curr) {
+          auto c(curr);
+          expired_events.clear();
+          bool match = false;
+          for (size_t i = 0; i < predicates.size(); i++) {
+            if (!match && predicates[i](e)) {
+              c[i] = e;
+              match = true;
+            } else {
+              if (c[i] && expired_(*c[i])) {
+                expired_events.push_back(*c[i]);
+                c[i].reset();
+              }
+            }
+          }
+          return c;
+        },
+        [&](const project_events_t &, const project_events_t & curr) {
+          call_rescue(expired_events, children);
+          for (const auto & ev : curr) {
+            if (ev) {
+              call_rescue(*ev, children);
+            }
           }
         }
     );

@@ -315,7 +315,6 @@ TEST(rate_thread_test_case, test)
   mock_sched.clear();
 }
 
-#include <iostream>
 TEST(coalesce_test_case, test)
 {
   std::vector<Event> v;
@@ -376,6 +375,72 @@ TEST(coalesce_test_case, test)
   call_rescue(e, {coalesce_stream});
   ASSERT_EQ(1, v.size());
 }
+
+TEST(project_test_case, test)
+{
+  std::vector<Event> v;
+
+  mock_sched.clear();
+
+  auto m1 = PRED(e.host() == "a");
+  auto m2 = PRED(e.host() == "b");
+  auto m3 = PRED(e.host() == "c");
+
+  auto project_stream = project({m1, m2, m3}, {sink(v)});
+
+  Event e;
+
+  e.set_host("a");
+  e.set_service("a");
+  e.set_time(1);
+  call_rescue(e, {project_stream});
+  v.clear();
+
+  e.set_host("b");
+  e.set_service("b");
+  e.set_time(1);
+  call_rescue(e, {project_stream});
+  v.clear();
+
+  e.set_host("c");
+  e.set_service("c");
+  e.set_time(1);
+  call_rescue(e, {project_stream});
+
+  ASSERT_EQ(3, v.size());
+  v.clear();
+
+  e.set_host("b");
+  e.set_service("b");
+  e.set_time(2);
+  call_rescue(e, {project_stream});
+
+  ASSERT_EQ(3, v.size());
+  bool ok = false;
+  for (const auto & p: v) {
+    if (p.host() == "b" && p.time() == 2) {
+      ok = true;
+      break;
+    }
+  }
+  ASSERT_TRUE(ok);
+  v.clear();
+
+  mock_sched.process_event_time(100);
+  e.set_host("b");
+  e.set_service("b");
+  e.set_time(90);
+  call_rescue(e, {project_stream});
+  ASSERT_EQ(3, v.size());
+  v.clear();
+
+  e.set_host("b");
+  e.set_service("b");
+  e.set_time(91);
+  call_rescue(e, {project_stream});
+  ASSERT_EQ(1, v.size());
+}
+
 
 TEST(changed_state_test_case, test)
 {
