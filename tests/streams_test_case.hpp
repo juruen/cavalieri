@@ -803,6 +803,33 @@ TEST(stable_test_case, test)
   call_rescue(e, {stable_stream});
 }
 
+TEST(throttle_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto throttle_stream = throttle(3, 5, {sink(v)});
+
+  Event e;
+
+  for (auto i = 0; i < 3; i++) {
+    e.set_time(1);
+    call_rescue(e, {throttle_stream});
+    ASSERT_EQ(1, v.size());
+    v.clear();
+  }
+
+  e.set_time(1);
+  call_rescue(e, {throttle_stream});
+  ASSERT_EQ(0, v.size());
+
+  for (auto i = 0; i < 3; i++) {
+    e.set_time(7);
+    call_rescue(e, {throttle_stream});
+    ASSERT_EQ(1, v.size());
+    v.clear();
+  }
+}
+
 TEST(above_test_case, test)
 {
   std::vector<Event> v;

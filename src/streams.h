@@ -72,6 +72,8 @@ stream_t fixed_time_window(time_t dt, const children_t& children);
 
 stream_t stable(time_t dt, const children_t& children);
 
+stream_t throttle(size_t n, time_t dt, const children_t& children);
+
 stream_t above(double m, const children_t& children);
 
 stream_t under(double m, const children_t& children);
