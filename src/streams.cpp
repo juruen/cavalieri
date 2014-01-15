@@ -560,6 +560,37 @@ stream_t stable(time_t dt, const children_t& children) {
   };
 }
 
+typedef struct {
+  size_t forwarded{0};
+ time_t new_interval{0};
+} throttle_t;
+
+stream_t throttle(size_t n, time_t dt, const children_t & children) {
+  auto throttled = make_shared_atom<throttle_t>();
+
+  return [=](e_t e) mutable {
+    bool forward;
+    throttled->update(
+        [&](const throttle_t & t) {
+          auto c(t);
+          if (c.new_interval < e.time()) {
+            c.new_interval += e.time() + dt;
+            c.forwarded = 0;
+          }
+          forward = (c.forwarded < n);
+          if (forward) {
+            c.forwarded++;
+          }
+          return c;
+        },
+        [&](const throttle_t &, const throttle_t &) {
+          if (forward) {
+            call_rescue(e, children);
+          }
+    });
+  };
+}
+
 stream_t above(double m, const children_t & children) {
   return [=](e_t e) {
     if (metric_to_double(e) > m) {
