@@ -5,6 +5,7 @@
 #include "query_grammar_test_case.hpp"
 #include "mock_scheduler_test_case.hpp"
 #include "streams_test_case.hpp"
+#include "folds_test_case.hpp"
 #include "atom_test_case.hpp"
 #include "scheduler.h"
 #include "mock_scheduler.h"

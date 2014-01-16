@@ -13,6 +13,7 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/index.cpp
     ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
+    ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/tcpserver.cpp
     ${CMAKE_SOURCE_DIR}/src/tcpconnection.cpp
     ${CMAKE_SOURCE_DIR}/src/riemanntcpconnection.cpp
