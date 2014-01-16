@@ -20,8 +20,6 @@ mstream_t msink(std::vector<Event> & v) {
   return [&](const events_t evs) { v = evs; };
 }
 
-
-
 TEST(call_rescue_streams_test_case, test)
 {
   std::vector<Event> v1, v2, v3;
