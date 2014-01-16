@@ -12,9 +12,15 @@ const size_t thread_num = 4;
 const size_t iterations = 10000;
 }
 
-std::function<void(e_t e)> sink(std::vector<Event> & v) {
+stream_t sink(std::vector<Event> & v) {
   return [&](e_t e) { v.push_back(e); };
 }
+
+mstream_t msink(std::vector<Event> & v) {
+  return [&](const events_t evs) { v = evs; };
+}
+
+
 
 TEST(call_rescue_streams_test_case, test)
 {
@@ -321,7 +327,7 @@ TEST(coalesce_test_case, test)
 
   mock_sched.clear();
 
-  auto coalesce_stream = coalesce({sink(v)});
+  auto coalesce_stream = coalesce({msink(v)});
 
   Event e;
 
@@ -366,7 +372,7 @@ TEST(coalesce_test_case, test)
   e.set_service("b");
   e.set_time(90);
   call_rescue(e, {coalesce_stream});
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(1, v.size());
   v.clear();
 
   e.set_host("b");
@@ -386,7 +392,7 @@ TEST(project_test_case, test)
   auto m2 = PRED(e.host() == "b");
   auto m3 = PRED(e.host() == "c");
 
-  auto project_stream = project({m1, m2, m3}, {sink(v)});
+  auto project_stream = project({m1, m2, m3}, {msink(v)});
 
   Event e;
 
@@ -431,7 +437,7 @@ TEST(project_test_case, test)
   e.set_service("b");
   e.set_time(90);
   call_rescue(e, {project_stream});
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(1, v.size());
   v.clear();
 
   e.set_host("b");

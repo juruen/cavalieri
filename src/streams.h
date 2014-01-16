@@ -10,6 +10,7 @@
 #include <index.h>
 
 typedef const Event& e_t;
+typedef std::vector<Event> events_t;
 
 #define PRED(EXP) [](e_t e) { return (EXP); }
 #define TR(EXP) [](Event & e) {(EXP); }
@@ -20,6 +21,8 @@ typedef std::function<void(e_t)> stream_t;
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::function<void(Event &)> smap_fn_t;
 typedef std::vector<stream_t> children_t;
+typedef std::function<void(events_t)> mstream_t;
+typedef std::vector<mstream_t> mchildren_t;
 typedef std::vector<predicate_t> predicates_t;
 typedef std::pair<const predicate_t, const stream_t> split_pair_t;
 typedef boost::variant<std::string, int, double> change_value_t;
@@ -50,9 +53,9 @@ stream_t by(const by_keys_t& keys, const by_streams_t& streams);
 
 stream_t rate(const int seconds, const children_t& children);
 
-stream_t coalesce(const children_t& children);
+stream_t coalesce(const mchildren_t& children);
 
-stream_t project(const predicates_t predicates, const children_t& children);
+stream_t project(const predicates_t predicates, const mchildren_t& children);
 
 stream_t changed_state(std::string initial, const children_t& children);
 

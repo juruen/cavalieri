@@ -36,6 +36,14 @@ void call_rescue(const std::list<Event> events, const children_t& children) {
   }
 }
 
+void call_rescue(const std::vector<Event> events, const mchildren_t& children) {
+  if (!events.empty()) {
+    for (auto& s: children) {
+      s(events);
+    }
+  }
+}
+
 stream_t prn() {
   return [](e_t e) {
     LOG(INFO) << "prn() " <<  event_to_json(e);
@@ -152,7 +160,7 @@ stream_t rate(const int interval, const children_t& children) {
 
 typedef std::unordered_map<std::string, Event> coalesce_events_t;
 
-stream_t coalesce(const children_t & children) {
+stream_t coalesce(const mchildren_t & children) {
   auto coalesce = make_shared_atom<coalesce_events_t>();
   return [=](e_t e) mutable {
     std::vector<Event> expired_events;
@@ -176,9 +184,11 @@ stream_t coalesce(const children_t & children) {
         },
         [&](const coalesce_events_t &, const coalesce_events_t & curr) {
           call_rescue(expired_events, children);
+          events_t events;
           for (const auto & it : curr) {
-            call_rescue(it.second, children);
+            events.push_back(it.second);
           }
+          call_rescue(events, children);
         }
     );
   };
@@ -186,7 +196,7 @@ stream_t coalesce(const children_t & children) {
 
 typedef std::vector<boost::optional<Event>> project_events_t;
 
-stream_t project(const predicates_t predicates, const children_t& children) {
+stream_t project(const predicates_t predicates, const mchildren_t& children) {
   auto events = make_shared_atom<project_events_t>({predicates.size(),
                                                     boost::none});
   return [=](e_t e) mutable {
@@ -211,10 +221,14 @@ stream_t project(const predicates_t predicates, const children_t& children) {
         },
         [&](const project_events_t &, const project_events_t & curr) {
           call_rescue(expired_events, children);
+          events_t events;
           for (const auto & ev : curr) {
             if (ev) {
-              call_rescue(*ev, children);
+              events.push_back(*ev);
             }
+          }
+          if (!events.empty()) {
+            call_rescue(events, children);
           }
         }
     );

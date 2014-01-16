@@ -10,6 +10,7 @@ SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
+    ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index.cpp
     ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
@@ -50,6 +51,7 @@ GTEST_ADD_TESTS(
     ${CMAKE_SOURCE_DIR}/tests/query_grammar_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/mock_scheduler_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/streams_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/folds_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/atom_test_case.hpp
   )
 
