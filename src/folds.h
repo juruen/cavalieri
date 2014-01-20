@@ -21,5 +21,4 @@ mstream_t minimum(const children_t);
 
 mstream_t maximum(const children_t);
 
-
 #endif
