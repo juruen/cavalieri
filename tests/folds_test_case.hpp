@@ -72,4 +72,52 @@ TEST(difference_test_case, test)
   ASSERT_EQ(-1, v[0].metric_d());
 }
 
+TEST(mean_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto mean_stream = mean({asink(v)});
+
+  std::vector<Event> events(3);
+  for (size_t i = 1; i < 4; i++) {
+    events[i - 1].set_metric_d(i);
+  }
+
+  mean_stream(events);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(2, v[0].metric_d());
+}
+
+TEST(maximum_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto maximum_stream = maximum({asink(v)});
+
+  std::vector<Event> events(3);
+  for (size_t i = 1; i < 4; i++) {
+    events[i - 1].set_metric_d(i);
+  }
+
+  maximum_stream(events);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(3, v[0].metric_d());
+}
+
+TEST(minimum_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto minimum_stream = minimum({asink(v)});
+
+  std::vector<Event> events(3);
+  for (size_t i = 1; i < 4; i++) {
+    events[i - 1].set_metric_d(i);
+  }
+
+  minimum_stream(events);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1, v[0].metric_d());
+}
+
 #endif
