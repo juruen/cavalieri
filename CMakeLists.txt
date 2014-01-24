@@ -55,44 +55,50 @@ FIND_PACKAGE(Protobuf REQUIRED)
 FIND_PACKAGE(Glog REQUIRED)
 FIND_PACKAGE(LibEv REQUIRED)
 FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
+FIND_PACKAGE(CURL REQUIRED)
+FIND_PACKAGE(OpenSSL REQUIRED)
+FIND_PACKAGE(TBB REQUIRED)
 
-IF(PROTOBUF_FOUND)
-  PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${MINIRIEMANN_PROTOFILES})
+PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${MINIRIEMANN_PROTOFILES})
 
-  INCLUDE_DIRECTORIES(
-      ${CMAKE_CURRENT_BINARY_DIR}
-      ${CMAKE_BINARY_DIR}
-      ${MINIRIEMANN_HDRS}
-      ${PROTOBUF_INCLUDE_DIR}
-      ${Glog_INCLUDE_DIR}
-      ${LibEv_INCLUDE_DIR}
-      ${PYTHON_INCLUDE_DIRS}
-    )
+INCLUDE_DIRECTORIES(
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_BINARY_DIR}
+    ${MINIRIEMANN_HDRS}
+    ${PROTOBUF_INCLUDE_DIR}
+    ${Glog_INCLUDE_DIR}
+    ${LibEv_INCLUDE_DIR}
+    ${PYTHON_INCLUDE_DIRS}
+    ${CURL_INCLUDE_DIRS}
+    ${OpenSSL_INCLUDE_DIRS}
+    ${TBB_INCLUDE_DIRS}
+  )
 
-  ADD_EXECUTABLE(
-      miniriemann
-      ${MINIRIEMANN_SRCS}
-      ${ProtoSources}
-      ${ProtoHeaders}
-    )
+ADD_EXECUTABLE(
+    miniriemann
+    ${MINIRIEMANN_SRCS}
+    ${ProtoSources}
+    ${ProtoHeaders}
+  )
 
-  TARGET_LINK_LIBRARIES(
-      miniriemann
-      ${CMAKE_THREAD_LIBS_INIT}
-      ${PROTOBUF_LIBRARY}
-      ${LibEv_LIBRARIES}
-      ${Glog_LIBRARIES}
-      ${PYTHON_LIBRARIES}
-      ssl
-      crypto
-      curl
-      pthread
-      tbb
-      cds
-    )
+TARGET_LINK_LIBRARIES(
+    miniriemann
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${PROTOBUF_LIBRARY}
+    ${LibEv_LIBRARIES}
+    ${Glog_LIBRARIES}
+    ${PYTHON_LIBRARIES}
+    ${CURL_LIBRARIES}
+    ${TBB_LIBRARIES}
+    crypto
+    pthread
+    cds
+    dl
+  )
 
-  ENABLE_TESTING()
+add_library(rules SHARED src/rules.cpp)
 
-  ADD_SUBDIRECTORY(tests)
+ENABLE_TESTING()
 
-ENDIF(PROTOBUF_FOUND)
+ADD_SUBDIRECTORY(tests)
+
