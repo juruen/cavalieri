@@ -7,6 +7,7 @@
 #include "streams_test_case.hpp"
 #include "folds_test_case.hpp"
 #include "atom_test_case.hpp"
+#include "rules_common_test_case.hpp"
 #include "scheduler.h"
 #include "mock_scheduler.h"
 #include "atom.h"

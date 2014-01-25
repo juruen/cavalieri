@@ -18,6 +18,7 @@ SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
     ${CMAKE_SOURCE_DIR}/src/query/parser.cpp
     ${CMAKE_SOURCE_DIR}/src/query/expression.cpp
+    ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
   )
 
 SET(MINIRIEMANN_PROTOFILES
@@ -53,6 +54,7 @@ GTEST_ADD_TESTS(
     ${CMAKE_SOURCE_DIR}/tests/streams_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/folds_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/atom_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/rules_common_test_case.hpp
   )
 
 TARGET_LINK_LIBRARIES(
