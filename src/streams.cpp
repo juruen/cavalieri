@@ -607,7 +607,7 @@ stream_t throttle(size_t n, time_t dt, const children_t & children) {
 
 stream_t above(double m, const children_t & children) {
   return [=](e_t e) {
-    if (metric_to_double(e) > m) {
+    if (above_(e,m)) {
       call_rescue(e, children);
     }
   };
@@ -615,7 +615,7 @@ stream_t above(double m, const children_t & children) {
 
 stream_t under(double m, const children_t & children) {
   return [=](e_t e) {
-    if (metric_to_double(e) < m) {
+    if (under_(e,m)) {
       call_rescue(e, children);
     }
   };
@@ -623,7 +623,7 @@ stream_t under(double m, const children_t & children) {
 
 stream_t within(double a, double b, const children_t & children) {
   return [=](e_t e) {
-    if (metric_to_double(e) >= a && metric_to_double(e) <= b) {
+    if (above_eq_(e,a) && under_eq_(e, b)) {
       call_rescue(e, children);
     }
   };
@@ -631,7 +631,7 @@ stream_t within(double a, double b, const children_t & children) {
 
 stream_t without(double a, double b, const children_t & children) {
   return [=](e_t e) {
-    if (metric_to_double(e) < a || metric_to_double(e) > b) {
+    if (under_(e,a) || above_(e,b)) {
       call_rescue(e, children);
     }
   };
@@ -673,6 +673,39 @@ stream_t tag(tags_t tags, const children_t& children) {
     call_rescue(ne, children);
   };
 }
+
+predicate_t above_eq_pred(const double value) {
+  return PRED(above_eq_(e, value));
+}
+
+predicate_t above_pred(const double value) {
+  return PRED(above_(e, value));
+}
+
+predicate_t under_eq_pred(const double value) {
+  return PRED(under_eq_(e, value));
+}
+
+predicate_t under_pred(const double value) {
+  return PRED(under_(e, value));
+}
+
+bool above_eq_(e_t e, const double value) {
+  return (metric_to_double(e) >= value);
+}
+
+bool above_(e_t e, const double value) {
+  return (metric_to_double(e) > value);
+}
+
+bool under_eq_(e_t e, const double value) {
+  return (metric_to_double(e) <= value);
+}
+
+bool under_(e_t e, const double value) {
+  return (metric_to_double(e) < value);
+}
+
 
 void streams::add_stream(stream_t stream) {
   VLOG(3) << "adding stream";

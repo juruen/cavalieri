@@ -12,7 +12,7 @@
 typedef const Event& e_t;
 typedef std::vector<Event> events_t;
 
-#define PRED(EXP) [](e_t e) { return (EXP); }
+#define PRED(EXP) [=](e_t e) { return (EXP); }
 #define TR(EXP) [](Event & e) {(EXP); }
 #define CHILD(EXP) {EXP}
 #define BY(EXP) []() { return (EXP); }
@@ -95,11 +95,27 @@ stream_t tag(tags_t tags, const children_t& children);
 
 stream_t send_index(class index&);
 
+predicate_t above_eq_pred(const double value);
+
+predicate_t above_pred(const double value);
+
+predicate_t under_eq_pred(const double value);
+
+predicate_t under_pred(const double value);
+
 bool tagged_any_(e_t e, const tags_t& tags);
 
 bool tagged_all_(e_t e, const tags_t& tags);
 
 bool expired_(e_t e);
+
+bool above_eq_(e_t e, const double value);
+
+bool above_(e_t e, const double value);
+
+bool under_eq_(e_t e, const double value);
+
+bool under_(e_t e, const double value);
 
 class streams {
 public:
