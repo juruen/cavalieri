@@ -15,14 +15,15 @@ typedef std::vector<Event> events_t;
 #define PRED(EXP) [=](e_t e) { return (EXP); }
 #define TR(EXP) [](Event & e) {(EXP); }
 #define CHILD(EXP) {EXP}
+#define S(...) std::vector<stream_t> {__VA_ARGS__}
 #define BY(EXP) []() { return (EXP); }
 
 typedef std::function<void(e_t)> stream_t;
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::function<void(Event &)> smap_fn_t;
-typedef std::vector<stream_t> children_t;
+typedef boost::variant<stream_t, std::vector<stream_t>> children_t;
 typedef std::function<void(events_t)> mstream_t;
-typedef std::vector<mstream_t> mchildren_t;
+typedef boost::variant<mstream_t, std::vector<mstream_t>> mchildren_t;
 typedef std::vector<predicate_t> predicates_t;
 typedef std::pair<const predicate_t, const stream_t> split_pair_t;
 typedef boost::variant<std::string, int, double> change_value_t;
@@ -44,7 +45,7 @@ stream_t with(const with_changes_t& changes, const children_t& children);
 stream_t with_ifempty(const with_changes_t& changes, const children_t& children);
 
 stream_t where(const predicate_t& predicate, const children_t& children,
-               const children_t& else_children={});
+               const children_t& else_children=std::vector<stream_t>{});
 
 stream_t split(const split_clauses_t clauses,
                const stream_t& default_stream={});

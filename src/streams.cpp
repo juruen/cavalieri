@@ -12,17 +12,32 @@
 
 namespace {
   const unsigned int default_ttl = 60;
+  // TODO: use function template
+  std::vector<stream_t> children_to_vec(const children_t & children) {
+    if (children.which() == 0) {
+      return {1, boost::get<stream_t>(children)};
+    } else {
+      return boost::get<std::vector<stream_t>>(children);
+    }
+  }
+  std::vector<mstream_t> children_to_vec(const mchildren_t & children) {
+    if (children.which() == 0) {
+      return {1, boost::get<mstream_t>(children)};
+    } else {
+      return boost::get<std::vector<mstream_t>>(children);
+    }
+  }
 };
 
 void call_rescue(e_t e, const children_t& children) {
-  for (auto& s: children) {
+  for (auto& s: children_to_vec(children)) {
     s(e);
   }
 }
 
 void call_rescue(const std::vector<Event> events, const children_t& children) {
   for (auto& e: events) {
-    for (auto& s: children) {
+    for (auto& s: children_to_vec(children)) {
       s(e);
     }
   }
@@ -30,7 +45,7 @@ void call_rescue(const std::vector<Event> events, const children_t& children) {
 
 void call_rescue(const std::list<Event> events, const children_t& children) {
   for (auto& e: events) {
-    for (auto& s: children) {
+    for (auto& s: children_to_vec(children)) {
       s(e);
     }
   }
@@ -38,7 +53,7 @@ void call_rescue(const std::list<Event> events, const children_t& children) {
 
 void call_rescue(const std::vector<Event> events, const mchildren_t& children) {
   if (!events.empty()) {
-    for (auto& s: children) {
+    for (auto& s: children_to_vec(children)) {
       s(events);
     }
   }
@@ -106,7 +121,7 @@ stream_t by(const by_keys_t & keys, const by_streams_t & streams) {
     }
 
     auto fn_value = [&]() {
-      children_t children;
+      std::vector<stream_t> children;
       for (auto & s: streams) {
         children.push_back(s());
       }

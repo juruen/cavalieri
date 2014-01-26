@@ -37,14 +37,14 @@ stream_t stable_stream(double dt, atomic_bool_t state, children_t children) {
     state->store(e.state() == "ok");
     call_rescue(e, children);
   };
-  return (stable(dt, {set_state}));
+  return (stable(dt, set_state));
 }
 
 stream_t trigger_detrigger(double dt, predicate_t trigger_pred,
                            predicate_t cancel_pred, children_t children)
 {
   auto state_ok = std::make_shared<std::atomic<bool>>(true);
-  auto s = stable_stream(dt, state_ok, {call_rescue_e(children)});
+  auto s = stable_stream(dt, state_ok, call_rescue_e(children));
 
   return [=](e_t e) {
     bool ok = state_ok->load();
@@ -82,4 +82,14 @@ stream_t trigger_detrigger_under(double dt, double trigger_value,
   );
 }
 
+typedef std::function<mstream_t(children_t)> agg_fn_t;
+
+
+stream_t aggregated_trigger(double dt, agg_fn_t agg_fn, predicate_t trigger_pred,
+                             predicate_t keep_trigger_pred, children_t children)
+{
+  auto trigger_s = trigger_detrigger(dt, trigger_pred,
+                                     keep_trigger_pred, children);
+  return coalesce(agg_fn(trigger_s));
+}
 
