@@ -11,7 +11,7 @@ namespace {
   const uint32_t json_buff_size = 1024 * 4;
   const char *json_base =
       "{\"host\": \"%s\", \"service\": \"%s\", \"description\": \"%s\""
-      ",\"state\": \"%s\", \"metric\": %f, \"time\": %i, \"tags\": [%s] %s}";
+      ",\"state\": \"%s\", \"metric\": %f, \"time\": %lld, \"tags\": [%s] %s}";
 }
 
 std::string metric_to_string(const Event& e) {
