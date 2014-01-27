@@ -48,6 +48,18 @@ SET(MINIRIEMANN_PROTOFILES
     ${CMAKE_SOURCE_DIR}/src/proto.proto
   )
 
+SET(RULETESTER_SRCS
+    ${CMAKE_SOURCE_DIR}/src/rule_tester.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams.cpp
+    ${CMAKE_SOURCE_DIR}/src/folds.cpp
+    ${CMAKE_SOURCE_DIR}/src/index.cpp
+    ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
+    ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
+    ${CMAKE_SOURCE_DIR}/src/scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/mock_scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/util.cpp
+  )
+
 ADD_DEFINITIONS( -Wall -std=c++11 -g )
 
 INCLUDE(FindProtobuf)
@@ -97,7 +109,27 @@ TARGET_LINK_LIBRARIES(
     dl
   )
 
-add_library(rules SHARED src/rules.cpp)
+ADD_EXECUTABLE(
+    rule_tester
+    ${RULETESTER_SRCS}
+    ${ProtoSources}
+    ${ProtoHeaders}
+  )
+
+TARGET_LINK_LIBRARIES(
+    rule_tester
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${PROTOBUF_LIBRARY}
+    ${Glog_LIBRARIES}
+    ${CURL_LIBRARIES}
+    ${TBB_LIBRARIES}
+    crypto
+    pthread
+    cds
+    dl
+  )
+
+#add_library(rules SHARED src/rules.cpp)
 
 ENABLE_TESTING()
 
