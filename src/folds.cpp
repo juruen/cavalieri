@@ -2,10 +2,14 @@
 #include <util.h>
 
 namespace {
-  double reduce(const fold_fn_t f, const events_t & events) {
+  double reduce(const fold_fn_t f, const events_t & events, double & max_time) {
+    max_time = 0;
     double t(metric_to_double(events[0]));
     for (size_t i = 1; i < events.size(); i++) {
       t = f(t, metric_to_double(events[i]));
+      if (events[i].time() > max_time) {
+        max_time = events[i].time();
+      }
     }
     return t;
   }
@@ -26,7 +30,9 @@ mstream_t fold(const fold_fn_t f, const children_t & children) {
 
     Event event(events[0]);
     clear_metrics(event);
-    event.set_metric_d(reduce(f, events));
+    double max_time;
+    event.set_metric_d(reduce(f, events, max_time));
+    event.set_time(max_time);
     call_rescue(event, children);
   };
 }
@@ -50,7 +56,9 @@ mstream_t mean(const children_t children) {
     }
     Event event(events[0]);
     clear_metrics(event);
-    event.set_metric_d(reduce(sum_fn, events) / events.size());
+    double max_time{0};
+    event.set_metric_d(reduce(sum_fn, events, max_time) / events.size());
+    event.set_time(max_time);
     call_rescue(event, children);
   };
 }
@@ -63,13 +71,18 @@ mstream_t minimum(const children_t children) {
     Event event(events[0]);
     clear_metrics(event);
     double min = metric_to_double(events[0]);
+    double max_time{0};
     for (const auto & e: events) {
       auto tmp = metric_to_double(e);
       if (tmp < min) {
         min = tmp;
       }
+      if (e.time() > max_time) {
+        max_time = e.time();
+      }
     }
     event.set_metric_d(min);
+    event.set_time(max_time);
     call_rescue(event, children);
   };
 }
@@ -82,13 +95,18 @@ mstream_t maximum(const children_t children) {
     Event event(events[0]);
     clear_metrics(event);
     double max = metric_to_double(events[0]);
+    double max_time{0};
     for (const auto & e: events) {
       auto tmp = metric_to_double(e);
       if (tmp > max) {
         max = tmp;
       }
-      event.set_metric_d(max);
+      if (e.time() > max_time) {
+        max_time = e.time();
+      }
     }
+    event.set_metric_d(max);
+    event.set_time(max_time);
     call_rescue(event, children);
   };
 }
