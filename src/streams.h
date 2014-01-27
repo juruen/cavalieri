@@ -66,13 +66,13 @@ stream_t tagged_all(const tags_t& tags, const children_t& children);
 
 stream_t smap(smap_fn_t f, const children_t& children);
 
-stream_t moving_event_window(size_t window, const children_t& children);
+stream_t moving_event_window(size_t window, const mchildren_t& children);
 
-stream_t fixed_event_window(size_t window, const children_t& children);
+stream_t fixed_event_window(size_t window, const mchildren_t& children);
 
-stream_t moving_time_window(time_t dt, const children_t& children);
+stream_t moving_time_window(time_t dt, const mchildren_t& children);
 
-stream_t fixed_time_window(time_t dt, const children_t& children);
+stream_t fixed_time_window(time_t dt, const mchildren_t& children);
 
 stream_t stable(time_t dt, const children_t& children);
 

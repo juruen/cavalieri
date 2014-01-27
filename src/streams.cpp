@@ -59,6 +59,14 @@ void call_rescue(const std::vector<Event> events, const mchildren_t& children) {
   }
 }
 
+void call_rescue(const std::list<Event> events, const mchildren_t& children) {
+  if (!events.empty()) {
+    for (const auto& s: children_to_vec(children)) {
+      s(std::vector<Event>{begin(events), end(events)});
+    }
+  }
+}
+
 stream_t prn() {
   return [](e_t e) {
     LOG(INFO) << "prn() " <<  event_to_json(e);
@@ -338,7 +346,7 @@ stream_t smap(smap_fn_t f, const children_t& children) {
 }
 
 
-stream_t moving_event_window(size_t n, const children_t& children) {
+stream_t moving_event_window(size_t n, const mchildren_t& children) {
   auto window = make_shared_atom<std::list<Event>>();
 
   return [=](e_t e) {
@@ -353,15 +361,13 @@ stream_t moving_event_window(size_t n, const children_t& children) {
           return std::move(c);
         },
       [&](const std::list<Event> &, const std::list<Event> & curr) {
-        for (const auto & ev : curr) {
-          call_rescue(ev, children);
-        }
+        call_rescue(curr, children);
       }
     );
   };
 }
 
-stream_t fixed_event_window(size_t n, const children_t& children) {
+stream_t fixed_event_window(size_t n, const mchildren_t& children) {
   auto window = make_shared_atom<std::list<Event>>();
 
   return [=](e_t e) {
@@ -399,7 +405,7 @@ typedef struct {
   time_t max{0};
 } moving_time_window_t;
 
-stream_t moving_time_window(time_t dt, const children_t& children) {
+stream_t moving_time_window(time_t dt, const mchildren_t& children) {
   auto window = make_shared_atom<moving_time_window_t>();
 
   return [=](e_t e) {
@@ -430,10 +436,12 @@ stream_t moving_time_window(time_t dt, const children_t& children) {
         },
       [&](const moving_time_window_t &, const moving_time_window_t & curr) {
         auto c(curr);
+        std::vector<Event> events;
         while (!c.pq.empty()) {
-          call_rescue(c.pq.top(), children);
+          events.push_back(c.pq.top());
           c.pq.pop();
         }
+        call_rescue(events, children);
       }
     );
   };
@@ -446,7 +454,7 @@ typedef struct {
   bool started{false};
 } fixed_time_window_t;
 
-stream_t fixed_time_window(time_t dt, const children_t& children) {
+stream_t fixed_time_window(time_t dt, const mchildren_t& children) {
   auto window = make_shared_atom<fixed_time_window_t>();
 
   return [=](e_t e) {
