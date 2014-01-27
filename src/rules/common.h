@@ -14,4 +14,7 @@ stream_t trigger_detrigger_above(double dt, double trigger_value,
 stream_t trigger_detrigger_under(double dt, double trigger_value,
                                  double keep_trigger_value,
                                  children_t children);
+
+stream_t agg_sum_trigger_above(double dt, double trigger_value,
+                               double keep_trigger_value, children_t children);
 #endif

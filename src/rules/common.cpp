@@ -1,5 +1,6 @@
 #include "common.h"
 #include <atomic>
+#include <folds.h>
 
 namespace {
 stream_t set_state(std::string state, children_t children) {
@@ -84,12 +85,17 @@ stream_t trigger_detrigger_under(double dt, double trigger_value,
 
 typedef std::function<mstream_t(children_t)> agg_fn_t;
 
-
-stream_t aggregated_trigger(double dt, agg_fn_t agg_fn, predicate_t trigger_pred,
-                             predicate_t keep_trigger_pred, children_t children)
+stream_t agg_trigger(double dt, agg_fn_t agg_fn, predicate_t trigger_pred,
+                     predicate_t keep_trigger_pred, children_t children)
 {
-  auto trigger_s = trigger_detrigger(dt, trigger_pred,
-                                     keep_trigger_pred, children);
-  return coalesce(agg_fn(trigger_s));
+  auto trigger = trigger_detrigger(dt, trigger_pred,
+                                   keep_trigger_pred, children);
+  return coalesce(agg_fn(trigger));
 }
 
+stream_t agg_sum_trigger_above(double dt, double trigger_value,
+                               double keep_trigger_value, children_t children)
+{
+  return agg_trigger(dt, sum, above_eq_pred(trigger_value),
+                     above_pred(keep_trigger_value), call_rescue_e(children));
+}

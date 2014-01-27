@@ -547,7 +547,7 @@ TEST(moving_event_window_test_case, test)
 {
   std::vector<Event> v;
 
-  auto moving_stream = moving_event_window(3, sink(v));
+  auto moving_stream = moving_event_window(3, msink(v));
 
   Event e;
 
@@ -580,7 +580,7 @@ TEST(fixed_event_window_test_case, test)
 {
   std::vector<Event> v;
 
-  auto moving_stream = fixed_event_window(3, sink(v));
+  auto moving_stream = fixed_event_window(3, msink(v));
 
   Event e;
 
@@ -619,7 +619,7 @@ TEST(moving_time_window_test_case, test)
 {
   std::vector<Event> v;
 
-  auto moving_stream = moving_time_window(3, sink(v));
+  auto moving_stream = moving_time_window(3, msink(v));
 
   Event e;
 
@@ -672,7 +672,7 @@ TEST(fixed_time_window_test_case, test)
 {
   std::vector<Event> v;
 
-  auto moving_stream = fixed_time_window(3, sink(v));
+  auto moving_stream = fixed_time_window(3, msink(v));
 
   Event e;
 
