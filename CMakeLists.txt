@@ -55,10 +55,11 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index.cpp
-    ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/mock_scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/mock_index.cpp
+    ${CMAKE_SOURCE_DIR}/src/index.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
   )
 
