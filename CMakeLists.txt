@@ -61,6 +61,7 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/mock_index.cpp
     ${CMAKE_SOURCE_DIR}/src/index.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/external_mocks.cpp
   )
 
 ADD_DEFINITIONS( -Wall -std=c++11 -g )
