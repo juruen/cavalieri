@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <iostream>
 #include <thread>
-#include "index.h"
+#include "real_index.h"
 #include "tcpserver.h"
 #include "riemanntcpconnection.h"
 #include "websocket.h"
@@ -109,7 +109,9 @@ int main(int argc, char **argv)
                  CHILD(prn())))));
 
     /* Everything goes to the index. Check for expired events every 3 seconds */
-    class index index{pubsub, [&](const Event& e){ all_streams.push_event (e);  }, 10};
+    real_index idx{pubsub, [&](const Event& e){ all_streams.push_event (e);  }, 10};
+    class index index{idx};
+
     all_streams.add_stream(
 
         /* Set default tt to 9 sec */

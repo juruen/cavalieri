@@ -2,33 +2,22 @@
 #define INDEX_H
 
 #include <proto.pb.h>
-#include <tbb/concurrent_hash_map.h>
-#include <pubsub.h>
-#include <util.h>
+#include <functional>
 
+typedef std::function<void(const Event&)> push_event_fn_t;
 
-
-typedef tbb::concurrent_hash_map<std::string, Event> index_t;
-typedef std::function<void(const Event&)> push_event_f_t;
+class index_interface {
+public:
+  virtual void add_event(const Event& e) = 0;
+};
 
 class index {
-private:
-  pub_sub& pubsub;
-  index_t index_map;
-  push_event_f_t push_event;
-
 public:
-  index(
-      pub_sub& pubsub,
-      push_event_f_t push_event,
-      const int64_t expire_interval
-    );
-  ~index();
+  index(index_interface & impl);
   void add_event(const Event& e);
 
 private:
-  void expire_events();
-  const std::string key(const Event& e) const;
+  index_interface & impl_;
 };
 
 #endif
