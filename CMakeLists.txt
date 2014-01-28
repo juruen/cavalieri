@@ -42,6 +42,7 @@ SET(MINIRIEMANN_HDRS
     ${CMAKE_SOURCE_DIR}/src/
     ${CMAKE_SOURCE_DIR}/src/query/
     ${CMAKE_SOURCE_DIR}/src/external/
+    ${CMAKE_SOURCE_DIR}/src/rules/
     /usr/include/i386-linux-gnu/c++/4.7
   )
 
@@ -56,6 +57,7 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
+    ${CMAKE_SOURCE_DIR}/src/rules/rules.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/mock_index.cpp

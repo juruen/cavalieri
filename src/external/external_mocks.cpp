@@ -1,26 +1,33 @@
 #include <external_mocks.h>
+#include <scheduler.h>
 
-void external_mocks::add_call(const std::string & external, const Event & e) {
-  auto it = calls_.insert({external, {e}});
-  if (!it.second) {
-    it.first->second.push_back(e);
-  }
+void external_mocks::add_call(const std::string & external,
+                              const std::string & message,
+                              const std::string & extra, const Event & e) {
+  calls_.push_back({external, message, extra, g_scheduler.unix_time(), e});
 }
 
-stream_t pd_trigger(const std::string &) {
+std::vector<external_event_t> external_mocks::calls() const {
+  return calls_;
+}
+
+stream_t pd_trigger(const std::string & pgkey) {
   return [=](e_t e) {
-   g_external_mocks.add_call("pg_trigger", e);
+   g_external_mocks.add_call("pagerduty",
+                             "trigger pagerduty for key " + pgkey, "", e);
   };
 }
 
-stream_t pd_resolve(const std::string &) {
+stream_t pd_resolve(const std::string & pgkey) {
   return [=](e_t e) {
-   g_external_mocks.add_call("pg_resolve", e);
+    g_external_mocks.add_call("pagerduty",
+                              "resolve pagerduty for key " + pgkey, "", e);
   };
 }
 
-stream_t pd_acknowledge(const std::string &) {
+stream_t pd_acknowledge(const std::string & pgkey) {
   return [=](e_t e) {
-   g_external_mocks.add_call("pg_ackknowledge", e);
+    g_external_mocks.add_call("pagerduty",
+                              "acknowledge pagerduty for key " + pgkey, "", e);
   };
 }
