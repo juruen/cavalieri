@@ -88,6 +88,8 @@ stream_t without(double a, double b, const children_t& children);
 
 stream_t scale(double s, const children_t& children);
 
+stream_t sdo(const children_t& children);
+
 stream_t counter(const children_t& children);
 
 stream_t expired(const children_t& children);
