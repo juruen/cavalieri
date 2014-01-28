@@ -673,6 +673,12 @@ stream_t scale(double s, const children_t & children) {
   };
 }
 
+stream_t sdo(const children_t & children) {
+  return [=](e_t e) {
+    call_rescue(e, children);
+  };
+}
+
 stream_t counter(const children_t & children) {
  auto counter = std::make_shared<std::atomic<unsigned int>>(0);
 
