@@ -4,6 +4,7 @@ libfind_pkg_check_modules(JsonCpp_PKGCONF jsoncpp)
 
 find_path(JsonCpp_INCLUDE_DIR
     NAMES json/features.h
+    PATH_SUFFIXES jsoncpp
     PATHS ${JsonCpp_PKGCONF_INCLUDE_DIRS} # /usr/include/jsoncpp/json
   )
 

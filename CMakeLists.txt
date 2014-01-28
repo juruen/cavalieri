@@ -50,6 +50,7 @@ SET(MINIRIEMANN_PROTOFILES
 
 SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/rule_tester.cpp
+    ${CMAKE_SOURCE_DIR}/src/rule_tester_util.cpp
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index.cpp
@@ -88,6 +89,7 @@ INCLUDE_DIRECTORIES(
     ${OpenSSL_INCLUDE_DIRS}
     ${TBB_INCLUDE_DIRS}
     ${GFlags_INCLUDE_DIRS}
+    ${JsonCpp_INCLUDE_DIRS}
   )
 
 ADD_EXECUTABLE(
@@ -96,6 +98,7 @@ ADD_EXECUTABLE(
     ${ProtoSources}
     ${ProtoHeaders}
   )
+
 
 TARGET_LINK_LIBRARIES(
     miniriemann
@@ -107,6 +110,7 @@ TARGET_LINK_LIBRARIES(
     ${PYTHON_LIBRARIES}
     ${CURL_LIBRARIES}
     ${TBB_LIBRARIES}
+    ${JsonCpp_LIBRARIES}
     crypto
     pthread
     cds
