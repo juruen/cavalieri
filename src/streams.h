@@ -2,7 +2,7 @@
 #define STREAMS_H
 
 #include <vector>
-#include <vector>
+#include <list>
 #include <functional>
 #include <memory>
 #include <boost/variant.hpp>
