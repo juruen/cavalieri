@@ -4,16 +4,15 @@
 #include <index.h>
 #include <unordered_map>
 
+typedef std::pair<time_t, Event> mock_index_events_t;
+
 class mock_index : public index_interface {
 public:
   void add_event(const Event& e);
-  std::vector<Event> events() const;
+  std::vector<mock_index_events_t> events() const;
 
 private:
-  std::string key(const Event& e) const;
-
-private:
-  std::unordered_map<std::string, Event> map_;
+  std::vector<mock_index_events_t> events_;
 };
 
 #endif

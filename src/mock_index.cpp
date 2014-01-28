@@ -1,17 +1,10 @@
 #include <mock_index.h>
+#include <scheduler.h>
 
 void mock_index::add_event(const Event & e) {
-  map_.insert({key(e), e});
+  events_.push_back({g_scheduler.unix_time(), e});
 }
 
-std::string mock_index::key(const Event & e) const {
-  return (e.host() + " " + e.service());
-}
-
-std::vector<Event> mock_index::events() const {
-  std::vector<Event> events;
-  for (const auto & p: map_) {
-    events.push_back(p.second);
-  }
-  return events;
+std::vector<mock_index_events_t> mock_index::events() const {
+  return events_;
 }
