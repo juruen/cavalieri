@@ -172,6 +172,10 @@ void set_event_value(
     if (replace || (!e.has_ttl())) {
       e.set_ttl(value);
     }
+  } else if (key == "time") {
+    if (replace || (!e.has_time())) {
+      e.set_time(value);
+    }
   } else {
     LOG(ERROR) << "set_event_value() wrong key: " << key;
   }
