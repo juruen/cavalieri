@@ -31,3 +31,10 @@ stream_t pd_acknowledge(const std::string & pgkey) {
                               "acknowledge pagerduty for key " + pgkey, "", e);
   };
 }
+
+stream_t email(const std::string & from, const std::string & to) {
+  return [=](e_t e) {
+    g_external_mocks.add_call("email",
+                              "send email from: " + from + " to: " + to, "", e);
+  };
+}
