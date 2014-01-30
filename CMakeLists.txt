@@ -24,8 +24,9 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/query/expression.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
-    ${CMAKE_SOURCE_DIR}/src/pythoninterpreter.cpp
+    ${CMAKE_SOURCE_DIR}/src/python_interpreter.cpp
     ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/email.cpp
     ${CMAKE_SOURCE_DIR}/src/wsutil.cpp
     ${CMAKE_SOURCE_DIR}/src/incomingevents.cpp
     ${CMAKE_SOURCE_DIR}/src/thread_pool.cpp
