@@ -4,6 +4,6 @@
 #include <streams.h>
 #include <index.h>
 
-stream_t rules(class index & idx);
+children_t rules(class index & idx);
 
 #endif
