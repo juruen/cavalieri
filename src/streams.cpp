@@ -719,6 +719,10 @@ predicate_t under_pred(const double value) {
   return PRED(under_(e, value));
 }
 
+predicate_t state_pred(const std::string state) {
+  return PRED(e.state() == state);
+}
+
 bool above_eq_(e_t e, const double value) {
   return (metric_to_double(e) >= value);
 }
@@ -734,7 +738,6 @@ bool under_eq_(e_t e, const double value) {
 bool under_(e_t e, const double value) {
   return (metric_to_double(e) < value);
 }
-
 
 void streams::add_stream(stream_t stream) {
   VLOG(3) << "adding stream";
