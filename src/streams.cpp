@@ -723,6 +723,10 @@ predicate_t state_pred(const std::string state) {
   return PRED(e.state() == state);
 }
 
+predicate_t service_pred(const std::string service) {
+  return PRED(e.service() == service);
+}
+
 bool above_eq_(e_t e, const double value) {
   return (metric_to_double(e) >= value);
 }

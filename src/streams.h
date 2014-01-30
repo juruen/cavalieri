@@ -108,6 +108,8 @@ predicate_t under_pred(const double value);
 
 predicate_t state_pred(std::string state);
 
+predicate_t service_pred(std::string state);
+
 bool tagged_any_(e_t e, const tags_t& tags);
 
 bool tagged_all_(e_t e, const tags_t& tags);
