@@ -9,6 +9,12 @@ SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
 SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/mock_os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/tcpconnection.cpp
+    ${CMAKE_SOURCE_DIR}/src/riemanntcpconnection.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket.cpp
+    ${CMAKE_SOURCE_DIR}/src/wsutil.cpp
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index.cpp
@@ -55,11 +61,15 @@ GTEST_ADD_TESTS(
     ${CMAKE_SOURCE_DIR}/tests/folds_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/atom_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/rules_common_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/tcp_connection_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/ws_connection_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/riemann_tcp_connection_test_case.hpp
   )
 
 TARGET_LINK_LIBRARIES(
     test_plan
     gcov
+    gmock
     ${GTEST_BOTH_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${PROTOBUF_LIBRARY}

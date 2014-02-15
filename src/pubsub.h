@@ -12,7 +12,7 @@
 typedef std::vector<Event> evs_list_t;
 typedef std::function<evs_list_t()> allevents_f_t;
 typedef std::unordered_map<std::string, allevents_f_t> publishers_t;
-typedef std::shared_ptr<tbb::concurrent_queue<Event>> notify_queue_t;
+typedef std::shared_ptr<tbb::concurrent_bounded_queue<Event>> notify_queue_t;
 
 class pub_sub {
 public:

@@ -9,16 +9,24 @@ SET(CMAKE_MODULE_PATH
   )
 
 SET(MINIRIEMANN_SRCS
-    ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
-    ${CMAKE_SOURCE_DIR}/src/index.cpp
-    ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
-    ${CMAKE_SOURCE_DIR}/src/streams.cpp
-    ${CMAKE_SOURCE_DIR}/src/folds.cpp
+    ${CMAKE_SOURCE_DIR}/src/real_async_loop.cpp
+    ${CMAKE_SOURCE_DIR}/src/async_loop.cpp
+    ${CMAKE_SOURCE_DIR}/src/tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/tcpserver.cpp
+    ${CMAKE_SOURCE_DIR}/src/thread_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/tcpconnection.cpp
     ${CMAKE_SOURCE_DIR}/src/riemanntcpconnection.cpp
+    ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/real_os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
+    ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
+    ${CMAKE_SOURCE_DIR}/src/folds.cpp
+    ${CMAKE_SOURCE_DIR}/src/index.cpp
+    ${CMAKE_SOURCE_DIR}/src/real_index.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
-    ${CMAKE_SOURCE_DIR}/src/websocket.cpp
     ${CMAKE_SOURCE_DIR}/src/query/parser.cpp
     ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
@@ -29,14 +37,10 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/external/email.cpp
     ${CMAKE_SOURCE_DIR}/src/wsutil.cpp
     ${CMAKE_SOURCE_DIR}/src/incomingevents.cpp
-    ${CMAKE_SOURCE_DIR}/src/thread_pool.cpp
-    ${CMAKE_SOURCE_DIR}/src/tcp_pool.cpp
-    ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/real_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/mock_scheduler.cpp
-    ${CMAKE_SOURCE_DIR}/src/real_index.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler.cpp
-    ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams.cpp
   )
 
 SET(MINIRIEMANN_HDRS
