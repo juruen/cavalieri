@@ -1,29 +1,34 @@
 #ifndef WEBSOCKET_H
 #define WEBSOCKET_H
 
-#include <ev++.h>
-#include <map>
-#include <unordered_map>
 #include <tcpconnection.h>
-#include <pubsub.h>
 #include <wsutil.h>
+#include <async_loop.h>
 
-class ws_connection : public tcp_connection {
+class ws_connection {
   public:
-    class ws_util* ws_util;
-    allevents_f_t all_events_;
-    uint32_t state;
-    ev::io io;
+    static const uint32_t  k_read_http_header  = 0x1;
+    static const uint32_t  k_write_http_header = 0x2;
+    static const uint32_t  k_read_frame_header = 0x4;
+    static const uint32_t  k_write_frame       = 0x08;
 
-    ws_connection(int socket_fd, class ws_util* ws_util, allevents_f_t all_events);
-    virtual ~ws_connection();
-    void callback(int revents);
+    ws_connection(tcp_connection & tcp_connection);
+    bool send_frame(const std::string & payload);
+    uint32_t state() const;
+    std::string uri() const;
+    void callback(async_fd &);
+
+  private:
     void read_cb();
     void write_cb();
     void read_header();
     void read_frame();
-    void send_frame(const std::string& payload);
     void write_response_header();
+
+  private:
+    tcp_connection & tcp_connection_;
+    ws_util ws_util_;
+    uint32_t state_;
 };
 
 #endif

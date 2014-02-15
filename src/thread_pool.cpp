@@ -5,31 +5,38 @@
 #include <atom.h>
 
 namespace {
-  uintptr_t to_uintptr(const ev::loop_ref & loop) {
-    return (uintptr_t)(void*)loop.raw_loop;
-  }
   const size_t stop_attempts = 20;
   const size_t stop_interval_check_ms  = 50;
 }
 
-thread_pool::thread_pool( size_t thread_num) :
+using namespace std::placeholders;
+
+thread_pool::thread_pool(size_t thread_num) :
   stop_(false),
   thread_num_(thread_num),
   next_thread_(0),
-  loops_(thread_num),
-  async_watchers_(thread_num),
-  finished_threads_(thread_num, false)
+  finished_threads_(thread_num, false),
+  async_events_(thread_num, std::bind(&thread_pool::async_callback, this, _1))
 {
   if (thread_num < 1) {
     LOG(FATAL) << "Thread number must be greater than 0";
   }
+}
 
-  VLOG(2) << "Creating a pool thread of size: " << thread_num;
-
-  for (size_t i = 0; i < thread_num; i++)  {
-    loop_to_thread_id_.insert({to_uintptr(loops_[i]), i});
-    async_watchers_[i].set(loops_[i]);
-    async_watchers_[i].set<thread_pool, &thread_pool::async_callback>(this);
+thread_pool::thread_pool(
+    size_t thread_num,
+    const float interval,
+    timer_cb_fn_t timer_cb_fn
+) :
+  stop_(false),
+  thread_num_(thread_num),
+  next_thread_(0),
+  finished_threads_(thread_num, false),
+  async_events_(thread_num, std::bind(&thread_pool::async_callback, this, _1),
+                interval, timer_cb_fn)
+{
+  if (thread_num < 1) {
+    LOG(FATAL) << "Thread number must be greater than 0";
   }
 }
 
@@ -54,32 +61,29 @@ void thread_pool::start_threads() {
   }
 }
 
-void thread_pool::async_callback(ev::async & async, int revents) {
-  UNUSED_VAR(revents);
-  size_t tid = ev_to_tid(async);
-  VLOG(3) << "async_callback tid: " << tid;
+void thread_pool::async_callback(async_loop & loop) {
+  size_t loop_id = loop.id();
+  VLOG(3) << "async_callback loop_id: " << loop_id;
   if (!stop_) {
-    if (async_hook_fn_) {
-      async_hook_fn_(tid, loops_[tid]);
-    } else {
-      VLOG(3) << "aync_hook_fn_ not set";
-    }
+      async_hook_fn_(loop);
   } else {
-    loops_[tid].unloop();
+    loop.stop();
   }
 }
 
-void thread_pool::run(const size_t thread_id) {
-  VLOG(3) << "run() thread id: " << thread_id;
+void thread_pool::run(const size_t loop_id) {
+  VLOG(3) << "run() thread id: " << loop_id;
 
   if (run_hook_fn_) {
-    run_hook_fn_(thread_id, loops_[thread_id]);
+    run_hook_fn_(async_events_.loop(loop_id));
   }
 
-  async_watchers_[thread_id].start();
-  loops_[thread_id].run();
-  finished_threads_[thread_id] = true;
-  VLOG(3) << "run() thread id: " << thread_id << " finished";
+  async_events_.start_loop(loop_id);
+
+  mutex_.lock();
+  finished_threads_[loop_id] = true;
+  mutex_.unlock();
+  VLOG(3) << "run() thread id: " << loop_id << " finished";
 }
 
 
@@ -90,54 +94,43 @@ void thread_pool::stop_threads() {
   }
 
   stop_ = true;
+  async_events_.stop_all_loops();
 
-  for (size_t i = 0; i < thread_num_; i++) {
-    signal_thread(i);
-  }
+  for (size_t attempts = stop_attempts; attempts > 0; attempts--) {
 
-  for (size_t attempts = stop_attempts; attempts > 0; attempts-- ) {
-    size_t stopped = std::count(
-                                 begin(finished_threads_),
-                                 end(finished_threads_), true);
+    size_t stopped = 0 ;
+
+    mutex_.lock();
+    for (const auto & t: finished_threads_) {
+      if (t) stopped++;
+    }
+    mutex_.unlock();
 
     if (stopped == thread_num_) {
       break;
     }
 
     VLOG(3) << "Waiting for " << thread_num_- stopped << " threads";
+
     std::this_thread::sleep_for(
         std::chrono::milliseconds(stop_interval_check_ms));
   }
 
   for (size_t i = 0; i < thread_num_; i++) {
-    if (finished_threads_[i]) {
       threads_[i].join();
-    }
   }
 
 }
 
-void thread_pool::signal_thread(size_t tid) {
-  VLOG(3) << "signal_thread() tid: " << tid;
+void thread_pool::signal_thread(size_t loop_id) {
+  VLOG(3) << "signal_thread() loop_id: " << loop_id;
 
-  if (tid >= thread_num_) {
-    LOG(FATAL) << "Invalid tid";
+  if (loop_id >= thread_num_) {
+    LOG(FATAL) << "Invalid loop_id";
     return;
   }
 
-  async_watchers_[tid].send();
-}
-
-size_t thread_pool::ev_to_tid(ev::io & io) {
-  return loop_to_thread_id_[to_uintptr(io.loop)];
-}
-
-size_t thread_pool::ev_to_tid(ev::async & async) {
-  return loop_to_thread_id_[to_uintptr(async.loop)];
-}
-
-size_t thread_pool::ev_to_tid(ev::timer & timer) {
-  return loop_to_thread_id_[to_uintptr(timer.loop)];
+  async_events_.signal_loop(loop_id);
 }
 
 size_t thread_pool::next_thread() {

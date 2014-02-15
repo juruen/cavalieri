@@ -2,6 +2,11 @@
 #include <sys/socket.h>
 #include <glog/logging.h>
 #include <tcpconnection.h>
+#include <os_functions.h>
+
+namespace {
+  const size_t k_default_buffer_size = 1024 * 128;
+}
 
 tcp_connection::tcp_connection(int sfd) :
   sfd(sfd),
@@ -9,15 +14,32 @@ tcp_connection::tcp_connection(int sfd) :
   bytes_to_write(0),
   bytes_read(0),
   bytes_written(0),
-  close_connection(false)
+  close_connection(false),
+  buffer_size(k_default_buffer_size),
+  r_buffer(k_default_buffer_size),
+  w_buffer(k_default_buffer_size)
+{
+}
+
+tcp_connection::tcp_connection(int sfd, size_t buff_size):
+  sfd(sfd),
+  bytes_to_read(0),
+  bytes_to_write(0),
+  bytes_read(0),
+  bytes_written(0),
+  close_connection(false),
+  buffer_size(buff_size),
+  r_buffer(buff_size),
+  w_buffer(buff_size)
 {
 }
 
 
-bool tcp_connection::read(const uint32_t& to_read) {
-  VLOG(3) << "read() up to  " << to_read << " bytes";
 
-  ssize_t nread = recv(sfd, (char*)r_buffer + bytes_read, to_read, 0);
+bool tcp_connection::read(const uint32_t & to_read) {
+
+  ssize_t nread = g_os_functions.recv(sfd, &r_buffer[0] + bytes_read,
+                                      to_read, 0);
 
   if (nread < 0) {
     VLOG(3) << "read error: " << strerror(errno);
@@ -31,27 +53,29 @@ bool tcp_connection::read(const uint32_t& to_read) {
   }
 
   bytes_read += nread;
-  VLOG(3) << "just read: " << nread << " bytes. total so far: " << bytes_read;
 
   return true;
 }
 
 bool tcp_connection::copy_to_write_buffer(const char *src, uint32_t length) {
-  VLOG(3) << "copy_to_write_buffer() from: " << bytes_to_write
-          << " to " << bytes_written + length;
+
   if ((bytes_to_write + length) > buffer_size) {
     LOG(ERROR) << "error write buffer is full";
     return false;
   }
-  memcpy((void*)(w_buffer + bytes_to_write), (void*)src, length);
+
+  memcpy(&w_buffer[0] + bytes_to_write, static_cast<const void*>(src), length);
+
   bytes_to_write += length;
+
   return true;
 }
 
 bool tcp_connection::write() {
   VLOG(3) << "write() up to " << bytes_to_write << " bytes";
 
-  ssize_t nwritten = ::write(sfd, w_buffer + bytes_written, bytes_to_write);
+  ssize_t nwritten = g_os_functions.write(sfd, &w_buffer[0] + bytes_written,
+                                          bytes_to_write);
 
   if (nwritten < 0) {
     VLOG(3) << "write error: " << strerror(errno);
@@ -64,18 +88,10 @@ bool tcp_connection::write() {
   return true;
 }
 
-void tcp_connection::set_io() {
-  if (bytes_to_write > 0) {
-    VLOG(3) << "set_io() set to RW";
-    io.set(ev::READ | ev::WRITE);
-  } else {
-    VLOG(3) << "set_io() set to R";
-    io.set(ev::READ);
-  }
+bool tcp_connection::pending_read() const {
+  return true;
 }
 
-tcp_connection::~tcp_connection() {
-  VLOG(3) << "~tcp_connection()";
-  io.stop();
-  close(sfd);
+bool tcp_connection::pending_write() const {
+  return (bytes_to_write > 0);
 }

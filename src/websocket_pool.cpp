@@ -2,32 +2,63 @@
 #include <websocket_pool.h>
 #include <websocket.h>
 #include <util.h>
+#include <iostream>
+#include <driver.h>
+#include <expression.h>
+
 
 namespace {
-  const float check_queue_interval_ms = .200;
+  const size_t k_queue_capacity = 1000000;
+  const float  k_ws_send_interval = 1;
+
+  std::function<bool(const Event&)> filter_query(const std::string uri) {
+
+    std::string index;
+    std::map<std::string, std::string> params;
+
+    query_f_t true_query = [](const Event&) -> bool { return true; };
+
+    if (!parse_uri(uri, index, params)) {
+      return true_query;
+    }
+
+    QueryContext query_ctx;
+    queryparser::Driver driver(query_ctx);
+
+    if (driver.parse_string(params["query"], "query")) {
+      query_ctx.expression->print(std::cout);
+      return  query_ctx.expression->evaluate();
+    } else {
+      return true_query;
+    }
+  }
 }
+
+using namespace std::placeholders;
 
 websocket_pool::websocket_pool(size_t thread_num, pub_sub & pubsub)
 :
-  tcp_pool_(thread_num),
-  timers_(thread_num)
+  tcp_pool_(thread_num,
+            {},
+            std::bind(&websocket_pool::create_conn, this, _1, _2, _3),
+            std::bind(&websocket_pool::data_ready, this, _1, _2),
+            k_ws_send_interval,
+            std::bind(&websocket_pool::timer, this, _1)),
+  thread_event_queues_(0),
+  fd_event_queues_(thread_num)
 {
-  using namespace std::placeholders;
 
   for (size_t i = 0; i < thread_num; i++) {
-    event_queues_.push_back(std::make_shared<event_queue_t>());
+
+    auto queue = std::make_shared<event_queue_t>();
+    queue->set_capacity(k_queue_capacity);
+
+    thread_event_queues_.push_back(queue);
+
+    all_events_fn_ = pubsub.subscribe("index", queue);
+
   }
-  for (auto event_queue: event_queues_) {
-    all_events_fn_ = pubsub.subscribe("index", event_queue);
-  }
-  tcp_pool_.set_tcp_conn_hook(
-      [&](int fd)
-        {
-          return std::make_shared<ws_connection>(
-                      fd, new ws_util(), all_events_fn_);
-        }
-  );
-  tcp_pool_.set_run_hook(std::bind(&websocket_pool::run_hook, this, _1, _2));
+
   tcp_pool_.start_threads();
 }
 
@@ -36,36 +67,103 @@ void websocket_pool::add_client(int fd) {
 }
 
 void websocket_pool::notify_event(const Event & event) {
-  for (auto & queue: event_queues_) {
+  for (auto & queue: thread_event_queues_) {
     queue->push(event);
   }
 }
 
-void websocket_pool::timer_callback(ev::timer & timer, int revents) {
-  UNUSED_VAR(revents);
+void websocket_pool::create_conn(int fd, async_loop & loop,
+                                 tcp_connection & conn)
+{
+  auto conn_data = std::make_tuple(ws_connection(conn),
+                           std::function<bool(const Event&)>{},
+                           std::queue<std::string>{});
 
-  size_t tid = tcp_pool_.ev_to_tid(timer);
-  auto event_queue = event_queues_[tid];
+  fd_event_queues_[loop.id()].insert({fd, std::move(conn_data)});
+}
 
-  if (event_queue->empty()) {
+void websocket_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
+
+  auto & fd_conn = fd_event_queues_[async.loop().id()];
+
+  auto it = fd_conn.find(async.fd());
+  CHECK(it != fd_conn.end()) << "couldn't find fd";
+
+  auto & ws_conn = std::get<0>(it->second);
+  ws_conn.callback(async);
+
+  if (tcp_conn.close_connection) {
+    VLOG(1) << "Closing websocket connection";
+    fd_conn.erase(it);
     return;
   }
 
-  auto conn_map = tcp_pool_.tcp_connection_map(tid);
+  // Set query_fn if websocket is ready
+  auto & query_fn = std::get<1>(it->second);
+  if (!query_fn && (ws_conn.state() | ws_connection::k_read_frame_header)) {
+    query_fn = filter_query(ws_conn.uri());
+  }
+}
+
+void websocket_pool::timer(async_loop & loop) {
+  size_t loop_id =  loop.id();
+  VLOG(3) << "loop_id: " << loop_id;
+  auto event_queue = thread_event_queues_[loop_id];
+
   while (!event_queue->empty()) {
+
     Event event;
     if (!event_queue->try_pop(event)) {
       continue;
     }
-    std::string ev_str(event_to_json(event));
-    for (auto & pair : conn_map) {
-      dynamic_cast<ws_connection*>(pair.second.get())->send_frame(ev_str);
+
+    auto str_event = event_to_json(event);
+
+    for (auto & fd_conn : fd_event_queues_[loop_id]) {
+
+      auto query_fn = std::get<1>(fd_conn.second);
+
+      if (!query_fn) {
+        VLOG(3) << "query_fn not defined";
+        continue;
+      }
+
+      if (!query_fn(event)) {
+        continue;
+      }
+
+      auto ws_conn = std::get<0>(fd_conn.second);
+      auto str_queue = std::get<2>(fd_conn.second);
+
+      if (ws_conn.send_frame(str_event)) {
+        loop.set_fd_mode(fd_conn.first, async_fd::readwrite);
+        continue;
+      }
+
+      if (str_queue.size() > k_queue_capacity) {
+        VLOG(1) << "Per connection event queue is full";
+      } else {
+        str_queue.push(str_event);
+      }
+
     }
   }
-}
 
-void websocket_pool::run_hook(size_t tid, ev::dynamic_loop & loop) {
-  timers_[tid].set(loop);
-  timers_[tid].set<websocket_pool, &websocket_pool::timer_callback>(this);
-  timers_[tid].start(0, check_queue_interval_ms);
+  for (auto & fd_conn : fd_event_queues_[loop_id]) {
+
+    auto ws_conn = std::get<0>(fd_conn.second);
+    auto str_queue = std::get<2>(fd_conn.second);
+
+    while (!str_queue.empty()) {
+
+      std::string str = str_queue.front();
+
+      if (!ws_conn.send_frame(str)) {
+        VLOG(1) << "buffer full to send frame";
+        break;
+      }
+
+      loop.set_fd_mode(fd_conn.first, async_fd::readwrite);
+    }
+  }
 }

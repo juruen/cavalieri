@@ -5,143 +5,129 @@
 #include <riemanntcpconnection.h>
 
 namespace {
-  char ok_response[1024];
-  uint32_t ok_response_size = 0;
-}
 
-static void generate_msg_ok()
+static std::vector<char>  generate_msg_ok()
 {
   Msg msg_ok;
   msg_ok.set_ok(true);
 
   uint32_t nsize = htonl(msg_ok.ByteSize());
-  memcpy(ok_response, (void *)&nsize, sizeof(nsize));
-  if (!msg_ok.SerializeToArray(ok_response + sizeof(nsize),
-                               msg_ok.ByteSize()))
-  {
-    VLOG(1) << "Error serializing response\n";
-    exit(1);
-  }
+  std::vector<char> response (sizeof(nsize) + msg_ok.ByteSize());
 
-  ok_response_size = sizeof(nsize) + msg_ok.ByteSize();
+  memcpy(&response[0], static_cast<void *>(&nsize), sizeof(nsize));
+
+  CHECK(msg_ok.SerializeToArray(&response[sizeof(nsize)], msg_ok.ByteSize()))
+    << "error serialazing msg_ok response";
+
+  return response;
+}
+
+std::vector<char> ok_response = generate_msg_ok();
+
 }
 
 riemann_tcp_connection::riemann_tcp_connection(
-  int sfd,
-  incoming_events& income_events
+    tcp_connection & tcp_connection,
+    raw_msg_fn_t raw_msg_fn
 ) :
-  tcp_connection(sfd),
-  reading_header(true),
-  protobuf_size(0),
-  income_events(income_events)
+  tcp_connection_(tcp_connection),
+  raw_msg_fn_(raw_msg_fn),
+  reading_header_(true),
+  protobuf_size_(0)
 {
-  io.set(ev::READ);
-
-  // FIXME
-  if (ok_response_size == 0) {
-    generate_msg_ok();
-  }
-  memcpy((void*)&w_buffer, ok_response, ok_response_size);
+  memcpy(static_cast<void*>(&tcp_connection_.w_buffer[0]),
+         &ok_response[0], ok_response.size());
 }
 
-void riemann_tcp_connection::callback(int revents) {
-  VLOG(3) << "callback() ";
+void riemann_tcp_connection::callback(async_fd & async) {
 
-  if (revents & EV_READ) {
-    VLOG(3) << "entering read_cb()";
+  if (async.ready_read()) {
     read_cb();
   }
 
-  if (close_connection) {
-    VLOG(3) << "close_connection";
+  if (tcp_connection_.close_connection) {
     return;
   }
 
-  if (revents & EV_WRITE) {
-    VLOG(3) << "entering write_cb()";
+  if (async.ready_write()) {
     write_cb();
   }
 }
 
 void riemann_tcp_connection::read_cb() {
-  if (reading_header) {
+
+  if (reading_header_) {
     read_header();
   } else {
     read_message();
   }
+
 }
 
 void riemann_tcp_connection::write_cb() {
-  VLOG(3) << "write_cb()";
 
-  if (bytes_to_write == 0) {
-    return; // Do we need this?
-  }
-
-  if (!write()) {
+  if (tcp_connection_.bytes_to_write == 0) {
     return;
   }
 
-  if (bytes_written == ok_response_size) {
-    bytes_to_write = 0;
-    VLOG(3) << "response sent";
+  if (!tcp_connection_.write()) {
+    return;
   }
+
+  if (tcp_connection_.bytes_written == ok_response.size()) {
+    tcp_connection_.bytes_to_write = 0;
+  }
+
 }
 
 void riemann_tcp_connection::read_header() {
-  VLOG(3) << "read_header()";
 
-  if (!read(buffer_size)) {
+  if (!tcp_connection_.read(tcp_connection_.buffer_size)) {
     return;
   }
 
-  if (bytes_read < 4) {
+  if (tcp_connection_.bytes_read < 4) {
     return;
   }
 
   uint32_t header;
-  memcpy((void *)&header, r_buffer, 4);
-  protobuf_size = ntohl(header);
+  memcpy(static_cast<void *>(&header), &tcp_connection_.r_buffer[0], 4);
+  protobuf_size_ = ntohl(header);
 
-  VLOG(2) << "header read. protobuf msg size: " << protobuf_size << " bytes";
-  if (protobuf_size + 4 > buffer_size) {
-    VLOG(2) << "protobuf_size too big: " << protobuf_size;
-    close_connection = true;
+  if (protobuf_size_ + 4 > tcp_connection_.buffer_size) {
+    VLOG(2) << "protobuf_size_ too big: " << protobuf_size_;
+    tcp_connection_.close_connection = true;
     return;
   }
 
-  reading_header = false;
+  reading_header_ = false;
   read_message();
 }
 
 void riemann_tcp_connection::read_message() {
-  VLOG(3) << "read_message()";
 
-  if (bytes_read < protobuf_size + 4) {
-    if (!read(protobuf_size + 4)) {
+  if (tcp_connection_.bytes_read < protobuf_size_ + 4) {
+    if (!tcp_connection_.read(protobuf_size_ + 4)) {
       return;
     }
 
-    if ((bytes_read - 4) != protobuf_size) {
+    if ((tcp_connection_.bytes_read - 4) != protobuf_size_) {
       return;
     }
   }
 
-  reading_header = true;
-  bytes_read = 0;
-  bytes_to_write = ok_response_size;
+  reading_header_ = true;
+  tcp_connection_.bytes_read = 0;
+  tcp_connection_.bytes_to_write = ok_response.size();
 
-  if (bytes_to_write > buffer_size) {
-    VLOG(2) << "bytes to write too big: " << bytes_to_write;
-    close_connection = true;
+  if (tcp_connection_.bytes_to_write > tcp_connection_.buffer_size) {
+    VLOG(2) << "write buffer is full: " << tcp_connection_.bytes_to_write;
+    tcp_connection_.close_connection = true;
     return;
   }
 
-  std::vector<unsigned char> msg(protobuf_size);
-  memcpy(&msg[0], r_buffer + 4, protobuf_size);
+  std::vector<unsigned char> msg(protobuf_size_);
+  memcpy(&msg[0], &tcp_connection_.r_buffer[4], protobuf_size_);
 
-  income_events.add_undecoded_msg(std::move(msg));
+  raw_msg_fn_(std::move(msg));
 }
-
-
-
