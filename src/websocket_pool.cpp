@@ -1,6 +1,6 @@
 #include <glog/logging.h>
 #include <websocket_pool.h>
-#include <websocket.h>
+#include <transport/ws_connection.h>
 #include <util.h>
 #include <iostream>
 #include <driver.h>

@@ -4,8 +4,8 @@
 #include <functional>
 #include <vector>
 #include <cstddef>
-#include <tcpconnection.h>
-#include <async_loop.h>
+#include <transport/tcp_connection.h>
+#include <async/async_loop.h>
 
 typedef std::function<void(std::vector<unsigned char>)> raw_msg_fn_t;
 

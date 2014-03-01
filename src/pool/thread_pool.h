@@ -1,11 +1,11 @@
-#ifndef THREAD_POOL_H
-#define THREAD_POOL_H
+#ifndef POOL_THREAD_POOL_H
+#define POOL_THREAD_POOL_H
 
 #include <thread>
 #include <vector>
 #include <functional>
 #include <mutex>
-#include <async_loop.h>
+#include <async/async_loop.h>
 
 typedef std::function<void(async_loop&)> hook_fn_t;
 

@@ -1,5 +1,5 @@
 #include <glog/logging.h>
-#include <real_scheduler.h>
+#include <scheduler/real_scheduler.h>
 #include <util.h>
 
 namespace {

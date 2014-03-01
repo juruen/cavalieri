@@ -1,9 +1,9 @@
-#ifndef WEBSOCKET_H
-#define WEBSOCKET_H
+#ifndef TRANSPORT_WS_CONNECTION_H
+#define TRANSPORT_WS_CONNECTION_H
 
-#include <tcpconnection.h>
-#include <wsutil.h>
-#include <async_loop.h>
+#include <transport/tcp_connection.h>
+#include <transport/ws_util.h>
+#include <async/async_loop.h>
 
 class ws_connection {
   public:

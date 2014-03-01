@@ -7,7 +7,7 @@
 #include <glog/logging.h>
 #include <streams.h>
 #include <util.h>
-#include <scheduler.h>
+#include <scheduler/scheduler.h>
 #include <atom.h>
 
 namespace {

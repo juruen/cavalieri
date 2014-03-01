@@ -1,7 +1,7 @@
-#ifndef REAL_ASYNC_LOOP_H
-#define REAL_ASYNC_LOOP_H
+#ifndef ASYNC_REAL_ASYNC_LOOP_H
+#define ASYNC_REAL_ASYNC_LOOP_H
 
-#include <async_loop.h>
+#include <async/async_loop.h>
 #include <ev++.h>
 #include <vector>
 #include <map>

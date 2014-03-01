@@ -1,5 +1,5 @@
-#ifndef ASYNC_LOOP_H
-#define ASYNC_LOOP_H
+#ifndef ASYNC_ASYNC_LOOP_H
+#define ASYNC_ASYNC_LOOP_H
 
 #include <functional>
 #include <memory>

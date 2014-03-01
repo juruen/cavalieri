@@ -1,7 +1,7 @@
 #include <glog/logging.h>
 #include <functional>
-#include <tcp_pool.h>
-#include <tcpconnection.h>
+#include <transport/tcp_pool.h>
+#include <transport/tcp_connection.h>
 #include <util.h>
 
 using namespace std::placeholders;

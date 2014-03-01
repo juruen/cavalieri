@@ -1,10 +1,10 @@
-#ifndef TCP_POOL_H
-#define TCP_POOL_H
+#ifndef TRANSPORT_TCP_POOL_H
+#define TRANSPORT_TCP_POOL_H
 
 #include <map>
 #include <queue>
 #include <mutex>
-#include <thread_pool.h>
+#include <pool/thread_pool.h>
 
 class tcp_connection;
 typedef std::map<const int, tcp_connection> conn_map_t;

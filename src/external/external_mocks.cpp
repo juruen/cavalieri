@@ -1,5 +1,5 @@
 #include <external_mocks.h>
-#include <scheduler.h>
+#include <scheduler/scheduler.h>
 
 void external_mocks::add_call(const std::string & external,
                               const std::string & message,

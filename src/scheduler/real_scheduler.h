@@ -1,11 +1,11 @@
-#ifndef REAL_SCHEDULER_H
-#define REAL_SCHEDULER_H
+#ifndef SCHEDULER_REAL_SCHEDULER_H
+#define SCHEDULER_REAL_SCHEDULER_H
 
 #include <unordered_map>
 #include <vector>
 #include <memory>
 #include <ev++.h>
-#include <scheduler.h>
+#include <scheduler/scheduler.h>
 
 class real_scheduler : public scheduler_interface {
 public:

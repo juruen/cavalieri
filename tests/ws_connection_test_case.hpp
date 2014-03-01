@@ -4,11 +4,11 @@
 #include <vector>
 #include <string>
 #include <netinet/in.h>
-#include <websocket.h>
+#include <transport/ws_connection.h>
 #include "mock_async_fd.hpp"
 #include <mock_os_functions.h>
 #include <proto.pb.h>
-#include <async_loop.h>
+#include <async/async_loop.h>
 
 extern mock_os_functions mock_os;
 

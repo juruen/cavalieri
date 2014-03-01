@@ -2,7 +2,7 @@
 #include <sys/socket.h>
 #include <glog/logging.h>
 #include <proto.pb.h>
-#include <riemanntcpconnection.h>
+#include <riemann_tcp_connection.h>
 
 namespace {
 

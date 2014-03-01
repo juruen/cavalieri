@@ -1,7 +1,7 @@
 #ifndef MOCK_SCHEDULER_TEST_CASE
 #define MOCK_SCHEDULER_TEST_CASE
 
-#include <mock_scheduler.h>
+#include <scheduler/mock_scheduler.h>
 
 TEST(mock_scheduler_unix_time_test_case, test)
 {

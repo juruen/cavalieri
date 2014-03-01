@@ -1,23 +1,18 @@
-#include <ev++.h>
 #include <glog/logging.h>
-#include <iostream>
-#include <thread>
-#include "async_loop.h"
-#include "real_index.h"
-#include "tcpserver.h"
-#include "riemanntcpconnection.h"
-#include "websocket.h"
-#include "streams.h"
-#include "util.h"
-#include "pubsub.h"
-#include "driver.h"
+#include <async/async_loop.h>
+#include <index/real_index.h>
+#include <transport/listen_tcp_socket.h>
+#include <riemann_tcp_pool.h>
+#include <websocket_pool.h>
+#include <streams.h>
+#include <util.h>
+#include <pubsub.h>
+#include <query/driver.h>
 #include "pagerduty.h"
-#include "wsutil.h"
-#include "incomingevents.h"
-#include "riemann_tcp_pool.h"
-#include "websocket_pool.h"
-#include "scheduler.h"
-#include "atom.h"
+#include <incomingevents.h>
+#include <riemann_tcp_pool.h>
+#include <scheduler/scheduler.h>
+#include <atom.h>
 
 
 int main(int, char **argv)
