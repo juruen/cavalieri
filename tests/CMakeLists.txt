@@ -7,17 +7,17 @@ SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
 #ADD_DEFINITIONS( -fprofile-arcs -ftest-coverage -g -O0)
 
 SET(MINIRIEMANN_TEST_SRCS
-    ${CMAKE_SOURCE_DIR}/src/mock_scheduler.cpp
-    ${CMAKE_SOURCE_DIR}/src/scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/scheduler/scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/mock_os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
-    ${CMAKE_SOURCE_DIR}/src/tcpconnection.cpp
-    ${CMAKE_SOURCE_DIR}/src/riemanntcpconnection.cpp
-    ${CMAKE_SOURCE_DIR}/src/websocket.cpp
-    ${CMAKE_SOURCE_DIR}/src/wsutil.cpp
+    ${CMAKE_SOURCE_DIR}/src/transport/tcp_connection.cpp
+    ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
+    ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
+    ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
-    ${CMAKE_SOURCE_DIR}/src/index.cpp
+    ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp

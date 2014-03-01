@@ -2,7 +2,7 @@
 #define RULES_RULES_H
 
 #include <streams.h>
-#include <index.h>
+#include <index/index.h>
 
 children_t rules(class index & idx);
 

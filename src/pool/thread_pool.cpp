@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <glog/logging.h>
 #include <util.h>
-#include <thread_pool.h>
+#include <pool/thread_pool.h>
 #include <atom.h>
 
 namespace {

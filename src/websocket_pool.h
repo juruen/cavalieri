@@ -2,9 +2,11 @@
 #define WEBSOCKET_POOL
 
 #include <tbb/concurrent_queue.h>
-#include <tcp_pool.h>
 #include <functional>
-#include <websocket.h>
+#include <queue>
+#include <transport/tcp_pool.h>
+#include <transport/ws_connection.h>
+#include <websocket_pool.h>
 #include <pubsub.h>
 
 class websocket_pool {

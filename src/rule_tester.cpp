@@ -1,12 +1,12 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <iostream>
-#include <scheduler.h>
-#include <mock_scheduler.h>
+#include <scheduler/scheduler.h>
+#include <scheduler/mock_scheduler.h>
 #include <external_mocks.h>
 #include <rule_tester_util.h>
 #include <rules/rules.h>
-#include <mock_index.h>
+#include <index/mock_index.h>
 #include "atom.h"
 
 DEFINE_string(input_events, "", "json string containing input events");

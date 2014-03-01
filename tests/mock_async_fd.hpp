@@ -2,7 +2,7 @@
 #define MOCK_ASYNC_FD_H
 
 #include <gmock/gmock.h>
-#include <async_loop.h>
+#include <async/async_loop.h>
 
 class mock_async_fd : public async_fd {
   public:

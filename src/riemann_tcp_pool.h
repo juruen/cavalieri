@@ -1,8 +1,8 @@
 #ifndef RIEMANN_TCP_POOL
 #define RIEMANN_TCP_POOL
 
-#include <tcp_pool.h>
-#include <riemanntcpconnection.h>
+#include <transport/tcp_pool.h>
+#include <riemann_tcp_connection.h>
 
 class riemann_tcp_pool {
   public:

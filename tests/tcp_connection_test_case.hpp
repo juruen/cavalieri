@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include <tcpconnection.h>
+#include <transport/tcp_connection.h>
 #include <mock_os_functions.h>
 
 extern mock_os_functions mock_os;

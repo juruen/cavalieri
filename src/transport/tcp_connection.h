@@ -1,5 +1,5 @@
-#ifndef TCP_CONNECTION_H
-#define TCP_CONNECTION_H
+#ifndef TRANSPORT_TCP_CONNECTION_H
+#define TRANSPORT_TCP_CONNECTION_H
 
 #include <vector>
 

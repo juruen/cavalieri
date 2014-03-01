@@ -7,7 +7,7 @@
 #include <memory>
 #include <boost/variant.hpp>
 #include <proto.pb.h>
-#include <index.h>
+#include <index/index.h>
 
 typedef const Event& e_t;
 typedef std::vector<Event> events_t;

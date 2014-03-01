@@ -1,6 +1,6 @@
 #include <glog/logging.h>
 #include <riemann_tcp_pool.h>
-#include <riemanntcpconnection.h>
+#include <riemann_tcp_connection.h>
 
 using namespace std::placeholders;
 

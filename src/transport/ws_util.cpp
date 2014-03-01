@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <boost/algorithm/string.hpp>
 #include <glog/logging.h>
-#include <wsutil.h>
+#include <transport/ws_util.h>
 #include <util.h>
 
 namespace {

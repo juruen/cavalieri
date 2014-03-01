@@ -1,7 +1,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <glog/logging.h>
-#include <tcpconnection.h>
+#include <transport/tcp_connection.h>
 #include <os_functions.h>
 
 namespace {

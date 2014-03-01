@@ -1,5 +1,5 @@
-#ifndef WS_UTIL_H
-#define WS_UTIL_H
+#ifndef TRANSPORT_WS_UTIL_H
+#define TRANSPORT_WS_UTIL_H
 
 #include <string>
 #include <vector>

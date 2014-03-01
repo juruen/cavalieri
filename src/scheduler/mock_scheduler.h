@@ -1,10 +1,9 @@
-#ifndef MOCK_SCHEDULER_H
-#define MOCK_SCHEDULER_H
+#ifndef SCHEDULER_MOCK_SCHEDULER_H
+#define SCHEDULER_MOCK_SCHEDULER_H
 
 #include <queue>
 #include <vector>
-#include <scheduler.h>
-
+#include <scheduler/scheduler.h>
 
 typedef std::tuple<time_t, time_t, task_fn_t> queue_element_t;
 

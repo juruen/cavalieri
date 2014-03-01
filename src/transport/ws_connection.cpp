@@ -7,11 +7,11 @@
 #include <errno.h>
 #include <glog/logging.h>
 #include <iostream>
-#include "proto.pb.h"
-#include "util.h"
-#include "websocket.h"
-#include "driver.h"
-#include "expression.h"
+#include <proto.pb.h>
+#include <util.h>
+#include <transport/ws_connection.h>
+#include <query/driver.h>
+#include <query/expression.h>
 
 namespace {
   const uint32_t max_header_size = 1024 * 2;

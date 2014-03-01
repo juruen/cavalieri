@@ -3,7 +3,7 @@
 
 #include <thread>
 #include <streams.h>
-#include <scheduler.h>
+#include <scheduler/scheduler.h>
 
 extern mock_scheduler mock_sched;
 

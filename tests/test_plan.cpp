@@ -12,8 +12,8 @@
 #include "tcp_connection_test_case.hpp"
 #include "ws_connection_test_case.hpp"
 #include "riemann_tcp_connection_test_case.hpp"
-#include "scheduler.h"
-#include "mock_scheduler.h"
+#include <scheduler/scheduler.h>
+#include <scheduler/mock_scheduler.h>
 #include "os_functions.h"
 #include "mock_os_functions.h"
 #include "atom.h"

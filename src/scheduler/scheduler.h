@@ -1,5 +1,5 @@
-#ifndef SCHEDULER_H
-#define SCHEDULER_H
+#ifndef SCHEDULER_SCHEDULER_H
+#define SCHEDULER_SCHEDULER_H
 
 #include <functional>
 #include <time.h>
