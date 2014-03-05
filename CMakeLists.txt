@@ -12,19 +12,21 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/riemann_udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/real_os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
-    ${CMAKE_SOURCE_DIR}/src/incomingevents.cpp
+    ${CMAKE_SOURCE_DIR}/src/incoming_events.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/async/real_async_loop.cpp
     ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/index/real_index.cpp
     ${CMAKE_SOURCE_DIR}/src/async/async_loop.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/transport/udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp

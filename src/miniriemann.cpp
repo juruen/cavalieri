@@ -9,8 +9,9 @@
 #include <pubsub.h>
 #include <query/driver.h>
 #include "pagerduty.h"
-#include <incomingevents.h>
+#include <incoming_events.h>
 #include <riemann_tcp_pool.h>
+#include <riemann_udp_pool.h>
 #include <scheduler/scheduler.h>
 #include <atom.h>
 
@@ -33,13 +34,18 @@ int main(int, char **argv)
 
     incoming_events incoming(streams);
 
-    riemann_tcp_pool rieman_tcp{1, [&](std::vector<unsigned char> e)
+    riemann_tcp_pool rieman_tcp{1, [&](const std::vector<unsigned char> e)
                                         {
                                           incoming.add_undecoded_msg(e);
                                         }};
 
     g_main_loop.add_tcp_listen_fd(create_tcp_listen_socket(5555),
                                 [&](int fd) { rieman_tcp.add_client(fd); });
+
+    riemann_udp_pool rieman_udp{[&](const std::vector<unsigned char> e)
+                                    {
+                                      incoming.add_undecoded_msg(e);
+                                    }};
 
     websocket_pool ws(1, pubsub);
     g_main_loop.add_tcp_listen_fd(create_tcp_listen_socket(5556),
