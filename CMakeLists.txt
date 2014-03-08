@@ -18,6 +18,7 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/real_os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
+    ${CMAKE_SOURCE_DIR}/src/xtreams.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/incoming_events.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
