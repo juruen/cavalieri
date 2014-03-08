@@ -4,6 +4,7 @@ namespace {
 
 forward_fn_t null_fn = [](const Event &)->void{std::cout << "null()\n";};
 mforward_fn_t m_null_fn = [](std::vector<Event>)->void{std::cout << "null()\n";};
+pred_fn_t pred_null_fn = [](const Event &){std::cout << "null()\n"; return false;};
 
 xtream_node_t child_join(xtream_node_t left, xtream_node_t right) {
   auto node = std::make_shared<xtream_t>();
@@ -97,6 +98,8 @@ mout_xtream_node_t create_mout_xtream_node(mout_node_fn_t fn) {
 
 xtream_t::xtream_t() : output_fn(null_fn), input_fn(null_fn) {}
 
+pred_xtream_t::pred_xtream_t() : pred_fn(pred_null_fn) {}
+
 min_xtream_t::min_xtream_t() : output_fn(null_fn), input_fn(m_null_fn) {}
 
 mout_xtream_t::mout_xtream_t() : output_fn(m_null_fn), input_fn(null_fn) {}
@@ -105,23 +108,23 @@ xtream_node_t operator+ (xtream_node_t left, xtream_node_t right) {
   return child_join(left, right);
 }
 
-xtreams_t operator>>(mout_xtream_node_t left, min_xtream_node_t right) {
+xtreams_t operator>=(mout_xtream_node_t left, min_xtream_node_t right) {
   return join(left, right);
 }
 
-xtreams_t operator>(xtream_node_t left, xtream_node_t right) {
+xtreams_t operator>>=(xtream_node_t left, xtream_node_t right) {
   return join(left, right);
 }
 
-xtreams_t operator>(xtream_node_t left, xtreams_t right) {
+xtreams_t operator>>=(xtream_node_t left, xtreams_t right) {
   return join(left, right);
 }
 
-xtreams_t operator>(xtreams_t left, xtream_node_t right) {
+xtreams_t operator>>=(xtreams_t left, xtream_node_t right) {
   return join(left, right);
 }
 
-xtreams_t operator>(xtreams_t left, xtreams_t right) {
+xtreams_t operator>>=(xtreams_t left, xtreams_t right) {
   return join(left, right);
 }
 
