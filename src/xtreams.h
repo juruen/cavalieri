@@ -9,12 +9,18 @@
 #include <proto.pb.h>
 
 typedef std::function<void(const Event&)> forward_fn_t;
+typedef std::function<bool(const Event&)> pred_fn_t;
 typedef std::function<void(const std::vector<Event>)> mforward_fn_t;
 
 struct xtream_t {
   xtream_t();
   forward_fn_t output_fn;
   forward_fn_t input_fn;
+};
+
+struct pred_xtream_t {
+  pred_xtream_t();
+  pred_fn_t pred_fn;
 };
 
 typedef std::shared_ptr<xtream_t> xtream_node_t;
@@ -55,14 +61,16 @@ void push_event(xtreams_t, const Event &);
 
 xtream_node_t operator+ (xtream_node_t left, xtream_node_t right);
 
-xtreams_t operator>>(mout_xtream_node_t left, min_xtream_node_t right);
+xtreams_t operator>=(mout_xtream_node_t left, min_xtream_node_t right);
 
-xtreams_t operator>(xtream_node_t left, xtream_node_t right);
+xtreams_t operator>>=(xtream_node_t left, xtream_node_t right);
 
-xtreams_t operator>(xtream_node_t left, xtreams_t right);
+xtreams_t operator>>=(xtream_node_t left, xtreams_t right);
 
-xtreams_t operator>(xtreams_t left, xtream_node_t right);
+xtreams_t operator>>=(xtreams_t left, xtream_node_t right);
 
-xtreams_t operator>(xtreams_t left, xtreams_t right);
+xtreams_t operator>>=(xtreams_t left, xtreams_t right);
+
+xtreams_t operator>>(pred_xtream_t, xtream_node_t right);
 
 #endif
