@@ -16,6 +16,7 @@ SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
     ${CMAKE_SOURCE_DIR}/src/streams.cpp
+    ${CMAKE_SOURCE_DIR}/src/xtreams.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
@@ -58,6 +59,7 @@ GTEST_ADD_TESTS(
     ${CMAKE_SOURCE_DIR}/tests/query_grammar_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/mock_scheduler_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/streams_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/xtreams_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/folds_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/atom_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/rules_common_test_case.hpp

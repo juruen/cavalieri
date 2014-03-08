@@ -6,6 +6,7 @@
 #include "query_grammar_test_case.hpp"
 #include "mock_scheduler_test_case.hpp"
 #include "streams_test_case.hpp"
+#include "xtreams_test_case.hpp"
 #include "folds_test_case.hpp"
 #include "atom_test_case.hpp"
 #include "rules_common_test_case.hpp"
