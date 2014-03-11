@@ -1,112 +1,108 @@
 #include <folds.h>
+#include <functional>
 #include <util.h>
 
 namespace {
-  double reduce(const fold_fn_t f, const events_t & events, double & max_time) {
-    max_time = 0;
-    double t(metric_to_double(events[0]));
-    for (size_t i = 1; i < events.size(); i++) {
-      t = f(t, metric_to_double(events[i]));
-      if (events[i].time() > max_time) {
-        max_time = events[i].time();
-      }
-    }
-    return t;
+
+typedef std::function<double(double, double)> reduce_fn_t;
+typedef std::vector<Event> events_t;
+typedef std::function<Event(const events_t)> fold_fn_t;
+
+double reduce(const reduce_fn_t f, const events_t & events) {
+
+  double t(metric_to_double(events[0]));
+
+  for (size_t i = 1; i < events.size(); i++) {
+
+    t = f(t, metric_to_double(events[i]));
+
   }
 
-  auto sum_fn = [](const double & x, const double & y) { return (x + y);};
-
-  auto product_fn = [](const double & x, const double & y) { return (x * y); };
-
-  auto difference_fn = [](const double & x, const double & y) { return (x - y);};
+  return t;
 }
 
-mstream_t fold(const fold_fn_t f, const children_t & children) {
-  return [=](const  events_t & events) {
+double sum_fn(const double & x, const double & y) {
+  return x + y;
+}
+
+double product_fn(const double & x, const double & y) {
+  return x * y;
+}
+
+double difference_fn(const double & x, const double & y) {
+  return x - y;
+}
+
+fold_result_t fold(const reduce_fn_t f, events_t events) {
+
     //TODO: Filter nil metric events
     if (events.empty()) {
-      return;
+      return {};
     }
 
-    Event event(events[0]);
-    clear_metrics(event);
-    double max_time;
-    event.set_metric_d(reduce(f, events, max_time));
-    event.set_time(max_time);
-    call_rescue(event, children);
-  };
+    return reduce(f, events);
 }
 
-mstream_t sum(const children_t children) {
-  return fold(sum_fn, children);
 }
 
-mstream_t product(const children_t children) {
-  return fold(product_fn, children);
+
+fold_result_t sum(events_t events) {
+  return fold(sum_fn, events);
 }
 
-mstream_t difference(const children_t children) {
-  return fold(difference_fn, children);
+fold_result_t product(events_t events) {
+  return fold(product_fn, events);
 }
 
-mstream_t mean(const children_t children) {
-  return [=](const events_t & events) {
+fold_result_t difference(events_t events) {
+  return fold(difference_fn, events);
+}
+
+fold_result_t mean(events_t events) {
+
     if (events.empty()) {
-      return;
+      return {};
     }
-    Event event(events[0]);
-    clear_metrics(event);
-    double max_time{0};
-    event.set_metric_d(reduce(sum_fn, events, max_time) / events.size());
-    event.set_time(max_time);
-    call_rescue(event, children);
-  };
+
+
+   return reduce(sum_fn, events) / events.size();
 }
 
-mstream_t minimum(const children_t children) {
-  return [=](const events_t & events) {
+fold_result_t minimum(events_t events) {
+
     if (events.empty()) {
-      return;
+      return {};
     }
-    Event event(events[0]);
-    clear_metrics(event);
+
     double min = metric_to_double(events[0]);
-    double max_time{0};
+
     for (const auto & e: events) {
+
       auto tmp = metric_to_double(e);
       if (tmp < min) {
         min = tmp;
       }
-      if (e.time() > max_time) {
-        max_time = e.time();
-      }
+
     }
-    event.set_metric_d(min);
-    event.set_time(max_time);
-    call_rescue(event, children);
-  };
+
+    return min;
 }
 
-mstream_t maximum(const children_t children) {
-  return [=](const events_t & events) {
+fold_result_t maximum(events_t events) {
+
     if (events.empty()) {
-      return;
+      return {};
     }
-    Event event(events[0]);
-    clear_metrics(event);
+
     double max = metric_to_double(events[0]);
-    double max_time{0};
+
     for (const auto & e: events) {
+
       auto tmp = metric_to_double(e);
       if (tmp > max) {
         max = tmp;
       }
-      if (e.time() > max_time) {
-        max_time = e.time();
-      }
     }
-    event.set_metric_d(max);
-    event.set_time(max_time);
-    call_rescue(event, children);
-  };
+
+    return max;
 }

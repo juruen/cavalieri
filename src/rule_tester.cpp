@@ -34,11 +34,11 @@ int main(int argc, char **argv) {
 
     mock_index idx;
     class index index(idx);
-    auto rule_stream = sdo(rules(index));
+    auto rule_stream = rules(index);
 
     for (const auto & event: events) {
       mock_sched.process_event_time(event.time());
-      rule_stream(event);
+      push_event(rule_stream, event);
     }
 
     std::cout << results(idx.events(), g_external_mocks.calls()) << "\n";

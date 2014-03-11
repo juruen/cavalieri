@@ -2,6 +2,7 @@
 #include <atomic>
 #include <folds.h>
 
+/*
 namespace {
 stream_t set_state(std::string state, children_t children) {
   return with({{"state", state}}, children);
@@ -99,3 +100,4 @@ stream_t agg_sum_trigger_above(double dt, double trigger_value,
   return agg_trigger(dt, sum, above_eq_pred(trigger_value),
                      above_pred(keep_trigger_value), call_rescue_e(children));
 }
+*/

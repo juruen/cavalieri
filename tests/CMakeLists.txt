@@ -15,8 +15,8 @@ SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
-    ${CMAKE_SOURCE_DIR}/src/streams.cpp
     ${CMAKE_SOURCE_DIR}/src/xtreams.cpp
+    ${CMAKE_SOURCE_DIR}/src/xtream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
@@ -25,7 +25,7 @@ SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
     ${CMAKE_SOURCE_DIR}/src/query/parser.cpp
     ${CMAKE_SOURCE_DIR}/src/query/expression.cpp
-    ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
+#    ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
   )
 
 SET(MINIRIEMANN_PROTOFILES
@@ -58,11 +58,10 @@ GTEST_ADD_TESTS(
     ${CMAKE_SOURCE_DIR}/tests/basic_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/query_grammar_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/mock_scheduler_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/streams_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/xtreams_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/folds_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/atom_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/rules_common_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/rules_common_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/tcp_connection_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/ws_connection_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/riemann_tcp_connection_test_case.hpp

@@ -1,7 +1,7 @@
 #ifndef INCOMINIG_EVENTS
 #define INCOMINIG_EVENTS
 
-#include <streams.h>
+#include <xtream_functions.h>
 
 class incoming_events {
 public:
@@ -9,7 +9,7 @@ public:
   void add_undecoded_msg(const std::vector<unsigned char> msgs);
 
 private:
-  streams & streams_;
+  streams streams_;
 };
 
 #endif

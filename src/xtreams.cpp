@@ -2,7 +2,7 @@
 
 namespace {
 
-forward_fn_t null_fn = [](const Event &)->void{std::cout << "null()\n";};
+forward_fn_t null_fn = [](const Event &)->void{};
 
 xtream_node_t child_join(xtream_node_t left, xtream_node_t right) {
   auto node = std::make_shared<xtream_t>();
