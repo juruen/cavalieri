@@ -4,6 +4,6 @@
 #include <xtream_functions.h>
 #include <index/index.h>
 
-xtream_node_t rules(class index & idx);
+xtreams_t rules(class index & idx);
 
 #endif

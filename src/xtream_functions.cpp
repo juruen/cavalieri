@@ -12,7 +12,7 @@ namespace {
   const unsigned int k_default_ttl = 60;
 }
 
-xtream_node_t  prn() {
+xtreams_t  prn() {
   return create_xtream_node(
     [](forward_fn_t, e_t e)
     {
@@ -20,7 +20,7 @@ xtream_node_t  prn() {
     });
 }
 
-xtream_node_t with(const with_changes_t & changes, const bool & replace)
+xtreams_t with(const with_changes_t & changes, const bool & replace)
 {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e)
@@ -35,36 +35,47 @@ xtream_node_t with(const with_changes_t & changes, const bool & replace)
     });
 }
 
-xtream_node_t with(const with_changes_t& changes) {
+xtreams_t with(const with_changes_t& changes) {
   return with(changes, true);
 }
 
-xtream_node_t default_to(const with_changes_t& changes)
+xtreams_t default_to(const with_changes_t& changes)
 {
   return with(changes, false);
 }
 
-xtream_node_t split(const split_clauses_t clauses, xtream_node_t default_stream)
+xtreams_t split_(const split_clauses_t clauses, xtreams_t default_stream)
 {
   return create_xtream_node(
     [=](forward_fn_t, e_t e) {
-
       for (auto const & pair: clauses) {
 
         if (pair.first(e)) {
+
           push_event(pair.second, e);
           return;
         }
 
       }
 
-      if (default_stream) {
+      if (!default_stream.empty()) {
         push_event(default_stream, e);
       }
+
   });
 }
 
-xtream_node_t where(const predicate_t & predicate)
+xtreams_t split(const split_clauses_t clauses)
+{
+  return split_(clauses, {});
+}
+
+xtreams_t split(const split_clauses_t clauses, xtreams_t default_stream)
+{
+  return split_(clauses, default_stream);
+}
+
+xtreams_t where(const predicate_t & predicate)
 {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e) {
@@ -76,8 +87,8 @@ xtream_node_t where(const predicate_t & predicate)
   });
 }
 
-xtream_node_t where(const predicate_t & predicate,
-                   xtream_node_t else_xtream)
+xtreams_t where(const predicate_t & predicate,
+                   xtreams_t else_xtream)
 {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e) {
@@ -91,9 +102,9 @@ xtream_node_t where(const predicate_t & predicate,
   });
 }
 
-typedef std::unordered_map<std::string, xtream_node_t> by_stream_map_t;
+typedef std::unordered_map<std::string, xtreams_t> by_stream_map_t;
 
-xtream_node_t by(const by_keys_t & keys, const by_stream_t stream) {
+xtreams_t by(const by_keys_t & keys, const by_stream_t stream) {
 
   auto atom_streams = make_shared_atom<by_stream_map_t>();
 
@@ -110,17 +121,17 @@ xtream_node_t by(const by_keys_t & keys, const by_stream_t stream) {
         key += string_to_value(e, k) + " ";
       }
 
-      map_on_sync_insert<std::string, xtream_node_t>(
+      map_on_sync_insert<std::string, xtreams_t>(
           atom_streams,
           key,
           [&]() { return stream();},
-          [&](xtream_node_t  c) { push_event(c, e); }
+          [&](xtreams_t  c) { push_event(c, e); }
       );
 
   });
 }
 
-xtream_node_t rate(const int interval) {
+xtreams_t rate(const int interval) {
 
   auto rate = std::make_shared<std::atomic<double>>(0);
   bool task_created = false;
@@ -169,7 +180,7 @@ xtream_node_t rate(const int interval) {
 
 typedef std::unordered_map<std::string, Event> coalesce_events_t;
 
-xtream_node_t coalesce(fold_fn_t fold) {
+xtreams_t coalesce(fold_fn_t fold) {
 
   auto coalesce = make_shared_atom<coalesce_events_t>();
 
@@ -225,7 +236,7 @@ xtream_node_t coalesce(fold_fn_t fold) {
 
 typedef std::vector<boost::optional<Event>> project_events_t;
 
-xtream_node_t project(const predicates_t predicates, fold_fn_t fold) {
+xtreams_t project(const predicates_t predicates, fold_fn_t fold) {
 
   auto events = make_shared_atom<project_events_t>({predicates.size(),
                                                     boost::none});
@@ -287,7 +298,7 @@ xtream_node_t project(const predicates_t predicates, fold_fn_t fold) {
 }
 
 
-xtream_node_t changed_state(std::string initial) {
+xtreams_t changed_state(std::string initial) {
   auto prev = make_shared_atom<std::string>(initial);
 
   return create_xtream_node(
@@ -306,7 +317,7 @@ xtream_node_t changed_state(std::string initial) {
     });
 }
 
-xtream_node_t tagged_any(const tags_t& tags) {
+xtreams_t tagged_any(const tags_t& tags) {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e)
     {
@@ -318,7 +329,7 @@ xtream_node_t tagged_any(const tags_t& tags) {
     });
 }
 
-xtream_node_t tagged_all(const tags_t& tags) {
+xtreams_t tagged_all(const tags_t& tags) {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e)
     {
@@ -329,7 +340,7 @@ xtream_node_t tagged_all(const tags_t& tags) {
     });
 }
 
-xtream_node_t smap(smap_fn_t f) {
+xtreams_t smap(smap_fn_t f) {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e)
     {
@@ -341,7 +352,7 @@ xtream_node_t smap(smap_fn_t f) {
     });
 }
 
-xtream_node_t moving_event_window(size_t n, fold_fn_t fold) {
+xtreams_t moving_event_window(size_t n, fold_fn_t fold) {
 
   auto window = make_shared_atom<std::list<Event>>();
 
@@ -374,7 +385,7 @@ xtream_node_t moving_event_window(size_t n, fold_fn_t fold) {
     });
 }
 
-xtream_node_t fixed_event_window(size_t n, fold_fn_t fold) {
+xtreams_t fixed_event_window(size_t n, fold_fn_t fold) {
 
   auto window = make_shared_atom<std::list<Event>>();
 
@@ -425,7 +436,7 @@ typedef struct {
   time_t max{0};
 } moving_time_window_t;
 
-xtream_node_t moving_time_window(time_t dt, fold_fn_t fold) {
+xtreams_t moving_time_window(time_t dt, fold_fn_t fold) {
 
   auto window = make_shared_atom<moving_time_window_t>();
 
@@ -485,7 +496,7 @@ typedef struct {
   bool started{false};
 } fixed_time_window_t;
 
-xtream_node_t fixed_time_window(time_t dt, fold_fn_t fold) {
+xtreams_t fixed_time_window(time_t dt, fold_fn_t fold) {
 
   auto window = make_shared_atom<fixed_time_window_t>();
 
@@ -557,7 +568,7 @@ typedef struct {
   time_t start{0};
 } stable_t;
 
-xtream_node_t stable(time_t dt) {
+xtreams_t stable(time_t dt) {
 
   auto stable = make_shared_atom<stable_t>();
 
@@ -620,7 +631,7 @@ typedef struct {
  time_t new_interval{0};
 } throttle_t;
 
-xtream_node_t throttle(size_t n, time_t dt) {
+xtreams_t throttle(size_t n, time_t dt) {
 
   auto throttled = make_shared_atom<throttle_t>();
 
@@ -660,7 +671,7 @@ xtream_node_t throttle(size_t n, time_t dt) {
 
 }
 
-xtream_node_t above(double m) {
+xtreams_t above(double m) {
   return create_xtream_node(
    [=](forward_fn_t forward, e_t e) {
 
@@ -671,7 +682,7 @@ xtream_node_t above(double m) {
   });
 }
 
-xtream_node_t under(double m) {
+xtreams_t under(double m) {
   return create_xtream_node(
    [=](forward_fn_t forward, e_t e) {
 
@@ -682,7 +693,7 @@ xtream_node_t under(double m) {
   });
 }
 
-xtream_node_t within(double a, double b) {
+xtreams_t within(double a, double b) {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e) {
 
@@ -693,7 +704,7 @@ xtream_node_t within(double a, double b) {
   });
 }
 
-xtream_node_t without(double a, double b) {
+xtreams_t without(double a, double b) {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e) {
 
@@ -704,7 +715,7 @@ xtream_node_t without(double a, double b) {
   });
 }
 
-xtream_node_t scale(double s) {
+xtreams_t scale(double s) {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e) {
 
@@ -719,14 +730,14 @@ xtream_node_t scale(double s) {
   });
 }
 
-xtream_node_t sdo() {
+xtreams_t sdo() {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e) {
       forward(e);
     });
 }
 
-xtream_node_t counter() {
+xtreams_t counter() {
    auto counter = std::make_shared<std::atomic<unsigned int>>(0);
 
   return create_xtream_node(
@@ -746,7 +757,7 @@ xtream_node_t counter() {
   });
 }
 
-xtream_node_t expired() {
+xtreams_t expired() {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e) {
       if (expired_(e)) {
@@ -755,7 +766,7 @@ xtream_node_t expired() {
   });
 }
 
-xtream_node_t tag(tags_t tags) {
+xtreams_t tag(tags_t tags) {
   return create_xtream_node(
     [=](forward_fn_t forward, e_t e) {
 
@@ -843,7 +854,7 @@ bool under_(e_t e, const double value) {
   return (metric_to_double(e) < value);
 }
 
-void streams::add_stream(xtream_node_t stream) {
+void streams::add_stream(xtreams_t stream) {
   VLOG(3) << "adding stream";
   streams_.push_back(stream);
 }

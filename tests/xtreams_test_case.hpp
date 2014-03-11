@@ -7,7 +7,7 @@
 #include <util.h>
 #include <iostream>
 
-xtream_node_t create_c_xtream(const std::string c) {
+xtreams_t create_c_xtream(const std::string c) {
   return create_xtream_node([=](forward_fn_t forward, const Event & e)
       {
         Event ne(e);
@@ -16,7 +16,7 @@ xtream_node_t create_c_xtream(const std::string c) {
       });
 }
 
-xtream_node_t sink(std::vector<Event> & v) {
+xtreams_t sink(std::vector<Event> & v) {
   return create_xtream_node([&](forward_fn_t, const Event & e)
       {
         v.push_back(e);
@@ -70,11 +70,20 @@ TEST(xtreams_test_case, test)
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (f + g + sink(v)), e);
+  push_event(a >>  b >> c >> d >> (sink(v) + f + g), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
+  push_event(a >>  b >> c >> d >> (f + sink(v) + g), e);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("abcd", v[0].host());
+  v.clear();
+
+  push_event(a >>  b >> c >> d >> (f + g + sink(v)), e);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("abcd", v[0].host());
+  v.clear();
 
   auto streams = a >> b >> sink(v);
   push_event(c >> streams, e);

@@ -1,18 +1,33 @@
 #include <xtreams.h>
+#include <algorithm>
 
 namespace {
 
 forward_fn_t null_fn = [](const Event &)->void{};
 
-xtream_node_t child_join(xtream_node_t left, xtream_node_t right) {
+xtreams_t child_join(xtreams_t left, xtreams_t right) {
   auto node = std::make_shared<xtream_t>();
 
+  xtreams_t list;
+
+  for (const auto & n: left) {
+    list.push_back(n);
+  }
+
+  for (const auto & n: right) {
+    list.push_back(n);
+  }
+
+  auto first_fn = left.front()->input_fn;
+
   node->input_fn = [=](const Event & e) {
-    left->input_fn(e);
-    right->input_fn(e);
+    left.front()->input_fn(e);
+    right.front()->input_fn(e);
   };
 
-  return node;
+  list.push_front(node);
+
+  return list;
 }
 
 xtreams_t join(xtream_node_t left, xtream_node_t right) {
@@ -51,19 +66,19 @@ xtreams_t join(xtream_node_t left, xtreams_t right) {
   return right;
 }
 
-xtream_node_t create_xtream_node(node_fn_t fn) {
+xtreams_t create_xtream_node(node_fn_t fn) {
   xtream_node_t node = std::make_shared<xtream_t>();
 
   node->input_fn = [=](const Event & e) {
     fn(node->output_fn, e);
   };
 
-  return node;
+  return {node};
 }
 
 xtream_t::xtream_t() : output_fn(null_fn), input_fn(null_fn) {}
 
-xtream_node_t operator+ (xtream_node_t left, xtream_node_t right) {
+xtreams_t operator+ (xtreams_t left, xtreams_t right) {
   return child_join(left, right);
 }
 

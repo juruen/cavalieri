@@ -21,75 +21,76 @@ typedef std::function<bool(e_t)> predicate_t;
 typedef std::function<void(Event &)> smap_fn_t;
 typedef std::function<Event(const events_t)> fold_fn_t;
 typedef std::vector<predicate_t> predicates_t;
-typedef std::pair<const predicate_t, const xtream_node_t> split_pair_t;
+typedef std::pair<const predicate_t, const xtreams_t> split_pair_t;
 typedef boost::variant<std::string, int, double> change_value_t;
 typedef std::map<std::string, change_value_t> with_changes_t;
 typedef std::vector<std::string> by_keys_t;
-typedef std::function<xtream_node_t()> by_stream_t;
+typedef std::function<xtreams_t()> by_stream_t;
 typedef std::vector<split_pair_t> split_clauses_t;
 typedef std::vector<std::string> tags_t;
 
-xtream_node_t prn();
+xtreams_t prn();
 
-xtream_node_t with(const with_changes_t& changes);
+xtreams_t with(const with_changes_t& changes);
 
-xtream_node_t default_to(const with_changes_t& changes);
+xtreams_t default_to(const with_changes_t& changes);
 
-xtream_node_t split(const split_clauses_t clauses,
-                    const xtream_node_t default_stream={});
+xtreams_t split(const split_clauses_t clauses);
 
-xtream_node_t where(const predicate_t& predicate,
-                    const xtream_node_t else_xtream);
+xtreams_t split(const split_clauses_t clauses, const xtreams_t default_stream);
 
-xtream_node_t where(const predicate_t& predicate);
+xtreams_t where(const predicate_t& predicate,
+                    const xtreams_t else_xtream);
 
-xtream_node_t by(const by_keys_t& keys, const by_stream_t stream);
+xtreams_t where(const predicate_t& predicate);
 
-xtream_node_t rate(const int seconds);
+xtreams_t by(const by_keys_t& keys, const by_stream_t stream);
 
-xtream_node_t coalesce(fold_fn_t);
+xtreams_t rate(const int seconds);
 
-xtream_node_t project(const predicates_t predicates, fold_fn_t);
+xtreams_t coalesce(fold_fn_t);
 
-xtream_node_t changed_state(std::string initial);
+xtreams_t project(const predicates_t predicates, fold_fn_t);
 
-xtream_node_t tagged_any(const tags_t& tags);
+xtreams_t changed_state(std::string initial);
 
-xtream_node_t tagged_all(const tags_t& tags);
+xtreams_t tagged_any(const tags_t& tags);
 
-xtream_node_t smap(smap_fn_t f);
+xtreams_t tagged_all(const tags_t& tags);
 
-xtream_node_t moving_event_window(size_t window, fold_fn_t);
+xtreams_t smap(smap_fn_t f);
 
-xtream_node_t fixed_event_window(size_t window, fold_fn_t);
+xtreams_t moving_event_window(size_t window, fold_fn_t);
 
-xtream_node_t moving_time_window(time_t dt, fold_fn_t);
+xtreams_t fixed_event_window(size_t window, fold_fn_t);
 
-xtream_node_t fixed_time_window(time_t dt, fold_fn_t);
+xtreams_t moving_time_window(time_t dt, fold_fn_t);
 
-xtream_node_t stable(time_t dt);
+xtreams_t fixed_time_window(time_t dt, fold_fn_t);
 
-xtream_node_t throttle(size_t n, time_t dt);
+xtreams_t stable(time_t dt);
 
-xtream_node_t above(double m);
+xtreams_t throttle(size_t n, time_t dt);
 
-xtream_node_t under(double m);
+xtreams_t above(double m);
 
-xtream_node_t within(double a, double b);
+xtreams_t under(double m);
 
-xtream_node_t without(double a, double b);
+xtreams_t within(double a, double b);
 
-xtream_node_t scale(double s);
+xtreams_t without(double a, double b);
 
-xtream_node_t sdo();
+xtreams_t scale(double s);
 
-xtream_node_t counter();
+xtreams_t sdo();
 
-xtream_node_t expired();
+xtreams_t counter();
 
-xtream_node_t tag(tags_t tags);
+xtreams_t expired();
 
-xtream_node_t send_index(class index&);
+xtreams_t tag(tags_t tags);
+
+xtreams_t send_index(class index&);
 
 predicate_t above_eq_pred(const double value);
 
@@ -119,12 +120,12 @@ bool under_(e_t e, const double value);
 
 class streams {
 public:
-  void add_stream(xtream_node_t stream);
+  void add_stream(xtreams_t stream);
   void process_message(const Msg& message);
   void push_event(const Event& e);
 
 private:
-  std::vector<xtream_node_t> streams_;
+  std::vector<xtreams_t> streams_;
 };
 
 
