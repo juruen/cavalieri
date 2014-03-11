@@ -9,7 +9,6 @@
 #include <proto.pb.h>
 
 typedef std::function<void(const Event&)> forward_fn_t;
-typedef std::function<void(const std::vector<Event>)> mforward_fn_t;
 
 struct xtream_t {
   xtream_t();

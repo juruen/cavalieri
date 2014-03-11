@@ -1,24 +1,21 @@
 #ifndef FOLDS_H
 #define FOLDS_H
 
-#include <functional>
 #include <proto.pb.h>
-#include <streams.h>
+#include <boost/optional.hpp>
 
-typedef std::function<double(const double&, const double&)> fold_fn_t;
+typedef boost::optional<double> fold_result_t;
 
-mstream_t fold(const fold_fn_t f, const children_t & children);
+fold_result_t sum(const std::vector<Event> events);
 
-mstream_t sum(const children_t);
+fold_result_t product(const std::vector<Event> events);
 
-mstream_t product(const children_t);
+fold_result_t difference(const std::vector<Event> events);
 
-mstream_t difference(const children_t);
+fold_result_t mean(const std::vector<Event> events);
 
-mstream_t mean(const children_t);
+fold_result_t minimum(const std::vector<Event> events);
 
-mstream_t minimum(const children_t);
-
-mstream_t maximum(const children_t);
+fold_result_t maximum(const std::vector<Event> events);
 
 #endif

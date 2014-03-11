@@ -10,7 +10,6 @@ SET(CMAKE_MODULE_PATH
 
 SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
-    ${CMAKE_SOURCE_DIR}/src/streams.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
@@ -19,6 +18,7 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/real_os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
     ${CMAKE_SOURCE_DIR}/src/xtreams.cpp
+    ${CMAKE_SOURCE_DIR}/src/xtream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/incoming_events.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
@@ -61,7 +61,8 @@ SET(MINIRIEMANN_PROTOFILES
 SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/rule_tester.cpp
     ${CMAKE_SOURCE_DIR}/src/rule_tester_util.cpp
-    ${CMAKE_SOURCE_DIR}/src/streams.cpp
+    ${CMAKE_SOURCE_DIR}/src/xtreams.cpp
+    ${CMAKE_SOURCE_DIR}/src/xtream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp

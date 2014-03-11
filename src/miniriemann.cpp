@@ -4,7 +4,7 @@
 #include <transport/listen_tcp_socket.h>
 #include <riemann_tcp_pool.h>
 #include <websocket_pool.h>
-#include <streams.h>
+#include <xtream_functions.h>
 #include <util.h>
 #include <pubsub.h>
 #include <query/driver.h>
@@ -30,7 +30,7 @@ int main(int, char **argv)
     class index idx(real_idx);
 
     streams streams;
-    streams.add_stream(send_index(idx));
+    //streams.add_stream(send_index(idx));
 
     incoming_events incoming(streams);
 
