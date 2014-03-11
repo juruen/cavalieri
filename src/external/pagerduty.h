@@ -3,8 +3,8 @@
 
 #include <xtreams.h>
 
-xtream_node_t pd_trigger(const std::string & pg_key);
-xtream_node_t pd_resolve(const std::string & pg_key);
-xtream_node_t pd_acknowledge(const std::string & pg_key);
+xtreams_t pd_trigger(const std::string & pg_key);
+xtreams_t pd_resolve(const std::string & pg_key);
+xtreams_t pd_acknowledge(const std::string & pg_key);
 
 #endif

@@ -4,6 +4,6 @@
 #include <xtream_functions.h>
 #include <rules/rules.h>
 
-xtream_node_t load_rules(class index &);
+xtreams_t load_rules(class index &);
 
 #endif

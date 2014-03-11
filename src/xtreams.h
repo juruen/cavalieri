@@ -22,13 +22,13 @@ typedef std::list<xtream_node_t> xtreams_t;
 
 typedef std::function<void(forward_fn_t, const Event &)> node_fn_t;
 
-xtream_node_t create_xtream_node(node_fn_t fn);
+xtreams_t create_xtream_node(node_fn_t fn);
 
 void push_event(xtream_node_t, const Event &);
 
 void push_event(xtreams_t, const Event &);
 
-xtream_node_t operator+ (xtream_node_t left, xtream_node_t right);
+xtreams_t operator+ (xtreams_t left, xtreams_t right);
 
 xtreams_t operator>>(xtream_node_t left, xtream_node_t right);
 

@@ -12,7 +12,7 @@ std::vector<external_event_t> external_mocks::calls() const {
   return calls_;
 }
 
-xtream_node_t pd_trigger(const std::string & pgkey) {
+xtreams_t pd_trigger(const std::string & pgkey) {
   return create_xtream_node(
     [=](forward_fn_t, const Event & e) {
        g_external_mocks.add_call("pagerduty",
@@ -20,7 +20,7 @@ xtream_node_t pd_trigger(const std::string & pgkey) {
     });
 }
 
-xtream_node_t pd_resolve(const std::string & pgkey) {
+xtreams_t pd_resolve(const std::string & pgkey) {
   return create_xtream_node(
     [=](forward_fn_t, const Event & e) {
        g_external_mocks.add_call("pagerduty",
@@ -28,7 +28,7 @@ xtream_node_t pd_resolve(const std::string & pgkey) {
     });
 }
 
-xtream_node_t pd_acknowledge(const std::string & pgkey) {
+xtreams_t pd_acknowledge(const std::string & pgkey) {
   return create_xtream_node(
     [=](forward_fn_t, const Event & e) {
        g_external_mocks.add_call("pagerduty",
@@ -37,7 +37,7 @@ xtream_node_t pd_acknowledge(const std::string & pgkey) {
     });
 }
 
-xtream_node_t email(const std::string & from, const std::string & to) {
+xtreams_t email(const std::string & from, const std::string & to) {
   return create_xtream_node(
     [=](forward_fn_t, const Event & e) {
       g_external_mocks.add_call("email",

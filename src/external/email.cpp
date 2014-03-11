@@ -2,7 +2,7 @@
 #include <email.h>
 #include <util.h>
 
-xtream_node_t email(const std::string & from, const std::string & to)
+xtreams_t email(const std::string & from, const std::string & to)
 {
   return create_xtream_node(
     [=](forward_fn_t, const Event & event) {

@@ -4,7 +4,7 @@
 #include <util.h>
 #include <python_interpreter.h>
 
-static xtream_node_t call_pg( const std::string& pg_key, const std::string& action)
+static xtreams_t call_pg( const std::string& pg_key, const std::string& action)
 {
   return create_xtream_node(
     [=](forward_fn_t, const Event & event) {
@@ -25,14 +25,14 @@ static xtream_node_t call_pg( const std::string& pg_key, const std::string& acti
   });
 }
 
-xtream_node_t pd_trigger(const std::string& pg_key) {
+xtreams_t pd_trigger(const std::string& pg_key) {
   return call_pg(pg_key, "trigger");
 }
 
-xtream_node_t pd_resolve(const std::string& pg_key) {
+xtreams_t pd_resolve(const std::string& pg_key) {
   return call_pg(pg_key, "resolve");
 }
 
-xtream_node_t pd_acknowledge(const std::string& pg_key) {
+xtreams_t pd_acknowledge(const std::string& pg_key) {
   return call_pg(pg_key, "acknowledge");
 }
