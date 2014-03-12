@@ -1,7 +1,7 @@
 #ifndef INCOMINIG_EVENTS
 #define INCOMINIG_EVENTS
 
-#include <stream_functions.h>
+#include <streams/stream_functions.h>
 
 class incoming_events {
 public:

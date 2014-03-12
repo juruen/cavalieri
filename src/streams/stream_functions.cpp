@@ -6,7 +6,7 @@
 #include <atom.h>
 #include <util.h>
 #include <scheduler/scheduler.h>
-#include <stream_functions.h>
+#include <streams/stream_functions.h>
 
 namespace {
   const unsigned int k_default_ttl = 60;

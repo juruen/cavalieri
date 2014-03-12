@@ -1,7 +1,7 @@
 #ifndef PAGERDUTY_H
 #define PAGERDUTY_H
 
-#include <streams.h>
+#include <streams/stream_infra.h>
 
 streams_t pd_trigger(const std::string & pg_key);
 streams_t pd_resolve(const std::string & pg_key);
