@@ -66,7 +66,7 @@ streams_t join(stream_node_t left, streams_t right) {
   return right;
 }
 
-streams_t create_stream_node(node_fn_t fn) {
+streams_t create_stream(node_fn_t fn) {
   stream_node_t node = std::make_shared<stream_t>();
 
   node->input_fn = [=](const Event & e) {
