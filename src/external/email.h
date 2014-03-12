@@ -1,8 +1,8 @@
 #ifndef EMAIL_H
 #define EMAIL_H
 
-#include <xtreams.h>
+#include <streams.h>
 
-xtreams_t email(const std::string & from, const std::string & to);
+streams_t email(const std::string & from, const std::string & to);
 
 #endif
