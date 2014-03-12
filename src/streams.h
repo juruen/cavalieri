@@ -22,7 +22,7 @@ typedef std::list<stream_node_t> streams_t;
 
 typedef std::function<void(forward_fn_t, const Event &)> node_fn_t;
 
-streams_t create_stream_node(node_fn_t fn);
+streams_t create_stream(node_fn_t fn);
 
 void push_event(stream_node_t, const Event &);
 

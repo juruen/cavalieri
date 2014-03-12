@@ -8,7 +8,7 @@
 #include <iostream>
 
 streams_t create_c_stream(const std::string c) {
-  return create_stream_node([=](forward_fn_t forward, const Event & e)
+  return create_stream([=](forward_fn_t forward, const Event & e)
       {
         Event ne(e);
         ne.set_host(ne.host() + c);
@@ -17,7 +17,7 @@ streams_t create_c_stream(const std::string c) {
 }
 
 streams_t sink(std::vector<Event> & v) {
-  return create_stream_node([&](forward_fn_t, const Event & e)
+  return create_stream([&](forward_fn_t, const Event & e)
       {
         v.push_back(e);
       });
@@ -270,7 +270,7 @@ TEST(by_streams_test_case, test)
   {
     v.resize(++i);
 
-    return create_stream_node([=,&v](forward_fn_t, const Event & e)
+    return create_stream([=,&v](forward_fn_t, const Event & e)
         {
           v[i - 1].push_back(e);
         });

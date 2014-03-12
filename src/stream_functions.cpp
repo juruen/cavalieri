@@ -13,7 +13,7 @@ namespace {
 }
 
 streams_t  prn() {
-  return create_stream_node(
+  return create_stream(
     [](forward_fn_t, e_t e)
     {
       LOG(INFO) << "prn() " <<  event_to_json(e);
@@ -22,7 +22,7 @@ streams_t  prn() {
 
 streams_t with(const with_changes_t & changes, const bool & replace)
 {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e)
     {
       Event ne(e);
@@ -46,7 +46,7 @@ streams_t default_to(const with_changes_t& changes)
 
 streams_t split_(const split_clauses_t clauses, streams_t default_stream)
 {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t, e_t e) {
       for (auto const & pair: clauses) {
 
@@ -77,7 +77,7 @@ streams_t split(const split_clauses_t clauses, streams_t default_stream)
 
 streams_t where(const predicate_t & predicate)
 {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
       if (predicate(e)) {
@@ -90,7 +90,7 @@ streams_t where(const predicate_t & predicate)
 streams_t where(const predicate_t & predicate,
                    streams_t else_stream)
 {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
       if (predicate(e)) {
@@ -108,7 +108,7 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
 
   auto atom_streams = make_shared_atom<by_stream_map_t>();
 
-  return create_stream_node(
+  return create_stream(
 
     [=](forward_fn_t, e_t e) mutable {
 
@@ -136,7 +136,7 @@ streams_t rate(const int interval) {
   auto rate = std::make_shared<std::atomic<double>>(0);
   bool task_created = false;
 
-  return create_stream_node(
+  return create_stream(
 
     [=](forward_fn_t forward, e_t e) mutable
     {
@@ -184,7 +184,7 @@ streams_t coalesce(fold_fn_t fold) {
 
   auto coalesce = make_shared_atom<coalesce_events_t>();
 
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) mutable
     {
 
@@ -240,7 +240,7 @@ streams_t project(const predicates_t predicates, fold_fn_t fold) {
 
   auto events = make_shared_atom<project_events_t>({predicates.size(),
                                                     boost::none});
-  return create_stream_node(
+  return create_stream(
 
     [=](forward_fn_t forward, e_t e) mutable {
 
@@ -301,7 +301,7 @@ streams_t project(const predicates_t predicates, fold_fn_t fold) {
 streams_t changed_state(std::string initial) {
   auto prev = make_shared_atom<std::string>(initial);
 
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
       prev->update(
@@ -318,7 +318,7 @@ streams_t changed_state(std::string initial) {
 }
 
 streams_t tagged_any(const tags_t& tags) {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e)
     {
 
@@ -330,7 +330,7 @@ streams_t tagged_any(const tags_t& tags) {
 }
 
 streams_t tagged_all(const tags_t& tags) {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e)
     {
       if (tagged_all_(e, tags)) {
@@ -341,7 +341,7 @@ streams_t tagged_all(const tags_t& tags) {
 }
 
 streams_t smap(smap_fn_t f) {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e)
     {
       Event ne(e);
@@ -356,7 +356,7 @@ streams_t moving_event_window(size_t n, fold_fn_t fold) {
 
   auto window = make_shared_atom<std::list<Event>>();
 
-  return create_stream_node(
+  return create_stream(
 
     [=](forward_fn_t forward, e_t e) {
 
@@ -389,7 +389,7 @@ streams_t fixed_event_window(size_t n, fold_fn_t fold) {
 
   auto window = make_shared_atom<std::list<Event>>();
 
-  return create_stream_node(
+  return create_stream(
 
     [=](forward_fn_t forward, e_t e) {
 
@@ -440,7 +440,7 @@ streams_t moving_time_window(time_t dt, fold_fn_t fold) {
 
   auto window = make_shared_atom<moving_time_window_t>();
 
-  return create_stream_node(
+  return create_stream(
 
     [=](forward_fn_t forward, e_t e) {
 
@@ -500,7 +500,7 @@ streams_t fixed_time_window(time_t dt, fold_fn_t fold) {
 
   auto window = make_shared_atom<fixed_time_window_t>();
 
-  return create_stream_node(
+  return create_stream(
 
     [=](forward_fn_t forward, e_t e) {
 
@@ -572,7 +572,7 @@ streams_t stable(time_t dt) {
 
   auto stable = make_shared_atom<stable_t>();
 
-  return create_stream_node(
+  return create_stream(
 
     [=](forward_fn_t forward, e_t e)
     {
@@ -635,7 +635,7 @@ streams_t throttle(size_t n, time_t dt) {
 
   auto throttled = make_shared_atom<throttle_t>();
 
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) mutable {
 
       bool forward_event;
@@ -672,7 +672,7 @@ streams_t throttle(size_t n, time_t dt) {
 }
 
 streams_t above(double m) {
-  return create_stream_node(
+  return create_stream(
    [=](forward_fn_t forward, e_t e) {
 
       if (above_(e,m)) {
@@ -683,7 +683,7 @@ streams_t above(double m) {
 }
 
 streams_t under(double m) {
-  return create_stream_node(
+  return create_stream(
    [=](forward_fn_t forward, e_t e) {
 
       if (under_(e,m)) {
@@ -694,7 +694,7 @@ streams_t under(double m) {
 }
 
 streams_t within(double a, double b) {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
     if (above_eq_(e,a) && under_eq_(e, b)) {
@@ -705,7 +705,7 @@ streams_t within(double a, double b) {
 }
 
 streams_t without(double a, double b) {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
     if (under_(e,a) || above_(e, b)) {
@@ -716,7 +716,7 @@ streams_t without(double a, double b) {
 }
 
 streams_t scale(double s) {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
       Event ne(e);
@@ -731,7 +731,7 @@ streams_t scale(double s) {
 }
 
 streams_t sdo() {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) {
       forward(e);
     });
@@ -740,7 +740,7 @@ streams_t sdo() {
 streams_t counter() {
    auto counter = std::make_shared<std::atomic<unsigned int>>(0);
 
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) mutable {
 
       if (metric_set(e)) {
@@ -758,7 +758,7 @@ streams_t counter() {
 }
 
 streams_t expired() {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) {
       if (expired_(e)) {
         forward(e);
@@ -767,7 +767,7 @@ streams_t expired() {
 }
 
 streams_t tag(tags_t tags) {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
       Event ne(e);

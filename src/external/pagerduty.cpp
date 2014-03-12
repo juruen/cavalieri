@@ -6,7 +6,7 @@
 
 static streams_t call_pg( const std::string& pg_key, const std::string& action)
 {
-  return create_stream_node(
+  return create_stream(
     [=](forward_fn_t, const Event & event) {
 
       Event me(event);
