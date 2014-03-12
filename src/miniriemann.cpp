@@ -4,7 +4,7 @@
 #include <transport/listen_tcp_socket.h>
 #include <riemann_tcp_pool.h>
 #include <websocket_pool.h>
-#include <xtream_functions.h>
+#include <stream_functions.h>
 #include <util.h>
 #include <pubsub.h>
 #include <query/driver.h>

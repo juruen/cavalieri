@@ -1,14 +1,14 @@
 #ifndef XTREAMS_TEST_CASE
 #define XTREAMS_TEST_CASE
 
-#include <xtreams.h>
-#include <xtream_functions.h>
+#include <streams.h>
+#include <stream_functions.h>
 #include <scheduler/mock_scheduler.h>
 #include <util.h>
 #include <iostream>
 
-xtreams_t create_c_xtream(const std::string c) {
-  return create_xtream_node([=](forward_fn_t forward, const Event & e)
+streams_t create_c_stream(const std::string c) {
+  return create_stream_node([=](forward_fn_t forward, const Event & e)
       {
         Event ne(e);
         ne.set_host(ne.host() + c);
@@ -16,8 +16,8 @@ xtreams_t create_c_xtream(const std::string c) {
       });
 }
 
-xtreams_t sink(std::vector<Event> & v) {
-  return create_xtream_node([&](forward_fn_t, const Event & e)
+streams_t sink(std::vector<Event> & v) {
+  return create_stream_node([&](forward_fn_t, const Event & e)
       {
         v.push_back(e);
       });
@@ -33,14 +33,14 @@ std::function<Event(const std::vector<Event>)> msink(std::vector<Event> & v) {
 
 extern mock_scheduler mock_sched;
 
-TEST(xtreams_test_case, test)
+TEST(streams_test_case, test)
 {
-  auto a = create_c_xtream("a");
-  auto b = create_c_xtream("b");
-  auto c = create_c_xtream("c");
-  auto d = create_c_xtream("d");
-  auto f = create_c_xtream("f");
-  auto g = create_c_xtream("g");
+  auto a = create_c_stream("a");
+  auto b = create_c_stream("b");
+  auto c = create_c_stream("c");
+  auto d = create_c_stream("d");
+  auto f = create_c_stream("f");
+  auto g = create_c_stream("g");
 
   std::vector<Event> v;
 
@@ -93,7 +93,7 @@ TEST(xtreams_test_case, test)
 
 }
 
-TEST(with_xtreams_test_case, test)
+TEST(with_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -137,7 +137,7 @@ TEST(with_xtreams_test_case, test)
   EXPECT_EQ("foo", v[0].attributes(0).value());
 }
 
-TEST(default_to_xtreams_test_case, test)
+TEST(default_to_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -189,7 +189,7 @@ TEST(default_to_xtreams_test_case, test)
   ASSERT_FALSE(v[0].has_metric_f());
 }
 
-TEST(split_xtreams_test_case, test)
+TEST(split_streams_test_case, test)
 {
   std::vector<Event> v1, v2, v3;
 
@@ -262,7 +262,7 @@ TEST(where_xstream_test_case, test)
   ASSERT_EQ(1, v2.size());
 }
 
-TEST(by_xtreams_test_case, test)
+TEST(by_streams_test_case, test)
 {
   std::vector<std::vector<Event>> v;
   int i = 0;
@@ -270,7 +270,7 @@ TEST(by_xtreams_test_case, test)
   {
     v.resize(++i);
 
-    return create_xtream_node([=,&v](forward_fn_t, const Event & e)
+    return create_stream_node([=,&v](forward_fn_t, const Event & e)
         {
           v[i - 1].push_back(e);
         });
@@ -304,7 +304,7 @@ TEST(by_xtreams_test_case, test)
   ASSERT_EQ(2, v[2].size());
 }
 
-TEST(changed_state_xtreams_test_case, test)
+TEST(changed_state_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -347,7 +347,7 @@ TEST(tagged_any_test_case, test)
   ASSERT_EQ(2, v.size());
 }
 
-TEST(tagged_all_xtreams_test_case, test)
+TEST(tagged_all_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -371,7 +371,7 @@ TEST(tagged_all_xtreams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
-TEST(smap_xtreams_test_case, test)
+TEST(smap_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -385,7 +385,7 @@ TEST(smap_xtreams_test_case, test)
   ASSERT_EQ("foo", v[0].host());
 }
 
-TEST(stable_xtreams_test_case, test)
+TEST(stable_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -451,7 +451,7 @@ TEST(stable_xtreams_test_case, test)
   push_event(stable_stream, e);
 }
 
-TEST(throttle_xtreams_test_case, test)
+TEST(throttle_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -478,7 +478,7 @@ TEST(throttle_xtreams_test_case, test)
   }
 }
 
-TEST(above_xtreams_test_case, test)
+TEST(above_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -495,7 +495,7 @@ TEST(above_xtreams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
-TEST(under_xtreams_test_case, test)
+TEST(under_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -512,7 +512,7 @@ TEST(under_xtreams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
-TEST(within_xtreams_test_case, test)
+TEST(within_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -531,7 +531,7 @@ TEST(within_xtreams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
-TEST(without_xtreams_test_case, test)
+TEST(without_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -550,7 +550,7 @@ TEST(without_xtreams_test_case, test)
   ASSERT_EQ(2, v.size());
 }
 
-TEST(scale_xtreams_test_case, test)
+TEST(scale_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -564,7 +564,7 @@ TEST(scale_xtreams_test_case, test)
   ASSERT_EQ(12, metric_to_double(v[0]));
 }
 
-TEST(counter_xtreams_test_case, test)
+TEST(counter_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -589,7 +589,7 @@ TEST(counter_xtreams_test_case, test)
   v.clear();
 }
 
-TEST(tag_xtreams_test_case, test)
+TEST(tag_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -601,7 +601,7 @@ TEST(tag_xtreams_test_case, test)
   ASSERT_TRUE(tagged_all_(v[0], {"foo", "bar"}));
 }
 
-TEST(expired_xtreams_test_case, test)
+TEST(expired_streams_test_case, test)
 {
   std::vector<Event> v;
   mock_sched.clear();
@@ -634,7 +634,7 @@ TEST(expired_xtreams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
-TEST(rate_xtreams_test_case, test)
+TEST(rate_streams_test_case, test)
 {
   std::vector<Event> v;
   mock_sched.clear();
@@ -680,7 +680,7 @@ TEST(rate_xtreams_test_case, test)
   mock_sched.clear();
 }
 
-TEST(coalesce_xtreams_test_case, test)
+TEST(coalesce_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -741,7 +741,7 @@ TEST(coalesce_xtreams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
-TEST(project_xtreams_test_case, test)
+TEST(project_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -806,7 +806,7 @@ TEST(project_xtreams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
-TEST(moving_event_window_xtreams_test_case, test)
+TEST(moving_event_window_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -839,7 +839,7 @@ TEST(moving_event_window_xtreams_test_case, test)
   v.clear();
 }
 
-TEST(fixed_event_window_xtreams_test_case, test)
+TEST(fixed_event_window_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -878,7 +878,7 @@ TEST(fixed_event_window_xtreams_test_case, test)
   ASSERT_EQ(5, v[2].metric_sint64());
 }
 
-TEST(moving_time_window_xtreams_test_case, test)
+TEST(moving_time_window_streams_test_case, test)
 {
   std::vector<Event> v;
 
@@ -931,7 +931,7 @@ TEST(moving_time_window_xtreams_test_case, test)
   v.clear();
 }
 
-TEST(fixed_time_window_xtreams_test_case, test)
+TEST(fixed_time_window_streams_test_case, test)
 {
   std::vector<Event> v;
 

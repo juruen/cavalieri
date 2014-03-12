@@ -1,9 +1,9 @@
 #ifndef RULES_LOADER_H
 #define RULES_LOADER_H
 
-#include <xtream_functions.h>
+#include <stream_functions.h>
 #include <rules/rules.h>
 
-xtreams_t load_rules(class index &);
+streams_t load_rules(class index &);
 
 #endif

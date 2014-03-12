@@ -1,14 +1,14 @@
-#include <xtreams.h>
+#include <streams.h>
 #include <algorithm>
 
 namespace {
 
 forward_fn_t null_fn = [](const Event &)->void{};
 
-xtreams_t child_join(xtreams_t left, xtreams_t right) {
-  auto node = std::make_shared<xtream_t>();
+streams_t child_join(streams_t left, streams_t right) {
+  auto node = std::make_shared<stream_t>();
 
-  xtreams_t list;
+  streams_t list;
 
   for (const auto & n: left) {
     list.push_back(n);
@@ -30,17 +30,17 @@ xtreams_t child_join(xtreams_t left, xtreams_t right) {
   return list;
 }
 
-xtreams_t join(xtream_node_t left, xtream_node_t right) {
+streams_t join(stream_node_t left, stream_node_t right) {
   left->output_fn = right->input_fn;
 
-  xtreams_t list;
+  streams_t list;
   list.push_back(left);
   list.push_back(right);
 
   return list;
 }
 
-xtreams_t join(xtreams_t left, xtreams_t right) {
+streams_t join(streams_t left, streams_t right) {
 
   left.back()->output_fn = right.front()->input_fn;
   left.insert(left.end(), begin(right), end(right));
@@ -48,7 +48,7 @@ xtreams_t join(xtreams_t left, xtreams_t right) {
   return left;
 }
 
-xtreams_t join(xtreams_t left, xtream_node_t right) {
+streams_t join(streams_t left, stream_node_t right) {
 
   left.back()->output_fn = right->input_fn;
   left.push_back(right);
@@ -58,7 +58,7 @@ xtreams_t join(xtreams_t left, xtream_node_t right) {
 
 }
 
-xtreams_t join(xtream_node_t left, xtreams_t right) {
+streams_t join(stream_node_t left, streams_t right) {
 
   left->output_fn = right.front()->input_fn;
   right.push_front(left);
@@ -66,8 +66,8 @@ xtreams_t join(xtream_node_t left, xtreams_t right) {
   return right;
 }
 
-xtreams_t create_xtream_node(node_fn_t fn) {
-  xtream_node_t node = std::make_shared<xtream_t>();
+streams_t create_stream_node(node_fn_t fn) {
+  stream_node_t node = std::make_shared<stream_t>();
 
   node->input_fn = [=](const Event & e) {
     fn(node->output_fn, e);
@@ -76,32 +76,32 @@ xtreams_t create_xtream_node(node_fn_t fn) {
   return {node};
 }
 
-xtream_t::xtream_t() : output_fn(null_fn), input_fn(null_fn) {}
+stream_t::stream_t() : output_fn(null_fn), input_fn(null_fn) {}
 
-xtreams_t operator+ (xtreams_t left, xtreams_t right) {
+streams_t operator+ (streams_t left, streams_t right) {
   return child_join(left, right);
 }
 
-xtreams_t operator>>(xtream_node_t left, xtream_node_t right) {
+streams_t operator>>(stream_node_t left, stream_node_t right) {
   return join(left, right);
 }
 
-xtreams_t operator>>(xtream_node_t left, xtreams_t right) {
+streams_t operator>>(stream_node_t left, streams_t right) {
   return join(left, right);
 }
 
-xtreams_t operator>>(xtreams_t left, xtream_node_t right) {
+streams_t operator>>(streams_t left, stream_node_t right) {
   return join(left, right);
 }
 
-xtreams_t operator>>(xtreams_t left, xtreams_t right) {
+streams_t operator>>(streams_t left, streams_t right) {
   return join(left, right);
 }
 
-void push_event(xtream_node_t node, const Event & e) {
+void push_event(stream_node_t node, const Event & e) {
   node->input_fn(e);
 }
 
-void push_event(xtreams_t l, const Event & e) {
+void push_event(streams_t l, const Event & e) {
   l.front()->input_fn(e);
 }
