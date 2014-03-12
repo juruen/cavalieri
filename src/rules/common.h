@@ -2,19 +2,19 @@
 #define RULES_COMMON_H
 
 /*
-stream_t critical_above(double value, children_t children);
+#include <streams/stream_infra.h>
 
-stream_t critical_under(double value, children_t children);
+streams_t critical_above(double value);
 
-stream_t trigger_detrigger_above(double dt, double trigger_value,
-                                 double keep_trigger_value,
-                                 children_t children);
+streams_t critical_under(double valuen);
 
-stream_t trigger_detrigger_under(double dt, double trigger_value,
-                                 double keep_trigger_value,
-                                 children_t children);
+streams_t trigger_detrigger_above(double dt, double trigger_value,
+                                  double keep_trigger_value);
 
-stream_t agg_sum_trigger_above(double dt, double trigger_value,
-                               double keep_trigger_value, children_t children);
+streams_t trigger_detrigger_under(double dt, double trigger_value,
+                                  double keep_trigger_value);
+
+streams_t agg_sum_trigger_above(double dt, double trigger_value,
+                                double keep_trigger_value);
 */
 #endif
