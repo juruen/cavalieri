@@ -1,5 +1,5 @@
 #include <external_mocks.h>
-#include <streams.h>
+#include <streams/stream_infra.h>
 #include <scheduler/scheduler.h>
 
 void external_mocks::add_call(const std::string & external,

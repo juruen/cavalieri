@@ -7,7 +7,7 @@
 #include <memory>
 #include <boost/variant.hpp>
 #include <proto.pb.h>
-#include <streams.h>
+#include <streams/stream_infra.h>
 #include <index/index.h>
 
 typedef const Event& e_t;

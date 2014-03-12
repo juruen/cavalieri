@@ -1,8 +1,8 @@
 #ifndef XTREAMS_TEST_CASE
 #define XTREAMS_TEST_CASE
 
-#include <streams.h>
-#include <stream_functions.h>
+#include <streams/stream_infra.h>
+#include <streams/stream_functions.h>
 #include <scheduler/mock_scheduler.h>
 #include <util.h>
 #include <iostream>

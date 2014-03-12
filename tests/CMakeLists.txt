@@ -15,8 +15,8 @@ SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
-    ${CMAKE_SOURCE_DIR}/src/streams.cpp
-    ${CMAKE_SOURCE_DIR}/src/stream_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/pubsub.cpp

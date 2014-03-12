@@ -1,4 +1,4 @@
-#include <streams.h>
+#include <streams/stream_infra.h>
 #include <algorithm>
 
 namespace {
