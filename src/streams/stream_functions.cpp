@@ -47,18 +47,32 @@ streams_t default_to(const with_changes_t& changes)
 streams_t split_(const split_clauses_t clauses, streams_t default_stream)
 {
   return create_stream(
-    [=](forward_fn_t, e_t e) {
+
+    [=](forward_fn_t forward, e_t e) {
+
       for (auto const & pair: clauses) {
 
         if (pair.first(e)) {
 
+          pair.second.back()->output_fn = [&](e_t e)
+          {
+            forward(e);
+          };
+
           push_event(pair.second, e);
+
           return;
         }
 
       }
 
       if (!default_stream.empty()) {
+
+        default_stream.back()->output_fn = [&](e_t e)
+        {
+          forward(e);
+        };
+
         push_event(default_stream, e);
       }
 

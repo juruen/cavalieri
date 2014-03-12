@@ -239,6 +239,20 @@ TEST(split_streams_test_case, test)
   ASSERT_EQ(0, v1.size());
   ASSERT_EQ(0, v2.size());
   ASSERT_EQ(1, v3.size());
+
+  v3.clear();
+
+  split_clauses_t clauses_stream =
+  {
+    {PRED(e.host() == "host1"),       sdo()},
+    {PRED(metric_to_double(e) > 3.3), sdo()}
+  };
+
+  e.set_host("host1");
+  push_event(split(clauses_stream) >> sink(v3), e);
+  ASSERT_EQ(0, v1.size());
+  ASSERT_EQ(0, v2.size());
+  ASSERT_EQ(1, v3.size());
 }
 
 TEST(where_xstream_test_case, test)
