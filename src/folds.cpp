@@ -33,76 +33,104 @@ double difference_fn(const double & x, const double & y) {
   return x - y;
 }
 
-fold_result_t fold(const reduce_fn_t f, events_t events) {
+double max_time(events_t events) {
+
+  double max_time = 0;
+
+  for (const auto & e : events) {
+    if (e.time() > max_time) {
+      max_time = e.time();
+    }
+  }
+
+  return max_time;
+}
+
+Event fold(const reduce_fn_t f, events_t events) {
 
     //TODO: Filter nil metric events
     if (events.empty()) {
       return {};
     }
 
-    return reduce(f, events);
+    Event e(events.front());
+    e.set_metric_d(reduce(f, events));
+    e.set_time(max_time(events));
+
+    return e;
 }
 
 }
 
 
-fold_result_t sum(events_t events) {
+Event sum(events_t events) {
   return fold(sum_fn, events);
 }
 
-fold_result_t product(events_t events) {
+Event product(events_t events) {
   return fold(product_fn, events);
 }
 
-fold_result_t difference(events_t events) {
+Event difference(events_t events) {
   return fold(difference_fn, events);
 }
 
-fold_result_t mean(events_t events) {
+Event mean(events_t events) {
 
-    if (events.empty()) {
-      return {};
-    }
+  if (events.empty()) {
+    return {};
+  }
 
+  Event e(events.front());
+  e.set_metric_d(reduce(sum_fn, events) / events.size());
+  e.set_time(max_time(events));
 
-   return reduce(sum_fn, events) / events.size();
+  return e;
 }
 
-fold_result_t minimum(events_t events) {
+Event minimum(events_t events) {
 
-    if (events.empty()) {
-      return {};
+  if (events.empty()) {
+    return {};
+  }
+
+  double min = metric_to_double(events[0]);
+
+  for (const auto & e: events) {
+
+    auto tmp = metric_to_double(e);
+    if (tmp < min) {
+      min = tmp;
     }
 
-    double min = metric_to_double(events[0]);
+  }
 
-    for (const auto & e: events) {
+  Event e(events.front());
+  e.set_metric_d(min);
+  e.set_time(max_time(events));
 
-      auto tmp = metric_to_double(e);
-      if (tmp < min) {
-        min = tmp;
-      }
-
-    }
-
-    return min;
+  return e;
 }
 
-fold_result_t maximum(events_t events) {
+Event maximum(events_t events) {
 
-    if (events.empty()) {
-      return {};
+  if (events.empty()) {
+    return {};
+  }
+
+  double max = metric_to_double(events[0]);
+
+  for (const auto & e: events) {
+
+    auto tmp = metric_to_double(e);
+    if (tmp > max) {
+      max = tmp;
     }
+  }
 
-    double max = metric_to_double(events[0]);
+  Event e(events.front());
+  e.set_metric_d(max);
+  e.set_time(max_time(events));
 
-    for (const auto & e: events) {
-
-      auto tmp = metric_to_double(e);
-      if (tmp > max) {
-        max = tmp;
-      }
-    }
-
-    return max;
+  return e;
 }

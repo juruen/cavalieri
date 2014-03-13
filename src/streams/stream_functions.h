@@ -104,6 +104,8 @@ predicate_t state_pred(std::string state);
 
 predicate_t service_pred(std::string state);
 
+predicate_t default_pred();
+
 bool tagged_any_(e_t e, const tags_t& tags);
 
 bool tagged_all_(e_t e, const tags_t& tags);

@@ -8,7 +8,7 @@
 #include "streams_test_case.hpp"
 #include "folds_test_case.hpp"
 #include "atom_test_case.hpp"
-//#include "rules_common_test_case.hpp"
+#include "rules_common_test_case.hpp"
 #include "tcp_connection_test_case.hpp"
 #include "ws_connection_test_case.hpp"
 #include "riemann_tcp_connection_test_case.hpp"

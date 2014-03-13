@@ -1,103 +1,103 @@
-#include "common.h"
 #include <atomic>
 #include <folds.h>
+#include <streams/stream_functions.h>
+#include "common.h"
 
-/*
+
 namespace {
-stream_t set_state(std::string state, children_t children) {
-  return with({{"state", state}}, children);
-}
 
-stream_t  call_rescue_e(children_t children) {
-  return [=](e_t e) { call_rescue(e, children);};
+streams_t set_state(std::string state) {
+  return with({{"state", state}});
 }
 
 }
 
-stream_t critical_above(double value, children_t children) {
+streams_t critical_above(double value) {
   return
     split(
     {
-      {above_eq_pred(value), set_state("critical", children)},
-      {under_pred(value), set_state("ok", children)}
+      {above_eq_pred(value), set_state("critical")},
+      {default_pred(), set_state("ok")}
     });
 }
 
-stream_t critical_under(double value, children_t children) {
+streams_t critical_under(double value) {
   return
     split(
     {
-      {under_eq_pred(value), set_state("critical", children)},
-      {above_eq_pred(value), set_state("ok", children)}
+      {under_eq_pred(value), set_state("critical")},
+      {default_pred(), set_state("ok")}
     });
+
 }
 
 typedef std::shared_ptr<std::atomic<bool>> atomic_bool_t;
 
-stream_t stable_stream(double dt, atomic_bool_t state, children_t children) {
-  auto set_state = [=](e_t e) {
-    state->store(e.state() == "ok");
-    call_rescue(e, children);
-  };
-  return (stable(dt, set_state));
+streams_t stable_stream(double dt, atomic_bool_t state) {
+
+  auto set_state = create_stream(
+    [=](forward_fn_t forward, e_t e)
+    {
+      state->store(e.state() == "ok");
+      forward(e);
+    });
+
+  return stable(dt) >> set_state;
 }
 
-stream_t trigger_detrigger(double dt, predicate_t trigger_pred,
-                           predicate_t cancel_pred, children_t children)
+streams_t trigger_detrigger(double dt, predicate_t trigger_pred,
+                           predicate_t cancel_pred)
 {
   auto state_ok = std::make_shared<std::atomic<bool>>(true);
-  auto s = stable_stream(dt, state_ok, call_rescue_e(children));
 
-  return [=](e_t e) {
-    bool ok = state_ok->load();
-    std::string state("ok");
-    if (trigger_pred(e) || (!ok && cancel_pred(e))) {
-      state = "critical";
+  auto is_critical = [=](e_t e) {
+
+    if (trigger_pred(e)) {
+      return true;
     }
-    Event ne(e);
-    ne.set_state(state);
-    s(ne);
+
+    if (!state_ok->load() && cancel_pred(e)) {
+      return true;
+    }
+
+    return false;
   };
+
+  split_clauses_t clauses =
+  {
+    {is_critical, set_state("critical")},
+    {default_pred(), set_state("ok")}
+  };
+
+  return split(clauses) >>  stable_stream(dt, state_ok);
 }
 
-stream_t trigger_detrigger_above(double dt, double trigger_value,
-                                 double keep_trigger_value,
-                                 children_t children)
+streams_t trigger_detrigger_above(double dt, double trigger_value,
+                                  double keep_trigger_value)
 {
-  return trigger_detrigger(
-      dt,
-      above_pred(trigger_value),
-      above_pred(keep_trigger_value),
-      children
-  );
+  return trigger_detrigger(dt, above_pred(trigger_value),
+                           above_pred(keep_trigger_value));
 }
 
-stream_t trigger_detrigger_under(double dt, double trigger_value,
-                                 double keep_trigger_value,
-                                 children_t children)
+streams_t trigger_detrigger_under(double dt, double trigger_value,
+                                 double keep_trigger_value)
 {
-  return trigger_detrigger(
-      dt,
-      under_pred(trigger_value),
-      under_pred(keep_trigger_value),
-      children
-  );
+  return trigger_detrigger(dt, under_pred(trigger_value),
+                           under_pred(keep_trigger_value));
 }
 
-typedef std::function<mstream_t(children_t)> agg_fn_t;
-
-stream_t agg_trigger(double dt, agg_fn_t agg_fn, predicate_t trigger_pred,
-                     predicate_t keep_trigger_pred, children_t children)
+streams_t agg_trigger(double dt, fold_fn_t agg_fn, predicate_t trigger_pred,
+                      predicate_t keep_trigger_pred)
 {
-  auto trigger = trigger_detrigger(dt, trigger_pred,
-                                   keep_trigger_pred, children);
-  return coalesce(agg_fn(trigger));
+  return
+    coalesce(agg_fn)
+      >> trigger_detrigger(dt, trigger_pred, keep_trigger_pred);
 }
 
-stream_t agg_sum_trigger_above(double dt, double trigger_value,
-                               double keep_trigger_value, children_t children)
+streams_t agg_sum_trigger_above(double dt, double trigger_value,
+                               double keep_trigger_value)
 {
   return agg_trigger(dt, sum, above_eq_pred(trigger_value),
-                     above_pred(keep_trigger_value), call_rescue_e(children));
+                     above_pred(keep_trigger_value));
 }
-*/
+
