@@ -234,14 +234,18 @@ streams_t coalesce(fold_fn_t fold) {
 
         [&](const coalesce_events_t &, const coalesce_events_t & curr) {
 
-          forward(fold(expired_events));
+          if (!expired_events.empty()) {
+            forward(fold(expired_events));
+          }
 
           events_t events;
           for (const auto & it : curr) {
             events.push_back(it.second);
           }
 
-          forward(fold(events));
+          if (!events.empty()) {
+            forward(fold(events));
+          }
         }
       );
     }
@@ -569,7 +573,7 @@ streams_t fixed_time_window(time_t dt, fold_fn_t fold) {
         },
 
         [&](const fixed_time_window_t &, const fixed_time_window_t &) {
-           forward(fold(flush)); 
+           forward(fold(flush));
         }
       );
   });
@@ -819,6 +823,9 @@ predicate_t service_pred(const std::string service) {
   return PRED(e.service() == service);
 }
 
+predicate_t default_pred() {
+  return [](e_t){ return true; };
+}
 
 bool tagged_any_(e_t e, const tags_t& tags) {
   for (auto &tag: tags) {

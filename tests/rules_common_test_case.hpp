@@ -3,25 +3,24 @@
 
 #include <rules/common.h>
 
-stream_t bsink(std::vector<Event> & v) {
-  return [&](e_t e) { v.push_back(e); };
+streams_t bsink(std::vector<Event> & v) {
+  return create_stream([&](forward_fn_t, e_t e) { v.push_back(e); });
 }
-
 
 TEST(critical_above_test_case, test)
 {
   std::vector<Event> v;
 
-  auto cabove = critical_above(5, {bsink(v)});
+  auto cabove = critical_above(5) >> bsink(v);
 
   Event e;
 
   e.set_metric_d(1);
-  call_rescue(e, {cabove});
+  push_event(cabove, e);
   ASSERT_EQ("ok", v[0].state());
 
   e.set_metric_d(6);
-  call_rescue(e, {cabove});
+  push_event(cabove, e);
   ASSERT_EQ("critical", v[1].state());
 }
 
@@ -29,16 +28,16 @@ TEST(critical_under_test_case, test)
 {
   std::vector<Event> v;
 
-  auto cunder = critical_under(5, {bsink(v)});
+  auto cunder = critical_under(5) >>  bsink(v);
 
   Event e;
 
   e.set_metric_d(1);
-  call_rescue(e, {cunder});
+  push_event(cunder, e);
   ASSERT_EQ("critical", v[0].state());
 
   e.set_metric_d(6);
-  call_rescue(e, {cunder});
+  push_event(cunder, e);
   ASSERT_EQ("ok", v[1].state());
 }
 
@@ -46,17 +45,17 @@ TEST(trigger_detrigger_above_test_case, test)
 {
   std::vector<Event> v;
 
-  auto td_above = trigger_detrigger_above(5, 5, 3, {bsink(v)});
+  auto td_above = trigger_detrigger_above(5, 5, 3) >> bsink(v);
 
   Event e;
 
   e.set_metric_d(1);
   e.set_time(1);
-  call_rescue(e, {td_above});
+  push_event(td_above, e);
   ASSERT_EQ(0, v.size());
 
   e.set_time(6);
-  call_rescue(e, {td_above});
+  push_event(td_above, e);
   ASSERT_EQ(2, v.size());
   ASSERT_EQ("ok", v[0].state());
   ASSERT_EQ("ok", v[1].state());
@@ -64,15 +63,15 @@ TEST(trigger_detrigger_above_test_case, test)
 
   e.set_metric_d(6);
   e.set_time(10);
-  call_rescue(e, {td_above});
+  push_event(td_above, e);
   ASSERT_EQ(0, v.size());
 
   e.set_time(12);
-  call_rescue(e, {td_above});
+  push_event(td_above, e);
   ASSERT_EQ(0, v.size());
 
   e.set_time(15);
-  call_rescue(e, {td_above});
+  push_event(td_above, e);
   ASSERT_EQ(3, v.size());
   ASSERT_EQ("critical", v[0].state());
   ASSERT_EQ("critical", v[1].state());
@@ -83,17 +82,17 @@ TEST(trigger_detrigger_under_test_case, test)
 {
   std::vector<Event> v;
 
-  auto td_under = trigger_detrigger_under(5, 5, 3, {bsink(v)});
+  auto td_under = trigger_detrigger_under(5, 5, 3) >> bsink(v);
 
   Event e;
 
   e.set_metric_d(1);
   e.set_time(1);
-  call_rescue(e, {td_under});
+  push_event(td_under, e);
   ASSERT_EQ(0, v.size());
 
   e.set_time(6);
-  call_rescue(e, {td_under});
+  push_event(td_under, e);
   ASSERT_EQ(2, v.size());
   ASSERT_EQ("critical", v[0].state());
   ASSERT_EQ("critical", v[1].state());
@@ -101,15 +100,15 @@ TEST(trigger_detrigger_under_test_case, test)
 
   e.set_metric_d(6);
   e.set_time(10);
-  call_rescue(e, {td_under});
+  push_event(td_under, e);
   ASSERT_EQ(0, v.size());
 
   e.set_time(12);
-  call_rescue(e, {td_under});
+  push_event(td_under, e);
   ASSERT_EQ(0, v.size());
 
   e.set_time(15);
-  call_rescue(e, {td_under});
+  push_event(td_under, e);
   ASSERT_EQ(3, v.size());
   ASSERT_EQ("ok", v[0].state());
   ASSERT_EQ("ok", v[1].state());
@@ -120,7 +119,7 @@ TEST(agg_sum_trigger_above_test_case,test)
 {
   std::vector<Event> v;
 
-  auto agg =  agg_sum_trigger_above(5, 5, 3, sink(v));
+  auto agg =  agg_sum_trigger_above(5, 5, 3) >> sink(v);
   mock_sched.clear();
 
   Event e1,e2;
@@ -133,20 +132,20 @@ TEST(agg_sum_trigger_above_test_case,test)
 
   e1.set_time(1);
   e2.set_time(1);
-  call_rescue(e1, agg);
-  call_rescue(e2, agg);
+  push_event(agg,  e1);
+  push_event(agg,  e2);
   ASSERT_EQ(0, v.size());
 
   e1.set_time(6);
   e2.set_time(6);
-  call_rescue(e1, agg);
-  call_rescue(e2, agg);
+  push_event(agg,  e1);
+  push_event(agg,  e2);
 
   ASSERT_EQ(4, v.size());
   v.clear();
 
   e1.set_time(7);
-  call_rescue(e1, agg);
+  push_event(agg,  e1);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("ok", v[0].state());
   ASSERT_EQ(2, v[0].metric_d());
@@ -154,17 +153,18 @@ TEST(agg_sum_trigger_above_test_case,test)
 
   e2.set_time(10);
   e2.set_metric_d(5);
-  call_rescue(e2, agg);
+  push_event(agg,  e2);
   ASSERT_EQ(0, v.size());
 
   e1.set_time(14);
-  call_rescue(e1, agg);
+  push_event(agg,  e1);
   ASSERT_EQ(0, v.size());
 
   e2.set_time(16);
-  call_rescue(e2, agg);
+  push_event(agg,  e2);
   ASSERT_EQ(3, v.size());
   ASSERT_EQ("critical", v[0].state());
   ASSERT_EQ(6, v[0].metric_d());
 }
+
 #endif
