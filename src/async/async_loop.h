@@ -51,16 +51,19 @@ public:
 
 class async_events : public async_events_interface {
 public:
-  async_events(size_t, async_cb_fn_t);
-  async_events(size_t, async_cb_fn_t, const float, timer_cb_fn_t);
+  async_events(std::shared_ptr<async_events_interface>);
   void start_loop(size_t loop_id);
   void signal_loop(size_t loop_id);
   void stop_all_loops();
   async_loop & loop(size_t loop_id);
 
 private:
-  std::unique_ptr<async_events_interface> impl_;
+  std::shared_ptr<async_events_interface> impl_;
 };
+
+async_events create_async_events(size_t, async_cb_fn_t);
+async_events create_async_events(size_t, async_cb_fn_t,
+                                 const float, timer_cb_fn_t);
 
 typedef std::function<void(const int fd)> on_new_client_fn_t;
 typedef std::function<void(const int signal)> on_signal_fn_t;
