@@ -6,7 +6,7 @@
 #include <websocket_pool.h>
 #include <streams/stream_functions.h>
 #include <util.h>
-#include <pubsub.h>
+#include <pub_sub/pub_sub.h>
 #include <query/driver.h>
 #include "pagerduty.h"
 #include <incoming_events.h>
