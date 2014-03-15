@@ -73,14 +73,14 @@ public:
 
 class main_async_loop : public main_async_loop_interface {
 public:
-  main_async_loop(main_async_loop_interface & impl);
+  main_async_loop(std::shared_ptr<main_async_loop_interface> impl);
   void start();
   void add_tcp_listen_fd(const int fd, on_new_client_fn_t fn);
 
 private:
-  main_async_loop_interface & impl_;
+  std::shared_ptr<main_async_loop_interface> impl_;
 };
 
-extern main_async_loop g_main_loop;
+main_async_loop create_main_async_loop();
 
 #endif

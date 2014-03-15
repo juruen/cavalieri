@@ -282,3 +282,11 @@ void real_main_async_loop::add_tcp_listen_fd(const int fd,
 void real_main_async_loop::signal_cb(ev::sig &, int) {
   default_loop_.break_loop();
 }
+
+main_async_loop create_main_async_loop() {
+
+  auto p = std::make_shared<real_main_async_loop>();
+
+  return main_async_loop(
+      std::dynamic_pointer_cast<main_async_loop_interface>(p));
+}

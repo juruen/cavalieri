@@ -110,8 +110,4 @@ private:
   std::vector<std::shared_ptr<listen_io>> listen_ios_;
 };
 
-real_main_async_loop real_loop;
-
-main_async_loop g_main_loop(real_loop);
-
 #endif
