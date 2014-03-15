@@ -17,9 +17,10 @@ SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index/index.cpp
-    ${CMAKE_SOURCE_DIR}/src/pubsub.cpp
+    ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
@@ -65,6 +66,7 @@ GTEST_ADD_TESTS(
     ${CMAKE_SOURCE_DIR}/tests/tcp_connection_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/ws_connection_test_case.hpp
     ${CMAKE_SOURCE_DIR}/tests/riemann_tcp_connection_test_case.hpp
+    ${CMAKE_SOURCE_DIR}/tests/pubsub_test_case.hpp
   )
 
 TARGET_LINK_LIBRARIES(

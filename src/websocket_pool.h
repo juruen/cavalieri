@@ -7,7 +7,7 @@
 #include <transport/tcp_pool.h>
 #include <transport/ws_connection.h>
 #include <websocket_pool.h>
-#include <pubsub.h>
+#include <pub_sub/pub_sub.h>
 
 class websocket_pool {
   public:
@@ -29,7 +29,7 @@ class websocket_pool {
     tcp_pool tcp_pool_;
     std::vector<std::shared_ptr<event_queue_t>> thread_event_queues_;
     std::vector<std::map<int, fd_conn_data_t>> fd_event_queues_;
-    allevents_f_t all_events_fn_;
+    all_events_fn_t all_events_fn_;
 };
 
 #endif
