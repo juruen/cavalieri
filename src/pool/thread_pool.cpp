@@ -16,7 +16,9 @@ thread_pool::thread_pool(size_t thread_num) :
   thread_num_(thread_num),
   next_thread_(0),
   finished_threads_(thread_num, false),
-  async_events_(thread_num, std::bind(&thread_pool::async_callback, this, _1))
+  async_events_(create_async_events(thread_num,
+                                    std::bind(&thread_pool::async_callback,
+                                              this, _1)))
 {
   if (thread_num < 1) {
     LOG(FATAL) << "Thread number must be greater than 0";
@@ -32,8 +34,11 @@ thread_pool::thread_pool(
   thread_num_(thread_num),
   next_thread_(0),
   finished_threads_(thread_num, false),
-  async_events_(thread_num, std::bind(&thread_pool::async_callback, this, _1),
-                interval, timer_cb_fn)
+  async_events_(create_async_events(thread_num,
+                                    std::bind(&thread_pool::async_callback,
+                                              this, _1),
+                                    interval,
+                                    timer_cb_fn))
 {
   if (thread_num < 1) {
     LOG(FATAL) << "Thread number must be greater than 0";

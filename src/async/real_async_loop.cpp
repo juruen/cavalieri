@@ -197,36 +197,21 @@ async_loop & real_async_events::loop(const size_t loop_id) {
   return loops_[loop_id];
 }
 
-async_events::async_events(size_t threads, async_cb_fn_t cb)
-:
-  async_events_interface()
-{
-  impl_.reset(new real_async_events(threads, cb));
+async_events create_async_events(size_t threads, async_cb_fn_t async_cb) {
+
+  auto p = std::make_shared<real_async_events>(threads, async_cb);
+
+  return async_events(
+      std::dynamic_pointer_cast<async_events_interface>(p));
 }
 
-async_events::async_events(size_t threads, async_cb_fn_t cb,
-                           const float interval, timer_cb_fn_t timer_cb_fn)
-:
-  async_events_interface()
-{
-  impl_.reset(new real_async_events(threads, cb, interval, timer_cb_fn));
-}
+async_events create_async_events(size_t threads, async_cb_fn_t async_cb,
+                                 const float interval, timer_cb_fn_t timer_cb) {
 
-
-void async_events::start_loop(size_t loop_id) {
-  impl_->start_loop(loop_id);
-}
-
-void async_events::signal_loop(size_t loop_id) {
-  impl_->signal_loop(loop_id);
-}
-
-void async_events::stop_all_loops() {
-  impl_->stop_all_loops();
-}
-
-async_loop & async_events::loop(size_t loop_id) {
-  return impl_->loop(loop_id);
+  auto p = std::make_shared<real_async_events>(threads, async_cb,
+                                               interval, timer_cb);
+  return async_events(
+      std::dynamic_pointer_cast<async_events_interface>(p));
 }
 
 listen_io::listen_io(const int fd, on_new_client_fn_t on_new_client)
@@ -290,3 +275,6 @@ main_async_loop create_main_async_loop() {
   return main_async_loop(
       std::dynamic_pointer_cast<main_async_loop_interface>(p));
 }
+
+
+
