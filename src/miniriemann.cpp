@@ -25,6 +25,8 @@ int main(int, char **argv)
 
     google::InitGoogleLogging(argv[0]);
 
+    auto main_loop = create_main_async_loop();
+
     pub_sub pubsub;
     real_index real_idx(pubsub, [](e_t){}, 60);
     class index idx(real_idx);
@@ -39,7 +41,7 @@ int main(int, char **argv)
                                           incoming.add_undecoded_msg(e);
                                         }};
 
-    g_main_loop.add_tcp_listen_fd(create_tcp_listen_socket(5555),
+    main_loop.add_tcp_listen_fd(create_tcp_listen_socket(5555),
                                 [&](int fd) { rieman_tcp.add_client(fd); });
 
     riemann_udp_pool rieman_udp{[&](const std::vector<unsigned char> e)
@@ -48,11 +50,11 @@ int main(int, char **argv)
                                     }};
 
     websocket_pool ws(1, pubsub);
-    g_main_loop.add_tcp_listen_fd(create_tcp_listen_socket(5556),
+    main_loop.add_tcp_listen_fd(create_tcp_listen_socket(5556),
                                 [&](int fd) {ws.add_client(fd); });
 
 
-    g_main_loop.start();
+    main_loop.start();
   }
 
   cds::Terminate();
