@@ -27,7 +27,7 @@ int main(int, char **argv)
   cds::Initialize();
   {
     cds::gc::HP hpGC;
-    atom<bool>::attach_thread();
+    atom_attach_thread();
 
     google::InitGoogleLogging(argv[0]);
 

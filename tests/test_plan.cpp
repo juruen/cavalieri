@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   int ret;
   {
     cds::gc::HP hpGC;
-    atom<bool>::attach_thread();
+    atom_attach_thread();
 
     ::testing::InitGoogleTest(&argc, argv);
     google::InitGoogleLogging(argv[0]);

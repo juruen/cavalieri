@@ -56,9 +56,9 @@ void thread_pool::set_async_hook(hook_fn_t hook) {
 void thread_pool::start_threads() {
   auto run_fn = [=](size_t i)
   {
-    atom<bool>::attach_thread();
+    atom_attach_thread();
     this->run(i);
-    atom<bool>::detach_thread();
+    atom_detach_thread();
   };
 
   for (size_t i = 0; i < thread_num_; i++) {
