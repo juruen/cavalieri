@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 
   {
     cds::gc::HP hpGC;
-    atom<bool>::attach_thread();
+    atom_attach_thread();
 
     google::ParseCommandLineFlags(&argc, &argv, true);
 

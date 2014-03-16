@@ -3,22 +3,28 @@
 
 #include <unordered_map>
 #include <memory>
-#include <cds/init.h>
-#include <cds/gc/hp.h>
 
+#define USE_LIBCDS
+
+#ifdef USE_LIBCDS
+#include <atom_cds.h>
+#else
+#include <atom_cds.h>
+#endif
 
 template <class T>
 class atom {
 public:
-  atom(T* ptr) : atomic_ptr_(ptr) {};
-  atom() : atomic_ptr_(new T()) {};
+
+  atom(T* ptr) : atom_(ptr) {};
+  atom() : atom_(new T()) {};
 
   void update(std::function<T(const T&)> update_fn) {
-    update_(update_fn, {});
+    atom_.update(update_fn);
   }
 
   void update(const T& t, std::function<void(const T&, const T&)> success_fn) {
-    update_([&](const T&) { return t; }, success_fn);
+    atom_.update(t, success_fn);
   }
 
   void update(
@@ -26,68 +32,44 @@ public:
       std::function<void(const T&, const T&)> success_fn
   )
   {
-    update_(update_fn, success_fn);
+    atom_.update(update_fn, success_fn);
   }
 
-  void update_(
-      std::function<T(const T&)> update_fn,
-      std::function<void(const T&, const T&)> success_fn
-  ) {
-
-    T* nptr = nullptr;
-    T* optr = nullptr;
-
-    cds::gc::HP::Guard new_guard;
-
-    do {
-      cds::gc::HP::Guard old_guard;
-      old_guard.assign(atomic_ptr_.load());
-      if (nptr != nullptr) {
-        delete nptr;
-      }
-      optr = (T*)(old_guard.get_native());
-      nptr = new T(update_fn(*optr));
-      new_guard.assign(nptr);
-    } while (!atomic_ptr_.compare_exchange_strong(optr, nptr));
-
-    if (success_fn) {
-      success_fn(*optr, *nptr);
-    }
-
-    cds::gc::HP::retire(optr, retire);
+#ifdef USE_LIBCDS
+  atom_cds<T> & atom_impl() {
+    return atom_;
   }
-
-
-
-  void safe_read(std::function<void(const T&)> fn) {
-    cds::gc::HP::Guard guard;
-    guard.assign(atomic_ptr_.load());
-    fn(*(T*)(guard.get_native()));
+#else
+  atom_cds<T> & atom_impl() {
+    return atom_;
   }
+#endif
+private:
 
-  std::atomic<T*> & atomic_ptr() {
-    return atomic_ptr_;
-  }
+#ifdef USE_LIBCDS
+  atom_cds<T> atom_;
+#else
+  atom_cds<T> atom_;
+#endif
 
-  static void retire(T *ptr) {
-    delete ptr;
-  }
-
-  static void attach_thread() {
-    cds::threading::Manager::attachThread();
-  }
-
-  static void detach_thread() {
-    cds::threading::Manager::detachThread();
-  }
-
- ~atom() {
-   cds::gc::HP::retire(atomic_ptr_.load(), retire);
-  }
-
- private:
-  std::atomic<T*> atomic_ptr_;
 };
+
+inline void atom_attach_thread() {
+#ifdef USE_LIBCDS
+    atom_attach_thread_cds();
+#else
+    atom_attach_thread_cds();
+#endif
+}
+
+inline void atom_detach_thread() {
+#ifdef USE_LIBCDS
+    atom_detach_thread_cds();
+#else
+    atom_detach_thread_cds();
+#endif
+}
+
 
 template <class T>
 std::shared_ptr<atom<T>> make_shared_atom() {
@@ -109,32 +91,11 @@ void map_on_sync_insert(
   std::function<void(V&)> fn_inserted
 )
 {
-  std::unordered_map<K,V>* nptr = nullptr;
-  std::unordered_map<K,V>* optr = nullptr;
-  do {
-    cds::gc::HP::Guard guard;
-    guard.assign(m->atomic_ptr().load());
-    if (nptr != nullptr) {
-      delete nptr;
-    }
-    optr = (std::unordered_map<K,V>*)(guard.get_native());
-    auto it = optr->find(k);
-    if (it != optr->end()) {
-      fn_inserted(it->second);
-      return;
-    }
-    nptr = new std::unordered_map<K,V>(*optr);
-    nptr->insert({k, fn_value()});
-  } while (!m->atomic_ptr().compare_exchange_strong(optr, nptr));
-
-  cds::gc::HP::Guard guard;
-  guard.assign(m->atomic_ptr().load());
-  nptr = (std::unordered_map<K,V>*)(guard.get_native());
-  auto it = nptr->find(k);
-  assert(it != nptr->end());
-  fn_inserted(it->second);
-
-  cds::gc::HP::retire(optr, atom<std::unordered_map<K,V>>::retire);
+#ifdef USE_LIBCDS
+  map_on_sync_insert_cds<K,V>(m->atom_impl(), k, fn_value, fn_inserted);
+#else
+  map_on_sync_insert_cds<K,V>(m->atom_impl(), k, fn_value, fn_inserted);
+#endif
 }
 
 #endif

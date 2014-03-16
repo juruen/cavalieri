@@ -1,5 +1,5 @@
-#ifndef XTREAM_FUNCTIONS_H
-#define XTREAM_FUNCTIONS_H
+#ifndef STREAM_FUNCTIONS_H
+#define STREAM_FUNCTIONS_H
 
 #include <vector>
 #include <list>
