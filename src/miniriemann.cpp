@@ -1,5 +1,6 @@
 #include <glog/logging.h>
 #include <async/async_loop.h>
+#include <thread>
 #include <index/real_index.h>
 #include <transport/listen_tcp_socket.h>
 #include <riemann_tcp_pool.h>
@@ -16,6 +17,11 @@
 #include <atom.h>
 
 
+void detach_thread(std::function<void()> fn) {
+  std::thread t(fn);
+  t.detach();
+}
+
 int main(int, char **argv)
 {
   cds::Initialize();
@@ -28,7 +34,7 @@ int main(int, char **argv)
     auto main_loop = create_main_async_loop();
 
     pub_sub pubsub;
-    real_index real_idx(pubsub, [](e_t){}, 60);
+    real_index real_idx(pubsub, [](e_t){}, 60, detach_thread);
     class index idx(real_idx);
 
     streams streams;
