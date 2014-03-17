@@ -93,6 +93,16 @@ inline void atom_detach_thread_cds() {
   cds::threading::Manager::detachThread();
 }
 
+inline void atom_initialize_cds() {
+  cds::Initialize();
+}
+
+inline void atom_terminate_cds() {
+  cds::Terminate();
+}
+
+#define ATOM_GC_CDS  cds::gc::HP hpGC
+
 template <class K, class V>
 void map_on_sync_insert_cds(
   atom_cds<std::unordered_map<K,V>> & m,
