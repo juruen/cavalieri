@@ -3,7 +3,7 @@
 
 #include <thread>
 #include <atomic>
-#include <atom.h>
+#include <atom/atom.h>
 
 const int atom_test_case_iterations = 10000;
 const int atom_test_case_threads = 4;

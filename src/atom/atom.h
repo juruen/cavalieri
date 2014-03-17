@@ -7,9 +7,9 @@
 #define USE_LIBCDS
 
 #ifdef USE_LIBCDS
-#include <atom_cds.h>
+#include <atom/atom_cds.h>
 #else
-#include <atom_mutex.h>
+#include <atom/atom_mutex.h>
 #endif
 
 template <class T>

@@ -14,7 +14,7 @@
 #include <riemann_tcp_pool.h>
 #include <riemann_udp_pool.h>
 #include <scheduler/scheduler.h>
-#include <atom.h>
+#include <atom/atom.h>
 
 
 void detach_thread(std::function<void()> fn) {
