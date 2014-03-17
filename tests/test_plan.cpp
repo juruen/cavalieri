@@ -18,7 +18,7 @@
 #include <scheduler/mock_scheduler.h>
 #include "os_functions.h"
 #include "mock_os_functions.h"
-#include "atom.h"
+#include "atom/atom.h"
 
 mock_scheduler mock_sched;
 scheduler g_scheduler{mock_sched};

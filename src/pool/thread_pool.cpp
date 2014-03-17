@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <util.h>
 #include <pool/thread_pool.h>
-#include <atom.h>
+#include <atom/atom.h>
 
 namespace {
   const size_t stop_attempts = 20;

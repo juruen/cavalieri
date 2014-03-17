@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <queue>
 #include <atomic>
-#include <atom.h>
+#include <atom/atom.h>
 #include <util.h>
 #include <scheduler/scheduler.h>
 #include <streams/stream_functions.h>

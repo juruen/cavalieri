@@ -7,7 +7,7 @@
 #include <rule_tester_util.h>
 #include <rules/rules.h>
 #include <index/mock_index.h>
-#include "atom.h"
+#include "atom/atom.h"
 
 DEFINE_string(input_events, "", "json string containing input events");
 
