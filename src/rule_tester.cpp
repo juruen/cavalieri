@@ -16,10 +16,10 @@ scheduler g_scheduler{mock_sched};
 external_mocks g_external_mocks{};
 
 int main(int argc, char **argv) {
-  cds::Initialize();
 
+  atom_initialize();
   {
-    cds::gc::HP hpGC;
+    ATOM_GC;
     atom_attach_thread();
 
     google::ParseCommandLineFlags(&argc, &argv, true);
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 
     std::cout << results(idx.events(), g_external_mocks.calls()) << "\n";
   }
-  cds::Terminate();
+  atom_terminate();
 
   return 0;
 }

@@ -28,10 +28,10 @@ os_functions g_os_functions(mock_os);
 
 int main(int argc, char **argv)
 {
-  cds::Initialize();
+  atom_initialize();
   int ret;
   {
-    cds::gc::HP hpGC;
+    ATOM_GC;
     atom_attach_thread();
 
     ::testing::InitGoogleTest(&argc, argv);
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
     ret = RUN_ALL_TESTS();
   }
-  cds::Terminate();
+  atom_terminate();
 
   return ret;
 }

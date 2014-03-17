@@ -9,7 +9,7 @@
 #ifdef USE_LIBCDS
 #include <atom_cds.h>
 #else
-#include <atom_cds.h>
+#include <atom_mutex.h>
 #endif
 
 template <class T>
@@ -35,12 +35,16 @@ public:
     atom_.update(update_fn, success_fn);
   }
 
+  void safe_read(std::function<void(const T&)> fn) {
+    atom_.safe_read(fn);
+  }
+
 #ifdef USE_LIBCDS
   atom_cds<T> & atom_impl() {
     return atom_;
   }
 #else
-  atom_cds<T> & atom_impl() {
+  atom_mutex<T> & atom_impl() {
     return atom_;
   }
 #endif
@@ -49,7 +53,7 @@ private:
 #ifdef USE_LIBCDS
   atom_cds<T> atom_;
 #else
-  atom_cds<T> atom_;
+  atom_mutex<T> atom_;
 #endif
 
 };
@@ -58,7 +62,7 @@ inline void atom_attach_thread() {
 #ifdef USE_LIBCDS
     atom_attach_thread_cds();
 #else
-    atom_attach_thread_cds();
+    atom_attach_thread_mutex();
 #endif
 }
 
@@ -66,9 +70,31 @@ inline void atom_detach_thread() {
 #ifdef USE_LIBCDS
     atom_detach_thread_cds();
 #else
-    atom_detach_thread_cds();
+    atom_detach_thread_mutex();
 #endif
 }
+
+inline void atom_initialize() {
+#ifdef USE_LIBCDS
+    atom_initialize_cds();
+#else
+    atom_initialize_mutex();
+#endif
+}
+
+inline void atom_terminate() {
+#ifdef USE_LIBCDS
+    atom_terminate_cds();
+#else
+    atom_terminate_mutex();
+#endif
+}
+
+#ifdef USE_LIBCDS
+#define ATOM_GC ATOM_GC_CDS
+#else
+#define ATOM_GC ATOM_GC_MUTEX
+#endif
 
 
 template <class T>
@@ -94,7 +120,7 @@ void map_on_sync_insert(
 #ifdef USE_LIBCDS
   map_on_sync_insert_cds<K,V>(m->atom_impl(), k, fn_value, fn_inserted);
 #else
-  map_on_sync_insert_cds<K,V>(m->atom_impl(), k, fn_value, fn_inserted);
+  map_on_sync_insert_mutex<K,V>(m->atom_impl(), k, fn_value, fn_inserted);
 #endif
 }
 

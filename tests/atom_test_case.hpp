@@ -3,24 +3,23 @@
 
 #include <thread>
 #include <atomic>
-#include <atom_cds.h>
-
+#include <atom.h>
 
 const int atom_test_case_iterations = 10000;
 const int atom_test_case_threads = 4;
 
-TEST(atom_cds_update_test_case, test)
+TEST(atom_update_test_case, test)
 {
-  atom_cds<int> atom_int(new int(0));
+  atom<int> atom_int(new int(0));
   auto update_fn = [](const int & i) { return i + 1; };
 
   auto fn = [&]() mutable
   {
-    atom_attach_thread_cds();
+    atom_attach_thread();
     for (int i = 0; i < atom_test_case_iterations; i++) {
       atom_int.update(update_fn);
     }
-    atom_detach_thread_cds();
+    atom_detach_thread();
   };
 
   std::vector<std::thread> v;
@@ -39,7 +38,7 @@ TEST(atom_cds_update_test_case, test)
 
 TEST(atom_update_success_test_case, test)
 {
-  atom_cds<int> atom_int(new int(0));
+  atom<int> atom_int(new int(0));
   std::atomic<int> five_count(0);
 
   auto update_fn = [](const int  i) { return i + 1; };
@@ -48,11 +47,11 @@ TEST(atom_update_success_test_case, test)
 
   auto fn = [&]() mutable
   {
-    atom_attach_thread_cds();
+    atom_attach_thread();
     for (int i = 0; i < atom_test_case_iterations; i++) {
       atom_int.update(update_fn, success_fn);
     }
-    atom_detach_thread_cds();
+    atom_detach_thread();
   };
 
   std::vector<std::thread> v;

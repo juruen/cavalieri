@@ -24,9 +24,9 @@ void detach_thread(std::function<void()> fn) {
 
 int main(int, char **argv)
 {
-  cds::Initialize();
+  atom_initialize();
   {
-    cds::gc::HP hpGC;
+    ATOM_GC;
     atom_attach_thread();
 
     google::InitGoogleLogging(argv[0]);
@@ -63,7 +63,7 @@ int main(int, char **argv)
     main_loop.start();
   }
 
-  cds::Terminate();
+  atom_terminate();
 
   return 0;
 }
