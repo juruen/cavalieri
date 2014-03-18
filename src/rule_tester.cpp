@@ -32,8 +32,10 @@ int main(int argc, char **argv) {
       return -1;
     }
 
-    mock_index idx;
-    class index index(idx);
+    auto idx = std::make_shared<mock_index>();
+
+    class index index(std::dynamic_pointer_cast<index_interface>(idx));
+
     auto rule_stream = rules(index);
 
     for (const auto & event: events) {
@@ -41,7 +43,7 @@ int main(int argc, char **argv) {
       push_event(rule_stream, event);
     }
 
-    std::cout << results(idx.events(), g_external_mocks.calls()) << "\n";
+    std::cout << results(idx->events(), g_external_mocks.calls()) << "\n";
   }
   atom_terminate();
 
