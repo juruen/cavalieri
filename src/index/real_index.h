@@ -8,7 +8,6 @@
 #include <index/index.h>
 
 typedef tbb::concurrent_hash_map<std::string, Event> real_index_t;
-typedef std::function<void(std::function<void()>)> spwan_thread_fn_t;
 
 class real_index : public index_interface {
 public:

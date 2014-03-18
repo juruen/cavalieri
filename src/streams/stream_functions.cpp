@@ -883,6 +883,7 @@ void streams::add_stream(streams_t stream) {
 void streams::process_message(const Msg& message) {
 
   VLOG(3) << "process message. num of streams " << streams_.size();
+  VLOG(3) << "process message. num of events " << message.events_size();
 
   unsigned long int sec = time(0);
 

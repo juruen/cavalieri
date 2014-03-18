@@ -110,3 +110,19 @@ real_index::~real_index() {
 }
 
 
+class index create_index(pub_sub & pubsub, push_event_fn_t push_event,
+                         const int64_t expire_interval,
+                         spwan_thread_fn_t spwan_thread_fn)
+{
+  auto real_idx = std::make_shared<real_index>(pubsub, push_event,
+                                               expire_interval,
+                                               spwan_thread_fn);
+
+  auto idx_iface = std::dynamic_pointer_cast<index_interface>(real_idx);
+
+  class index idx(idx_iface);
+
+  return idx;
+}
+
+
