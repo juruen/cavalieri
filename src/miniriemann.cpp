@@ -20,7 +20,6 @@ int main(int, char **argv)
 
     g_core.reset();
   }
-
   atom_terminate();
 
   return 0;
