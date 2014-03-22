@@ -1,4 +1,3 @@
-FIND_PACKAGE(GTest REQUIRED)
 FIND_PACKAGE(Threads REQUIRED)
 
 SET(CMAKE_CXX_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
@@ -45,6 +44,7 @@ INCLUDE_DIRECTORIES(
     ${Glog_INCLUDE_DIR}
     ${LibEv_INCLUDE_DIR}
     ${PYTHON_INCLUDE_DIRS}
+    ${ThirdParty_INCLUDE_DIRS}
   )
 
 ADD_EXECUTABLE(
@@ -55,26 +55,25 @@ ADD_EXECUTABLE(
     ${CMAKE_SOURCE_DIR}/tests/test_plan.cpp
   )
 
-GTEST_ADD_TESTS(
-    test_plan
-    ${CMAKE_SOURCE_DIR}/tests/basic_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/query_grammar_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/mock_scheduler_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/streams_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/folds_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/atom_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/rules_common_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/tcp_connection_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/ws_connection_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/riemann_tcp_connection_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/pubsub_test_case.hpp
-    ${CMAKE_SOURCE_DIR}/tests/index_test_case.hpp
-  )
+#GTEST_ADD_TESTS(
+#    test_plan
+#    ${CMAKE_SOURCE_DIR}/tests/basic_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/query_grammar_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/mock_scheduler_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/streams_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/folds_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/atom_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/rules_common_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/tcp_connection_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/ws_connection_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/riemann_tcp_connection_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/pubsub_test_case.hpp
+#    ${CMAKE_SOURCE_DIR}/tests/index_test_case.hpp
+#  )
 
 TARGET_LINK_LIBRARIES(
     test_plan
     gcov
-    gmock
     ${GTEST_BOTH_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${PROTOBUF_LIBRARY}
@@ -86,8 +85,12 @@ TARGET_LINK_LIBRARIES(
     curl
     pthread
     tbb
-    cds
+    ${ThirdParty_LIBRARIES}
   )
+
+add_dependencies(test_plan cds)
+add_dependencies(test_plan googlemock)
+
 
 INCLUDE(CodeCoverage)
 
