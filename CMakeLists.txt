@@ -8,6 +8,8 @@ SET(CMAKE_MODULE_PATH
     "${CMAKE_SOURCE_DIR}/.cmake/Modules/"
   )
 
+ADD_SUBDIRECTORY(thirdparty)
+
 SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
     ${CMAKE_SOURCE_DIR}/src/core.cpp
@@ -105,6 +107,7 @@ INCLUDE_DIRECTORIES(
     ${TBB_INCLUDE_DIRS}
     ${GFlags_INCLUDE_DIRS}
     ${JsonCpp_INCLUDE_DIRS}
+    ${ThirdParty_INCLUDE_DIRS}
   )
 
 ADD_EXECUTABLE(
@@ -114,6 +117,8 @@ ADD_EXECUTABLE(
     ${ProtoHeaders}
   )
 
+add_dependencies(miniriemann cds)
+add_dependencies(miniriemann googlemock)
 
 TARGET_LINK_LIBRARIES(
     miniriemann
@@ -126,9 +131,9 @@ TARGET_LINK_LIBRARIES(
     ${CURL_LIBRARIES}
     ${TBB_LIBRARIES}
     ${JsonCpp_LIBRARIES}
+    ${ThirdParty_LIBRARIES}
     crypto
     pthread
-    cds
     dl
   )
 
@@ -139,6 +144,9 @@ ADD_EXECUTABLE(
     ${ProtoHeaders}
   )
 
+add_dependencies(rule_tester cds)
+add_dependencies(rule_tester googlemock)
+
 TARGET_LINK_LIBRARIES(
     rule_tester
     ${CMAKE_THREAD_LIBS_INIT}
@@ -148,9 +156,9 @@ TARGET_LINK_LIBRARIES(
     ${CURL_LIBRARIES}
     ${TBB_LIBRARIES}
     ${JsonCpp_LIBRARIES}
+    ${ThirdParty_LIBRARIES}
     crypto
     pthread
-    cds
     dl
   )
 
