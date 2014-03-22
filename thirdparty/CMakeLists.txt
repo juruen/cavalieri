@@ -44,7 +44,7 @@ ExternalProject_Add(
 
 set (ThirdParty_INCLUDE_DIRS
      ${CMAKE_BINARY_DIR}/thirdparty/googlemock-prefix/src/googlemock/gtest/include
-     ${CMAKE_BINARY_DIR}/googlemock-prefix/src/googlemock/include
+     ${CMAKE_BINARY_DIR}/thirdparty/googlemock-prefix/src/googlemock/include
      ${CMAKE_BINARY_DIR}/thirdparty/cds-prefix/src/cds
      PARENT_SCOPE)
 
