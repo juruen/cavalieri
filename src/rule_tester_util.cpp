@@ -21,7 +21,7 @@ namespace {
     event["description"] = Json::Value(e.description());
     event["state"] = Json::Value(e.state());
     event["metric"] = Json::Value(metric_to_double(e));
-    event["time"] = Json::Value(e.time());
+    event["time"] = Json::Value::UInt64(e.time());
     event["state"] = Json::Value(e.state());
 
     Json::Value tags(Json::arrayValue);
@@ -36,7 +36,7 @@ namespace {
 
   Json::Value index_event_to_json(mock_index_events_t idx_event) {
     Json::Value event;
-    event["time"] = static_cast<size_t>(idx_event.first);
+    event["time"] = Json::Value::UInt64(static_cast<size_t>(idx_event.first));
     event["event"] = event_to_jsoncpp(idx_event.second);
     return event;
   }
@@ -57,7 +57,7 @@ namespace {
       event.append(e.external_method);
 
       Json::Value ex_data(Json::objectValue);
-      ex_data["time"] = static_cast<size_t>(e.time);
+      ex_data["time"] = Json::Value::UInt64(static_cast<size_t>(e.time));
       ex_data["message"]= e.message;
       ex_data["extra"] = e.extra;
       ex_data["event"] = event_to_jsoncpp(e.e);
