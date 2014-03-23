@@ -2,9 +2,7 @@
 #include <atom/atom.h>
 #include <core.h>
 
-std::shared_ptr<core> g_core;
-
-int main(int, char **argv)
+int main(int argc, char **argv)
 {
   atom_initialize();
   {
@@ -12,13 +10,11 @@ int main(int, char **argv)
 
     atom_attach_thread();
 
+    google::ParseCommandLineFlags(&argc, &argv, true);
+
     google::InitGoogleLogging(argv[0]);
 
-    g_core = std::make_shared<core>();
-
-    g_core->start();
-
-    g_core.reset();
+    start_core();
   }
   atom_terminate();
 
