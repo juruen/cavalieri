@@ -53,4 +53,8 @@ set (ThirdParty_LIBRARIES
      ${CMAKE_BINARY_DIR}/thirdparty/googlemock-prefix/src/googlemock-build/libgmock.a
      PARENT_SCOPE)
 
-MESSAGE(STATUS "THIRDPARTY_INCLUDE_DIRS is " ${THIRDPARTY_INCLUDE_DIRS})
+set (libcds_LIBS
+     ${CMAKE_BINARY_DIR}/thirdparty/cds-prefix/src/cds/bin/${CDS_LIB_DIR}/libcds.so
+     ${CMAKE_BINARY_DIR}/thirdparty/cds-prefix/src/cds/bin/${CDS_LIB_DIR}/libcds.so.1.5.0
+     PARENT_SCOPE)
+
