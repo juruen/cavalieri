@@ -11,6 +11,7 @@ class udp_pool {
   public:
     udp_pool(
         size_t thread_num,
+        uint32_t port,
         udp_read_fn_t udp_ready_fn_t
     );
     void start_threads();
@@ -23,6 +24,7 @@ class udp_pool {
 
   private:
     thread_pool thread_pool_;
+    uint32_t port_;
     udp_read_fn_t udp_read_fn_;
 };
 

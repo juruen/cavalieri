@@ -65,7 +65,8 @@ std::shared_ptr<riemann_udp_pool> init_udp_server(
     incoming_event(raw_msg, streams);
   };
 
-  auto udp_server = std::make_shared<riemann_udp_pool>(income_udp_event);
+  auto udp_server = std::make_shared<riemann_udp_pool>(conf.events_port,
+                                                       income_udp_event);
 
   return udp_server;
 }
