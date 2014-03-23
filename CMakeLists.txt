@@ -18,6 +18,7 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/config/config.cpp
     ${CMAKE_SOURCE_DIR}/src/real_os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
