@@ -63,13 +63,8 @@ void udp_pool::socket_callback(async_fd & async) {
 
   std::vector<unsigned char> buffer(k_udp_buffer_size);
 
-  struct sockaddr_in addr;
-  socklen_t addr_len;
-
   size_t bytes = recvfrom(async.fd(), reinterpret_cast<char*>(&buffer[0]),
-                          buffer.size(), 0,
-                          reinterpret_cast<struct sockaddr*>(&addr),
-                          static_cast<socklen_t*>(&addr_len));
+                          buffer.size(), 0, NULL, NULL);
 
   buffer.resize(bytes);
 
