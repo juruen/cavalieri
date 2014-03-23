@@ -164,6 +164,9 @@ TARGET_LINK_LIBRARIES(
 
 #add_library(rules SHARED src/rules.cpp)
 
+install(PROGRAMS ${CMAKE_BINARY_DIR}/miniriemann ${CMAKE_BINARY_DIR}/rule_tester DESTINATION bin)
+install(PROGRAMS ${libcds_LIBS} DESTINATION lib)
+
 ENABLE_TESTING()
 
 ADD_SUBDIRECTORY(tests)
