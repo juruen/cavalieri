@@ -8,11 +8,12 @@
 #include <riemann_tcp_pool.h>
 #include <riemann_udp_pool.h>
 #include <websocket_pool.h>
+#include <config/config.h>
 
 class core {
 public:
 
-  core();
+  core(const config &);
   void start();
 
 private:
@@ -24,5 +25,9 @@ private:
   std::shared_ptr<class riemann_udp_pool> udp_server_;
   std::shared_ptr<class websocket_pool> ws_server_;
 };
+
+extern std::shared_ptr<core> g_core;
+
+void start_core();
 
 #endif
