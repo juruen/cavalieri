@@ -107,7 +107,7 @@ void tcp_pool::socket_callback(async_fd & async) {
   if (conn.close_connection) {
     VLOG(3) << "socket_callback() close_connection fd: " << async.fd();
     async.stop();
-    conn_maps_[tid].erase(async.fd());
+    conn_maps_[tid].erase(it);
     return;
   }
 
