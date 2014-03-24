@@ -48,8 +48,8 @@ bool real_async_fd::error() const {
 
 void real_async_fd::stop() {
   io_->stop();
-  async_loop_.remove_fd(fd_);
   close(fd_);
+  async_loop_.remove_fd(fd_);
 }
 
 void real_async_fd::async_cb(ev::io &, int revents) {
