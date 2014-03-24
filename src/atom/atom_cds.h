@@ -42,7 +42,7 @@ public:
     do {
 
       cds::gc::HP::Guard old_guard;
-      old_guard.assign(atomic_ptr_.load());
+      old_guard.protect(atomic_ptr_);
 
       if (nptr != nullptr) {
         delete nptr;
