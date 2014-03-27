@@ -1,3 +1,4 @@
+#include <glog/logging.h>
 #include <streams/stream_infra.h>
 #include <algorithm>
 
@@ -67,10 +68,13 @@ streams_t join(stream_node_t left, streams_t right) {
 }
 
 streams_t create_stream(node_fn_t fn) {
+
   stream_node_t node = std::make_shared<stream_t>();
 
+  std::weak_ptr<stream_t> weak_node = node;
+
   node->input_fn = [=](const Event & e) {
-    fn(node->output_fn, e);
+    fn(weak_node.lock()->output_fn, e);
   };
 
   return {node};

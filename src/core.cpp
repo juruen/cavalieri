@@ -1,5 +1,6 @@
 #include <glog/logging.h>
 #include <transport/listen_tcp_socket.h>
+#include <rules_loader.h>
 #include <core.h>
 
 namespace {
@@ -108,7 +109,20 @@ core::core(const config & conf)
 }
 
 void core::start() {
+  load_rules(".");
   main_loop_->start();
+}
+
+void core::add_stream(std::shared_ptr<streams_t> stream) {
+
+  if (stream) {
+
+    sh_streams_.push_back(stream);
+
+    streams_->add_stream(*stream);
+
+  }
+
 }
 
 std::shared_ptr<core> g_core;

@@ -15,6 +15,7 @@ public:
 
   core(const config &);
   void start();
+  void add_stream(std::shared_ptr<streams_t> stream);
 
 private:
   std::shared_ptr<class main_async_loop> main_loop_;
@@ -24,6 +25,8 @@ private:
   std::shared_ptr<class riemann_tcp_pool> tcp_server_;
   std::shared_ptr<class riemann_udp_pool> udp_server_;
   std::shared_ptr<class websocket_pool> ws_server_;
+
+  std::vector<std::shared_ptr<streams_t>> sh_streams_;
 };
 
 extern std::shared_ptr<core> g_core;

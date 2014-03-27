@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 
     class index index(std::dynamic_pointer_cast<index_interface>(idx));
 
-    auto rule_stream = rules(index);
+    auto rule_stream = *rules();
 
     for (const auto & event: events) {
       mock_sched.process_event_time(event.time());
