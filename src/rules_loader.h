@@ -2,8 +2,7 @@
 #define RULES_LOADER_H
 
 #include <streams/stream_functions.h>
-#include <rules/rules.h>
 
-streams_t load_rules(class index &);
+void load_rules(const std::string file);
 
 #endif

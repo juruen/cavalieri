@@ -13,6 +13,7 @@ ADD_SUBDIRECTORY(thirdparty)
 SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
     ${CMAKE_SOURCE_DIR}/src/core.cpp
+    ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
@@ -133,6 +134,8 @@ TARGET_LINK_LIBRARIES(
     ${TBB_LIBRARIES}
     ${JsonCpp_LIBRARIES}
     ${ThirdParty_LIBRARIES}
+    boost_filesystem
+    boost_system
     crypto
     pthread
     dl
@@ -163,7 +166,7 @@ TARGET_LINK_LIBRARIES(
     dl
   )
 
-#add_library(rules SHARED src/rules.cpp)
+add_library(rules SHARED src/rules/rules.cpp)
 
 install(PROGRAMS ${CMAKE_BINARY_DIR}/miniriemann ${CMAKE_BINARY_DIR}/rule_tester DESTINATION bin)
 install(PROGRAMS ${libcds_LIBS} DESTINATION lib)

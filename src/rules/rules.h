@@ -4,6 +4,10 @@
 #include <streams/stream_functions.h>
 #include <index/index.h>
 
-streams_t rules(class index & idx);
+extern "C" {
+
+streams_t* rules();
+
+}
 
 #endif

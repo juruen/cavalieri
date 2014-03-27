@@ -876,7 +876,6 @@ bool under_(e_t e, const double value) {
 }
 
 void streams::add_stream(streams_t stream) {
-  VLOG(3) << "adding stream";
   streams_.push_back(stream);
 }
 
