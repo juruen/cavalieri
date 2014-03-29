@@ -2,8 +2,36 @@
 #include <transport/listen_tcp_socket.h>
 #include <rules_loader.h>
 #include <core.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 namespace {
+
+char**  copy_args(int argc, char **argv) {
+
+  char **copy_argv = (char **)calloc(argc + 1, sizeof(char *));
+
+  for (char **cp = copy_argv; argc > 0; cp++, argv++, argc--) {
+    *cp = strdup(*argv);
+  }
+
+  return copy_argv;
+}
+
+
+void ld_environment(char **argv, const std::string dir) {
+
+  if (getenv("LD_LIBRARY_PATH")) {
+    return;
+  }
+
+  std::string ld_path = "LD_LIBRARY_PATH=" + dir;
+  putenv(const_cast<char*>(ld_path.c_str()));
+
+  execv(argv[0], argv);
+}
+
 
 void detach_thread(std::function<void()> fn) {
   std::thread t(fn);
@@ -91,6 +119,8 @@ std::shared_ptr<websocket_pool> init_ws_server(
 
 core::core(const config & conf)
   :
+    config_(conf),
+
     main_loop_(new main_async_loop(create_main_async_loop())),
 
     streams_(new streams()),
@@ -109,8 +139,14 @@ core::core(const config & conf)
 }
 
 void core::start() {
-  load_rules(".");
+
+  load_rules(config_.rules_directory);
+
+  VLOG (1) << "Brace for impact, starting nuclear core.";
+
   main_loop_->start();
+
+  VLOG (1) << "Screw you guys, I'm going home.";
 }
 
 void core::add_stream(std::shared_ptr<streams_t> stream) {
@@ -127,8 +163,23 @@ void core::add_stream(std::shared_ptr<streams_t> stream) {
 
 std::shared_ptr<core> g_core;
 
-void start_core() {
-  g_core = std::make_shared<core>(create_config());
+void start_core(int argc, char **argv) {
+
+  char **orig_argv = copy_args(argc, argv);
+
+  google::ParseCommandLineFlags(&argc, &argv, true);
+
+  google::InitGoogleLogging(argv[0]);
+
+  auto conf = create_config();
+
+  ld_environment(orig_argv, conf.rules_directory);
+
+  log_config(conf);
+
+  g_core = std::make_shared<core>(conf);
+
   g_core->start();
+
   g_core.reset();
 }

@@ -2,6 +2,7 @@
 #include <atom/atom.h>
 #include <core.h>
 
+
 int main(int argc, char **argv)
 {
   atom_initialize();
@@ -10,11 +11,7 @@ int main(int argc, char **argv)
 
     atom_attach_thread();
 
-    google::ParseCommandLineFlags(&argc, &argv, true);
-
-    google::InitGoogleLogging(argv[0]);
-
-    start_core();
+    start_core(argc, argv);
   }
   atom_terminate();
 
