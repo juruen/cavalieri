@@ -28,6 +28,11 @@ config create_config() {
   conf.index_expire_interval = FLAGS_index_expire_interval;
   conf.rules_directory = FLAGS_rules_directory;
 
+  return conf;
+}
+
+void log_config(config conf) {
+
   VLOG(1) << "config:";
   VLOG(1) << "\tevents_port: " << conf.events_port;
   VLOG(1) << "\trimeann_tcp_pool_size:: " << conf.riemann_tcp_pool_size;
@@ -37,5 +42,4 @@ config create_config() {
   VLOG(1) << "\trules_directory: " << conf.rules_directory;
   VLOG(1) << "--";
 
-  return conf;
 }

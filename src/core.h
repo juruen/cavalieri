@@ -18,6 +18,8 @@ public:
   void add_stream(std::shared_ptr<streams_t> stream);
 
 private:
+  config config_;
+
   std::shared_ptr<class main_async_loop> main_loop_;
   std::shared_ptr<class streams> streams_;
   std::shared_ptr<class pub_sub> pubsub_;
@@ -27,10 +29,11 @@ private:
   std::shared_ptr<class websocket_pool> ws_server_;
 
   std::vector<std::shared_ptr<streams_t>> sh_streams_;
+
 };
 
 extern std::shared_ptr<core> g_core;
 
-void start_core();
+void start_core(int argv, char **argc);
 
 #endif

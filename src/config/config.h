@@ -14,4 +14,6 @@ struct config {
 
 config create_config();
 
+void log_config(config);
+
 #endif
