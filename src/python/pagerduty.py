@@ -41,7 +41,7 @@ def resolve(json_str):
     return request('resolve', json_str)
 
 args = {
-    'pg_key': '113852fbf4d34663b87b7321e9eba1e1',
+    'pg_key': 'fixme',
     'description': 'this is a test',
     'host': 'foobar.com',
     'service': 'whatever'
