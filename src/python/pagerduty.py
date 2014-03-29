@@ -39,13 +39,3 @@ def acknowledge(json_str):
 
 def resolve(json_str):
     return request('resolve', json_str)
-
-args = {
-    'pg_key': 'fixme',
-    'description': 'this is a test',
-    'host': 'foobar.com',
-    'service': 'whatever'
-}
-
-#trigger(json.dumps(args))
-#resolve(json.dumps(args))
