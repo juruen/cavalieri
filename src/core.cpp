@@ -29,7 +29,20 @@ void ld_environment(char **argv, const std::string dir) {
   std::string ld_path = "LD_LIBRARY_PATH=" + dir;
   putenv(const_cast<char*>(ld_path.c_str()));
 
-  execv(argv[0], argv);
+  std::string python_path = "PYTHONPATH=" + std::string(PYTHON_MODULES_PATH);
+  putenv(const_cast<char*>(python_path.c_str()));
+
+  std::vector<char> binary(1024 * 10, 0);
+
+  if (readlink("/proc/self/exe", &binary[0], binary.size()) < 0) {
+    perror("failed to find /proc/self/exe");
+    return;
+  }
+
+  if (execv(&binary[0], argv) == -1) {
+    perror("failed to exec");
+    return;
+  }
 }
 
 
@@ -166,6 +179,9 @@ std::shared_ptr<core> g_core;
 void start_core(int argc, char **argv) {
 
   char **orig_argv = copy_args(argc, argv);
+
+  FLAGS_logtostderr = true;
+  FLAGS_v = 3;
 
   google::ParseCommandLineFlags(&argc, &argv, true);
 
