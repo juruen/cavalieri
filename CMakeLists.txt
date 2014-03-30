@@ -1,4 +1,4 @@
-PROJECT(miniriemann)
+PROJECT(cavalieri)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
@@ -11,7 +11,7 @@ SET(CMAKE_MODULE_PATH
 ADD_SUBDIRECTORY(thirdparty)
 
 SET(MINIRIEMANN_SRCS
-    ${CMAKE_SOURCE_DIR}/src/miniriemann.cpp
+    ${CMAKE_SOURCE_DIR}/src/cavalieri.cpp
     ${CMAKE_SOURCE_DIR}/src/core.cpp
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
@@ -122,17 +122,17 @@ ADD_DEFINITIONS(
 )
 
 ADD_EXECUTABLE(
-    miniriemann
+    cavalieri
     ${MINIRIEMANN_SRCS}
     ${ProtoSources}
     ${ProtoHeaders}
   )
 
-add_dependencies(miniriemann cds)
-add_dependencies(miniriemann googlemock)
+add_dependencies(cavalieri cds)
+add_dependencies(cavalieri googlemock)
 
 TARGET_LINK_LIBRARIES(
-    miniriemann
+    cavalieri
     ${CMAKE_THREAD_LIBS_INIT}
     ${PROTOBUF_LIBRARY}
     ${LibEv_LIBRARIES}
@@ -176,11 +176,11 @@ TARGET_LINK_LIBRARIES(
   )
 
 add_library(rules SHARED src/rules/rules.cpp)
-add_dependencies(rules miniriemann)
+add_dependencies(rules cavalieri)
 
 install(
   PROGRAMS
-  ${CMAKE_BINARY_DIR}/miniriemann
+  ${CMAKE_BINARY_DIR}/cavalieri
   ${CMAKE_BINARY_DIR}/rule_tester
   DESTINATION bin
 )
