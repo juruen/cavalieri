@@ -25,7 +25,6 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
-    ${CMAKE_SOURCE_DIR}/src/incoming_events.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/async/real_async_loop.cpp
     ${CMAKE_SOURCE_DIR}/src/index/index.cpp
