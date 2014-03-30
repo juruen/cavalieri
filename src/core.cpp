@@ -19,6 +19,16 @@ char**  copy_args(int argc, char **argv) {
   return copy_argv;
 }
 
+void free_args(int argc, char **argv) {
+
+  char ** aux = argv;
+
+  for (; argc > 0; argv++, argc--) {
+    free(*argv);
+  }
+
+  free(aux);
+}
 
 void ld_environment(char **argv, const std::string dir) {
 
@@ -178,6 +188,7 @@ std::shared_ptr<core> g_core;
 
 void start_core(int argc, char **argv) {
 
+  int orig_argc = argc;
   char **orig_argv = copy_args(argc, argv);
 
   FLAGS_logtostderr = true;
@@ -190,6 +201,8 @@ void start_core(int argc, char **argv) {
   auto conf = create_config();
 
   ld_environment(orig_argv, conf.rules_directory);
+
+  free_args(orig_argc, orig_argv);
 
   log_config(conf);
 

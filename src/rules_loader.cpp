@@ -61,13 +61,7 @@ std::shared_ptr<streams_t> load_library(std::string lib) {
 
   dlclose(handle);
 
-  std::shared_ptr<streams_t> sh_stream;
-  if (stream) {
-    sh_stream = std::make_shared<streams_t>(*stream);
-    delete stream;
-  }
-
-  return sh_stream;
+  return std::shared_ptr<streams_t>(stream);
 }
 
 }
