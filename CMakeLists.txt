@@ -112,6 +112,16 @@ INCLUDE_DIRECTORIES(
     ${ThirdParty_INCLUDE_DIRS}
   )
 
+SET(
+  PYTHON_INSTALL_DIR
+  ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME}/python
+)
+
+ADD_DEFINITIONS(
+     -Wall -std=c++11 -g
+    -DPYTHON_MODULES_PATH="${PYTHON_INSTALL_DIR}"
+)
+
 ADD_EXECUTABLE(
     miniriemann
     ${MINIRIEMANN_SRCS}
@@ -168,10 +178,22 @@ TARGET_LINK_LIBRARIES(
 
 add_library(rules SHARED src/rules/rules.cpp)
 
-install(PROGRAMS ${CMAKE_BINARY_DIR}/miniriemann ${CMAKE_BINARY_DIR}/rule_tester DESTINATION bin)
+install(
+  PROGRAMS
+  ${CMAKE_BINARY_DIR}/miniriemann
+  ${CMAKE_BINARY_DIR}/rule_tester
+  DESTINATION bin
+)
+
 install(PROGRAMS ${libcds_LIBS} DESTINATION lib)
+
+install(
+  FILES
+  ${CMAKE_SOURCE_DIR}/src/python/mailer.py
+  ${CMAKE_SOURCE_DIR}/src/python/pagerduty.py
+  DESTINATION share/${CMAKE_PROJECT_NAME}/python
+)
 
 ENABLE_TESTING()
 
 ADD_SUBDIRECTORY(tests)
-
