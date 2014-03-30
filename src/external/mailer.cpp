@@ -1,7 +1,8 @@
 #include <glog/logging.h>
-#include <python_interpreter.h>
+#include <thread>
+#include <mailer.h>
 #include <util.h>
-#include <email.h>
+#include <python_interpreter.h>
 
 streams_t email(const std::string & server, const std::string & from,
                 const std::string & to)
@@ -26,8 +27,6 @@ streams_t email(const std::string & server, const std::string & from,
       attr->set_value(to);
 
       const std::string jsonstr = event_to_json(me);
-
-      VLOG(3) << "email: " << jsonstr;
 
       g_python_runner.run_function("mailer", "send_email", event_to_json(me));
 

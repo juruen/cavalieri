@@ -37,7 +37,9 @@ streams_t pd_acknowledge(const std::string & pgkey) {
     });
 }
 
-streams_t email(const std::string & from, const std::string & to) {
+streams_t email(const std::string &,
+                const std::string & from, const std::string & to)
+{
   return create_stream(
     [=](forward_fn_t, const Event & e) {
       g_external_mocks.add_call("email",

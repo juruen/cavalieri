@@ -1,5 +1,5 @@
-#ifndef EMAIL_H
-#define EMAIL_H
+#ifndef MAILER_H
+#define MAILER_H
 
 #include <streams/stream_infra.h>
 
