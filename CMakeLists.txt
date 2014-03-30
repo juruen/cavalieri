@@ -176,6 +176,7 @@ TARGET_LINK_LIBRARIES(
   )
 
 add_library(rules SHARED src/rules/rules.cpp)
+add_dependencies(rules miniriemann)
 
 install(
   PROGRAMS
