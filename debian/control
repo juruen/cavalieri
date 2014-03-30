@@ -1,0 +1,15 @@
+Source: cavalieri
+Section: unknown
+Priority: extra
+Maintainer: Javier Uruen <javi.uruen@gmail.com>
+Build-Depends: debhelper (>= 8.0.0), cmake
+Standards-Version: 3.9.4
+#Homepage: <insert the upstream URL, if relevant
+#Vcs-Git: git://git.debian.org/collab-maint/miniriemann.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/miniriemann.git;a=summary
+
+Package: cavalieri
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
