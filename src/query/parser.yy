@@ -61,6 +61,7 @@
 %token <stringVal> 	GREATER_EQ "greater_eq"
 %token <stringVal> 	LESSER     "lesser"
 %token <stringVal> 	LESSER_EQ  "lesser_eq"
+%token <stringVal> 	LIKE       "like"
 %token <unquotedstringVal> 	UNQUOTEDSTRING		"unquotedstring"
 
 %token TRUE
@@ -88,6 +89,11 @@ all : '(' TRUE ')'
       }
 
 operator: EQUAL
+            {
+              $$ = $1;
+            }
+         |
+          LIKE
             {
               $$ = $1;
             }
