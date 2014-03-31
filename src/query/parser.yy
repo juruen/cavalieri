@@ -53,9 +53,14 @@
 
 %token			END	     0	"end of file"
 %token			EOL		"end of line"
-%token <integerVal> INTEGER		"integer"
-%token <doubleVal> 	DOUBLE		"double"
-%token <stringVal> 	STRING		"string"
+%token <integerVal> INTEGER		 "integer"
+%token <doubleVal> 	DOUBLE		 "double"
+%token <stringVal> 	STRING		 "string"
+%token <stringVal> 	EQUAL      "equal"
+%token <stringVal> 	GREATER    "greater"
+%token <stringVal> 	GREATER_EQ "greater_eq"
+%token <stringVal> 	LESSER     "lesser"
+%token <stringVal> 	LESSER_EQ  "lesser_eq"
 %token <unquotedstringVal> 	UNQUOTEDSTRING		"unquotedstring"
 
 %token TRUE
@@ -63,6 +68,7 @@
 %left OR AND NOT
 
 %type <querynode> all action expr
+%type <stringVal> operator
 
 %{
 
@@ -81,21 +87,42 @@ all : '(' TRUE ')'
         $$ = new QueryTrue();
       }
 
-action : TAGGED '=' STRING
+operator: EQUAL
+            {
+              $$ = $1;
+            }
+         | GREATER
+            {
+              $$ = $1;
+            }
+         | GREATER_EQ
+            {
+              $$ = $1;
+            }
+         | LESSER
+            {
+              $$ = $1;
+            }
+         | LESSER_EQ
+            {
+              $$ = $1;
+            }
+
+action : TAGGED EQUAL STRING
           {
             $$ = new QueryTagged($3);
           }
-        | UNQUOTEDSTRING '=' STRING
+        | UNQUOTEDSTRING operator STRING
           {
-            $$ = new QueryField($1, $3);
+            $$ = new QueryField($1, $3, $2);
           }
-        | UNQUOTEDSTRING '=' INTEGER
+        | UNQUOTEDSTRING operator INTEGER
           {
-            $$ = new QueryField($1, $3);
+            $$ = new QueryField($1, $3, $2);
           }
-        | UNQUOTEDSTRING '=' DOUBLE
+        | UNQUOTEDSTRING operator DOUBLE
           {
-            $$ = new QueryField($1, $3);
+            $$ = new QueryField($1, $3, $2);
           }
 
 expr: '(' expr ')'

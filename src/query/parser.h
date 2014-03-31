@@ -104,12 +104,17 @@ namespace queryparser {
      INTEGER = 259,
      DOUBLE = 260,
      STRING = 261,
-     UNQUOTEDSTRING = 262,
-     TRUE = 263,
-     TAGGED = 264,
-     NOT = 265,
-     AND = 266,
-     OR = 267
+     EQUAL = 262,
+     GREATER = 263,
+     GREATER_EQ = 264,
+     LESSER = 265,
+     LESSER_EQ = 266,
+     UNQUOTEDSTRING = 267,
+     TRUE = 268,
+     TAGGED = 269,
+     NOT = 270,
+     AND = 271,
+     OR = 272
    };
 
     };
@@ -289,7 +294,7 @@ namespace queryparser {
 } // queryparser
 
 /* Line 35 of lalr1.cc  */
-#line 293 "parser.h"
+#line 298 "parser.h"
 
 
 

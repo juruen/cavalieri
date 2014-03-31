@@ -207,6 +207,47 @@ TEST(query_grammar_fields_test_case, test)
   e.set_ttl(7);
   ASSERT_TRUE(eval_fn(e));
 
+  query = "(ttl > 10)";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  ASSERT_FALSE(eval_fn(e));
+
+  e.clear_time();
+  e.set_ttl(11);
+  ASSERT_TRUE(eval_fn(e));
+
+  query = "(ttl >= 10)";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  e.clear_time();
+  e.set_ttl(10);
+  ASSERT_TRUE(eval_fn(e));
+
+  query = "(ttl < 10)";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  ASSERT_FALSE(eval_fn(e));
+
+  e.clear_time();
+  e.set_ttl(9);
+  ASSERT_TRUE(eval_fn(e));
+
+  query = "(ttl <= 10)";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  e.clear_time();
+  e.set_ttl(10);
+  ASSERT_TRUE(eval_fn(e));
+
+
   query = "(metric = 7.1)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
