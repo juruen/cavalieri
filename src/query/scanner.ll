@@ -53,6 +53,31 @@ typedef queryparser::Parser::token_type token_type;
     yylloc->step();
 %}
 
+= {
+  yylval->stringVal = new std::string("=");
+  return token::EQUAL;
+}
+
+> {
+  yylval->stringVal = new std::string(">");
+  return token::GREATER;
+}
+
+>= {
+  yylval->stringVal = new std::string(">=");
+  return token::GREATER_EQ;
+}
+
+\< {
+  yylval->stringVal = new std::string("<");
+  return token::LESSER;
+}
+
+\<= {
+  yylval->stringVal = new std::string("<=");
+  return token::LESSER_EQ;
+}
+
 and {
   return token::AND;
 }

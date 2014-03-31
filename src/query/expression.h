@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <ostream>
+#include <iostream>
 #include <functional>
 #include <boost/variant/variant.hpp>
 #include <proto.pb.h>
@@ -39,13 +40,14 @@ public:
 
 class QueryField : public QueryNode
 {
+  std::string* op;
   std::string* field;
   boost::variant<std::string, int, double> value;
 
 public:
-  QueryField(std::string* field, std::string* value);
-  QueryField(std::string* field, const int &  value);
-  QueryField(std::string* field, const double & value);
+  QueryField(std::string* field, std::string* value, std::string* op);
+  QueryField(std::string* field, const int &  value, std::string* op);
+  QueryField(std::string* field, const double & value, std::string* op);
   virtual void print(std::ostream &os, unsigned int depth=0) const;
   virtual query_f_t evaluate() const;
 
@@ -97,5 +99,31 @@ class QueryContext
     ~QueryContext();
     void	clearExpressions();
 };
+
+template<typename T>
+bool compare(const T & left, const T & right, const std::string & op) {
+
+  if (op == "=") {
+    return left == right;
+  }
+
+  if (op == ">") {
+    return left > right;
+  }
+
+  if (op == ">=") {
+    return left >= right;
+  }
+
+  if (op == "<") {
+    return left < right;
+  }
+
+  if (op == "<=") {
+    return left <= right;
+  }
+
+  return false;
+}
 
 #endif
