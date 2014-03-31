@@ -58,6 +58,11 @@ typedef queryparser::Parser::token_type token_type;
   return token::EQUAL;
 }
 
+=~ {
+  yylval->stringVal = new std::string("=~");
+  return token::LIKE;
+}
+
 > {
   yylval->stringVal = new std::string(">");
   return token::GREATER;

@@ -185,6 +185,18 @@ TEST(query_grammar_fields_test_case, test)
   e.set_description("foo");
   ASSERT_TRUE(eval_fn(e));
 
+  query = "(description =~ \"foob%\")";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.expression->evaluate();
+
+  ASSERT_FALSE(eval_fn(e));
+
+  e.clear_state();
+  e.set_description("foobar");
+  ASSERT_TRUE(eval_fn(e));
+
+
   query = "(time = 7)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
