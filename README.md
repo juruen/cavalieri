@@ -13,6 +13,9 @@ Create your rules
 Test your rules
 ---------------
 
+Sending events
+--------------
+
 Streams API
 ------------
 
@@ -75,3 +78,6 @@ none of the predicates match, the event is passed to the default stream.
 ### Some utility functions
 
 ### Some typedefs
+
+Dashboard
+---------
