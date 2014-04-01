@@ -3,9 +3,9 @@ Section: unknown
 Priority: extra
 Maintainer: Javier Uruen <javi.uruen@gmail.com>
 Build-Depends: debhelper (>= 8.0.0), cmake, subversion, protobuf-compiler,
-  libprotobuf-dev, libev-dev, libgflags-dev, libpython-dev,
+  libprotobuf-dev, libev-dev, libgflags-dev, libgoogle-glog-dev, libpython-dev,
   libcurl4-openssl-dev, libssl-dev, libtbb-dev, libjsoncpp-dev, lcov,
-  flex, bison
+  flex, bison, patch, libboost-all-dev
 Standards-Version: 3.9.4
 #Homepage: <insert the upstream URL, if relevant
 #Vcs-Git: git://git.debian.org/collab-maint/miniriemann.git
