@@ -37,7 +37,7 @@ Modifies the event. It takes a map that contains the keys to be modified and the
 
 ```cpp
     // Change host field and description
-    with({{"host", "cluster-001"}, {"description", "aggregated master metrics"})
+    with({{"host", "cluster-001"}, {"description", "aggregated master metrics"});
 ```
 #### default_to (const with_changes_t & changes)
 
@@ -45,7 +45,7 @@ It takes a map that contains the keys to be added to the event if the key is not
 
 ```cpp
     // Default ttl to 120
-    default_to({"ttl", 120})
+    default_to({"ttl", 120});
 ```
 
 #### split (const split_clauses_t clauses)
@@ -54,8 +54,8 @@ It takes a list of pairs. Each pair contains a predicate function and a stream.
 When an event is received, the event is passed to the first stream which predicate returns true.
 
 ```cpp
-    split({above_(10), set_state("ok")},
-          {under_(5),  set_state("critical"})
+    split({above_pred(10), set_state("ok")},
+          {under_pred(5),  set_state("critical"});
 ```
 
 #### split (const split_clauses_t clauses, const streams_t default_stream)
@@ -65,10 +65,60 @@ When an event is received, the event is passed to the first stream which predica
 none of the predicates match, the event is passed to the default stream.
 
 ```cpp
-    split({above_(10), set_state("ok")},
-          {under_(5),  set_state("critical")},
-          set_state("warning"))
+    split({above_pred(10), set_state("ok")},
+          {under_pred(5),  set_state("critical")},
+          set_state("warning"));
 ```
+
+#### where (const predicate_t & predicate)
+
+It passes events that make the predicate function return true.
+
+```cpp
+    where(under_pred(5)) >> set_state("critical") >> notiy_email();
+```
+
+#### where (const predicate_t & predicate, const streams_t else_stream)
+
+It passes events that make the predicate function return true. Otherwise, events are passed to *else_stream*.
+
+```cpp
+    above_stream = set_state("ok") >> prn("metric is above 5");
+    
+    where(under_pred(5), above_stream) >> set_state("critical") >> notiy_email(); 
+```
+
+#### by (const by_keys_t  & keys, const by_stream_t stream)
+
+It takes a list of event's fields. When an event enters this function, the field(s) is retrieved, for every
+new value that has not been seen before, it will create a copy of  *stream* and the event will be passed
+to it. If the value was seen before, it will pass the event to the previously created stream.
+
+Let's see an example. We are going to use a stream function called *rate* which simply sums the event
+metrics that receives during *dt* seconds and divides the result by *dt*. Let's assume our servers
+send an event called *backend_exception* everytime a request can't be handled and we would
+like to see the exception rate per server.
+
+Note that if we just do what is below, we wouldn't get a per host rate, we would get a global rate.
+
+```cpp
+    auto rate_stream = with({"metric", 1}) >> rate(60) >> prn("exceptions per second:");
+```
+
+If we want to compute the rate per host, that's when *by()* comes in handy. It helps us to replicate the
+stream per each host so we can compute the rates individually.
+
+```cpp
+    auto rate_stream = BY(with({"metric", 1}) >> rate(60) >> prn("exceptions per second:"));
+    
+    // Use the field host and replicate rate_stream for evey distinct host.
+    by({"host"}, rate_stream);
+```
+
+Note that we need to wrap the stream function that we want to replicate with the *BY()* macro.
+
+You can pass several fields to *by()*.
+
 
 
 ### Fold functions
