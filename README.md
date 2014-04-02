@@ -119,7 +119,16 @@ Note that we need to wrap the stream function that we want to replicate with the
 
 You can pass several fields to *by()*.
 
+#### rate (const uint32 & dt)
 
+It sums the metrics of the received events for *dt* seconds. After that period, an event is forward where
+its metric contains the accumulated value divided by *dt*.
+
+
+```cpp
+    // An easy way to count the rate of events that go through this stream
+    with({"metric", 1) >> rate(60) >> prn("events per second");
+```
 
 ### Fold functions
 
