@@ -240,6 +240,33 @@ It forwards events with metrics not in the  (*a*, *b*) interval.
 It scales events' metric by  *s* and forwards them.
 
 
+```cpp
+    // Transform bytes in bits
+    where(service_pred("eth0_incoming")) >> scale(8);
+```
+
+#### sdo ()
+
+It just forwards events.
+
+#### counter ()
+
+It counts the number of events that pass through it.
+
+#### expired ()
+
+It forwards events that are expired.
+
+#### tags (tags_t tags)
+
+It adds the list of passed *tags* to events and forwards them.
+
+
+```cpp
+    tags({"processed"}) >> prn("tag added")
+```
+
+
 
 
 ### Fold functions
