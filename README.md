@@ -150,6 +150,29 @@ any of the predicates, all the stored events are forwared to *fold_fn*.
     project({service_pred("foo"), service_pred("bar"), sum) >> prn("foo + bar");
 ```
 
+#### changed_state (const std::string & initial)
+
+It only forward events if there is a state change. It assummes *initial* as the first state.
+
+If you are sending emails, this is useful to not spam yourself and only send emails when something goes
+from *ok* to *critical* and viceversa.
+
+#### tagged_any (const tags_t & tags)
+
+It forwards events only if they contain any of the given *tags*.
+
+```cpp
+    tagged_any({"debian", "ubuntu"}) >> where(above_pred(5)) >> email();
+```
+
+#### tagged_all (const tags_t & tags)
+
+It forwards events only if they contain all of the given *tags*.
+
+```cpp
+    tagged_any({"production", "london"}) >> where(above_pred(5)) >> email();
+```
+
 
 
 
