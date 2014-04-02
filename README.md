@@ -167,12 +167,24 @@ It forwards events only if they contain any of the given *tags*.
 
 #### tagged_all (const tags_t & tags)
 
-It forwards events only if they contain all of the given *tags*.
+It forwards events only if they contain all the given *tags*.
 
 ```cpp
     tagged_any({"production", "london"}) >> where(above_pred(5)) >> email();
 ```
 
+#### smap (const smap_fn_t fn)
+
+Events are recevied and passed to *fn* which returns a new event. This new event is forwarded. Use this
+when you need to modify events dynamically, as in opposed to statically, that you can do using *with()*.
+
+
+```cpp
+    // Function that takes and event and returns a new event which service has the host appended
+    auto host_service = [](e_t e) { auto ne(e); ne.set_service(e.service() + "-" + e.host(); };
+    
+    smap(host_service) >> prn("new shiny service string");
+```
 
 
 
