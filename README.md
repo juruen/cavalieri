@@ -181,7 +181,12 @@ when you need to modify events dynamically, as in opposed to statically, that yo
 
 ```cpp
     // Function that takes and event and returns a new event which service has the host appended
-    auto host_service = [](e_t e) { auto ne(e); ne.set_service(e.service() + "-" + e.host()); };
+    Event host_service(e_t e) 
+    { 
+      auto ne(e);
+      ne.set_service(e.service() + "-" + e.host());
+      return ne;
+    };
     
     smap(host_service) >> prn("new shiny service string");
 ```
