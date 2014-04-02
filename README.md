@@ -121,7 +121,7 @@ You can pass several fields to *by()*.
 
 #### rate (const uint32 & dt)
 
-It sums the metrics of the received events for *dt* seconds. After that period, an event is forward where
+It sums the metrics of the received events for *dt* seconds. After that period, an event is forwarded where
 its metric contains the accumulated value divided by *dt*.
 
 
@@ -129,6 +129,30 @@ its metric contains the accumulated value divided by *dt*.
     // An easy way to count the rate of events that go through this stream
     with({"metric", 1) >> rate(60) >> prn("events per second");
 ```
+
+#### coalesce (const fold_fn_t & fold_fn)
+
+It keeps a map with the receivied events. Events are inserted in the map by using their host and service as a key.
+Every time a new event is received, the map is updated and all the events in it are forwarded to the fold function.
+
+This function is useful to aggregate metrics from different hosts.
+
+
+#### project (const predicates_t predicates, const fold_fn_t & fold_fn)
+
+Similar to *coalesce* and more suitable when you just need a few events. It takes a list of predicates.
+For every predicate, the last event that matches is stored. Whenever a new event arrives and matches
+any of the predicates, all the stored events are forwared to *fold_fn*.
+
+
+```cpp
+    // Create a new event metric that is the sum of foo and bar
+    project({service_pred("foo"), service_pred("bar"), sum) >> prn("foo + bar");
+```
+
+
+
+
 
 ### Fold functions
 
