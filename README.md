@@ -191,6 +191,25 @@ when you need to modify events dynamically, as in opposed to statically, that yo
     smap(host_service) >> prn("new shiny service string");
 ```
 
+#### moving_event_window(const size_t n, const fold_fn_t fn)
+
+Every time an event is received, the last *n* events are passed to *fn* which returns a new event
+that is forwarded.
+
+
+#### fixed_event_window(const size_t n, const fold_fn_t fn)
+
+It passes non-overlapping windows of *n* events to *fn* which returns a new event that is forward.
+
+#### moving_event_window(const size_t dt, const fold_fn_t fn)
+
+Every time an event is received, the last events within a *dt* window are passed to *fn* which returns a new event
+that is forwarded.
+
+#### fixed_time_window(const size_t dt, const fold_fn_t fn)
+
+It passes non-overlapping windows of the events received within a *dt* window to *fn* 
+which returns a new event that is forward.
 
 
 
