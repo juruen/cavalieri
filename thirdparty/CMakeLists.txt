@@ -58,3 +58,7 @@ set (libcds_LIBS
      ${CMAKE_BINARY_DIR}/thirdparty/cds-prefix/src/cds/bin/${CDS_LIB_DIR}/libcds.so.1.5.0
      PARENT_SCOPE)
 
+set (libcds_INCLUDES
+     ${CMAKE_BINARY_DIR}/thirdparty/cds-prefix/src/cds/cds
+     PARENT_SCOPE)
+

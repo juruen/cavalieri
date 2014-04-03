@@ -51,10 +51,11 @@ SET(MINIRIEMANN_SRCS
   )
 
 SET(MINIRIEMANN_HDRS
-    ${CMAKE_SOURCE_DIR}/src/
+    ${CMAKE_SOURCE_DIR}/include/
+    ${CMAKE_SOURCE_DIR}/include/query/
     ${CMAKE_SOURCE_DIR}/src/query/
-    ${CMAKE_SOURCE_DIR}/src/external/
-    ${CMAKE_SOURCE_DIR}/src/rules/
+    ${CMAKE_SOURCE_DIR}/include/external/
+    ${CMAKE_SOURCE_DIR}/include/rules/
     /usr/include/i386-linux-gnu/c++/4.7
   )
 
@@ -193,6 +194,25 @@ install(
   ${CMAKE_SOURCE_DIR}/src/python/pagerduty.py
   DESTINATION share/${CMAKE_PROJECT_NAME}/python
 )
+
+install(
+  DIRECTORY
+  ${CMAKE_SOURCE_DIR}/include/
+  DESTINATION include/${CMAKE_PROJECT_NAME}
+)
+
+install(
+  DIRECTORY
+  ${libcds_INCLUDES}
+  DESTINATION include/${CMAKE_PROJECT_NAME}
+)
+
+install(
+  FILES
+  ${CMAKE_BINARY_DIR}/proto.pb.h
+  DESTINATION include/${CMAKE_PROJECT_NAME}
+)
+
 
 ENABLE_TESTING()
 
