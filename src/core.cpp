@@ -165,11 +165,11 @@ void core::start() {
 
   load_rules(config_.rules_directory);
 
-  VLOG (1) << "Brace for impact, starting nuclear core.";
+  LOG(INFO) << "Brace for impact, starting nuclear core.";
 
   main_loop_->start();
 
-  VLOG (1) << "Screw you guys, I'm going home.";
+  LOG(INFO) << "Screw you guys, I'm going home.";
 }
 
 void core::add_stream(std::shared_ptr<streams_t> stream) {
@@ -192,7 +192,7 @@ void start_core(int argc, char **argv) {
   char **orig_argv = copy_args(argc, argv);
 
   FLAGS_logtostderr = true;
-  FLAGS_v = 3;
+  FLAGS_v = 1;
 
   google::ParseCommandLineFlags(&argc, &argv, true);
 
