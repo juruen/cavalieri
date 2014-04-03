@@ -5,7 +5,6 @@
 #include <scheduler/mock_scheduler.h>
 #include <external_mocks.h>
 #include <rule_tester_util.h>
-#include <rules/rules.h>
 #include <index/mock_index.h>
 #include "atom/atom.h"
 
@@ -36,6 +35,7 @@ int main(int argc, char **argv) {
 
     class index index(std::dynamic_pointer_cast<index_interface>(idx));
 
+    /*
     auto rule_stream = *rules();
 
     for (const auto & event: events) {
@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
     }
 
     std::cout << results(idx->events(), g_external_mocks.calls()) << "\n";
+    */
   }
   atom_terminate();
 
