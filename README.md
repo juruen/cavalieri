@@ -10,6 +10,39 @@ Install
 Create your rules
 -----------------
 
+Clone *cavalieri-rules*, a template project to create your own rules.
+
+```sh
+    git clone https://github.com/juruen/cavalieri-rules.git
+    cd cavalieri-rules
+```
+
+Open *rules.cpp* and add your rules. The default rule will just print the events that are received:
+
+```cpp
+    #include <rules.h>
+    #include <external/pagerduty.h>
+    #include <external/email.h>
+
+    streams_t* rules() {
+    
+      return new streams_t(prn());
+      
+    }
+```
+
+ Build a plugin containing your rules that will be loaded by *cavalieri*.
+
+```sh
+    mkdir build
+    cd build
+    cmake ..
+    make
+```
+
+The above step generates a *librules.so* file that *cavalieri* will load. Execute cavalieri in the build directory or use the **-rules_directory** flag to specifify where the plugin is.
+
+
 Test your rules
 ---------------
 
