@@ -10,7 +10,7 @@ SET(CMAKE_MODULE_PATH
 
 ADD_SUBDIRECTORY(thirdparty)
 
-SET(MINIRIEMANN_SRCS
+SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/cavalieri.cpp
     ${CMAKE_SOURCE_DIR}/src/core.cpp
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
@@ -50,7 +50,7 @@ SET(MINIRIEMANN_SRCS
     ${CMAKE_SOURCE_DIR}/src/scheduler/scheduler.cpp
   )
 
-SET(MINIRIEMANN_HDRS
+SET(CAVALIERI_HDRS
     ${CMAKE_SOURCE_DIR}/include/
     ${CMAKE_SOURCE_DIR}/include/query/
     ${CMAKE_SOURCE_DIR}/src/query/
@@ -59,7 +59,7 @@ SET(MINIRIEMANN_HDRS
     /usr/include/i386-linux-gnu/c++/4.7
   )
 
-SET(MINIRIEMANN_PROTOFILES
+SET(CAVALIERI_PROTOFILES
     ${CMAKE_SOURCE_DIR}/src/proto.proto
   )
 
@@ -71,7 +71,6 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
-    ${CMAKE_SOURCE_DIR}/src/rules/rules.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/index/mock_index.cpp
@@ -94,12 +93,12 @@ FIND_PACKAGE(OpenSSL REQUIRED)
 FIND_PACKAGE(TBB REQUIRED)
 FIND_PACKAGE(JsonCpp REQUIRED)
 
-PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${MINIRIEMANN_PROTOFILES})
+PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${CAVALIERI_PROTOFILES})
 
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_BINARY_DIR}
-    ${MINIRIEMANN_HDRS}
+    ${CAVALIERI_HDRS}
     ${PROTOBUF_INCLUDE_DIR}
     ${Glog_INCLUDE_DIR}
     ${LibEv_INCLUDE_DIR}
@@ -124,7 +123,7 @@ ADD_DEFINITIONS(
 
 ADD_EXECUTABLE(
     cavalieri
-    ${MINIRIEMANN_SRCS}
+    ${CAVALIERI_SRCS}
     ${ProtoSources}
     ${ProtoHeaders}
   )
@@ -175,9 +174,6 @@ TARGET_LINK_LIBRARIES(
     pthread
     dl
   )
-
-add_library(rules SHARED src/rules/rules.cpp)
-add_dependencies(rules cavalieri)
 
 install(
   PROGRAMS

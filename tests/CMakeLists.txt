@@ -5,7 +5,7 @@ SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
 # Code coverage options
 #ADD_DEFINITIONS( -fprofile-arcs -ftest-coverage -g -O0)
 
-SET(MINIRIEMANN_TEST_SRCS
+SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/mock_os_functions.cpp
@@ -29,17 +29,17 @@ SET(MINIRIEMANN_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
   )
 
-SET(MINIRIEMANN_PROTOFILES
+SET(CAVALIERI_PROTOFILES
     ${CMAKE_SOURCE_DIR}/src/proto.proto
   )
 
-PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${MINIRIEMANN_PROTOFILES})
+PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${CAVALIERI_PROTOFILES})
 
 INCLUDE_DIRECTORIES(
     ${GTEST_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_BINARY_DIR}
-    ${MINIRIEMANN_HDRS}
+    ${CAVALIERI_HDRS}
     ${PROTOBUF_INCLUDE_DIR}
     ${Glog_INCLUDE_DIR}
     ${LibEv_INCLUDE_DIR}
@@ -49,7 +49,7 @@ INCLUDE_DIRECTORIES(
 
 ADD_EXECUTABLE(
     test_plan
-    ${MINIRIEMANN_TEST_SRCS}
+    ${CAVALIERI_TEST_SRCS}
     ${ProtoSources}
     ${ProtoHeaders}
     ${CMAKE_SOURCE_DIR}/tests/test_plan.cpp
