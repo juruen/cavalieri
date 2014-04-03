@@ -57,7 +57,7 @@ std::shared_ptr<streams_t> load_library(std::string lib) {
 
   auto stream = rules();
 
-  VLOG(3) << "rules loaded succesfully";
+  LOG(INFO) << "rules loaded succesfully from " << lib;
 
   dlclose(handle);
 
