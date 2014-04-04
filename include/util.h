@@ -80,5 +80,11 @@ std::list<T> conj(const std::list<T> &v, T t) {
   return std::move(nv);
 }
 
+char**  copy_args(int argc, char **argv);
+
+void free_args(int argc, char **argv);
+
+void ld_environment(char **argv, const std::string dir);
+
 #endif
 

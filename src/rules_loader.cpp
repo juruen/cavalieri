@@ -3,6 +3,7 @@
 #include <regex>
 #include <dlfcn.h>
 #include <iostream>
+#include <util.h>
 #include <core.h>
 #include <rules_loader.h>
 
@@ -66,13 +67,21 @@ std::shared_ptr<streams_t> load_library(std::string lib) {
 
 }
 
-void load_rules(const std::string dir) {
+std::vector<std::shared_ptr<streams_t>> load_rules(const std::string dir) {
+
+  std::vector<std::shared_ptr<streams_t>> rules;
 
   for (const auto & lib : so_files(dir)) {
 
-    g_core->add_stream(load_library(lib));
+    std::shared_ptr<streams_t> stream = load_library(lib);
+
+    if (stream) {
+      rules.push_back(stream);
+     }
 
   }
+
+  return rules;
 
 }
 

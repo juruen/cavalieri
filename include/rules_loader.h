@@ -3,6 +3,6 @@
 
 #include <streams/stream_functions.h>
 
-void load_rules(const std::string file);
+std::vector<std::shared_ptr<streams_t>> load_rules(const std::string file);
 
 #endif
