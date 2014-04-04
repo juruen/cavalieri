@@ -66,6 +66,7 @@ SET(CAVALIERI_PROTOFILES
 SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/rule_tester.cpp
     ${CMAKE_SOURCE_DIR}/src/rule_tester_util.cpp
+    ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
@@ -156,6 +157,16 @@ ADD_EXECUTABLE(
     ${ProtoSources}
     ${ProtoHeaders}
   )
+
+TARGET_LINK_LIBRARIES(
+    rule_tester
+    boost_filesystem
+    boost_system
+    pthread
+    dl
+  )
+
+
 
 add_dependencies(rule_tester cds)
 add_dependencies(rule_tester googlemock)

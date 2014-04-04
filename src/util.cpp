@@ -375,4 +375,49 @@ bool parse_uri(
   return true;
 }
 
+char**  copy_args(int argc, char **argv) {
 
+  char **copy_argv = (char **)calloc(argc + 1, sizeof(char *));
+
+  for (char **cp = copy_argv; argc > 0; cp++, argv++, argc--) {
+    *cp = strdup(*argv);
+  }
+
+  return copy_argv;
+}
+
+void free_args(int argc, char **argv) {
+
+  char ** aux = argv;
+
+  for (; argc > 0; argv++, argc--) {
+    free(*argv);
+  }
+
+  free(aux);
+}
+
+void ld_environment(char **argv, const std::string dir) {
+
+  if (getenv("LD_LIBRARY_PATH")) {
+    return;
+  }
+
+  std::string ld_path = "LD_LIBRARY_PATH=" + dir;
+  putenv(const_cast<char*>(ld_path.c_str()));
+
+  std::string python_path = "PYTHONPATH=" + std::string(PYTHON_MODULES_PATH);
+  putenv(const_cast<char*>(python_path.c_str()));
+
+  std::vector<char> binary(1024 * 10, 0);
+
+  if (readlink("/proc/self/exe", &binary[0], binary.size()) < 0) {
+    perror("failed to find /proc/self/exe");
+    return;
+  }
+
+  if (execv(&binary[0], argv) == -1) {
+    perror("failed to exec");
+    return;
+  }
+}
