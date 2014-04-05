@@ -152,14 +152,14 @@ TARGET_LINK_LIBRARIES(
   )
 
 ADD_EXECUTABLE(
-    rule_tester
+    cavalieri_tester
     ${RULETESTER_SRCS}
     ${ProtoSources}
     ${ProtoHeaders}
   )
 
 TARGET_LINK_LIBRARIES(
-    rule_tester
+    cavalieri_tester
     boost_filesystem
     boost_system
     pthread
@@ -168,11 +168,11 @@ TARGET_LINK_LIBRARIES(
 
 
 
-add_dependencies(rule_tester cds)
-add_dependencies(rule_tester googlemock)
+add_dependencies(cavalieri_tester cds)
+add_dependencies(cavalieri_tester googlemock)
 
 TARGET_LINK_LIBRARIES(
-    rule_tester
+    cavalieri_tester
     ${CMAKE_THREAD_LIBS_INIT}
     ${PROTOBUF_LIBRARY}
     ${Glog_LIBRARIES}
@@ -189,7 +189,7 @@ TARGET_LINK_LIBRARIES(
 install(
   PROGRAMS
   ${CMAKE_BINARY_DIR}/cavalieri
-  ${CMAKE_BINARY_DIR}/rule_tester
+  ${CMAKE_BINARY_DIR}/cavalieri_tester
   DESTINATION bin
 )
 
