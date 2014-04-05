@@ -35,7 +35,7 @@ ExternalProject_Add(
     PATCH_COMMAND COMMAND svn patch ${CMAKE_SOURCE_DIR}/thirdparty/cds-no-test.patch ${CMAKE_BINARY_DIR}/thirdparty/cds-prefix/src/cds
     CONFIGURE_COMMAND ""
     CMAKE_COMMAND ""
-    BUILD_COMMAND /bin/bash -c "cd ${CMAKE_BINARY_DIR}/thirdparty/cds-prefix/src/cds/build && sh ./build.sh -p ${CDS_SYSTEM_PROCESSOR}"
+    BUILD_COMMAND /bin/bash -c "cd ${CMAKE_BINARY_DIR}/thirdparty/cds-prefix/src/cds/build && chmod +x build.sh && EXTRA_CXXFLAGS=-fPIC ./build.sh -p ${CDS_SYSTEM_PROCESSOR}"
     TIMEOUT 10
     INSTALL_COMMAND ""
     LOG_DOWNLOAD ON
