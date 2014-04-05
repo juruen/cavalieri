@@ -17,7 +17,8 @@ Clone *cavalieri-rules*, a template project to create your own rules.
     cd cavalieri-rules
 ```
 
-Open *rules.cpp* and add your rules. The default rule will just print the events that are received:
+Open *rules.cpp* and add your rules. The default rule will send an email with a critical event when
+a metric from the *requests_rate* service is above 40.
 
 ```cpp
     #include <rules.h>
@@ -26,7 +27,16 @@ Open *rules.cpp* and add your rules. The default rule will just print the events
 
     streams_t* rules() {
     
-      return new streams_t(prn());
+      auto mail_stream = email("localhost", "cavalieri@localhost",
+                           "devops@localhost");
+
+       auto s =  where(service_pred("requests_rate"))
+                   >> above(40)
+                     >> with({{"state", "critical"}})
+                       >> changed_state("ok")
+                         >>  mail_stream;
+
+      return new streams_t(s);
       
     }
 ```
@@ -58,6 +68,81 @@ The above step generates a *librules.so* file that *cavalieri* will load. Execut
 
 Test your rules
 ---------------
+
+You can easily test your rules without putting them in production. In the root directory of *cavalieri-template*
+there is Python script that will help you to find out if your rules are doing what you expect.
+
+The way it works is pretty simple. Open *test_rules.py* and add the events that are supposed to trigger your alerts.
+By default, you already have some events that will trigger an alert for the default rules:
+
+```python
+     events = [
+      {'host': 'foo.org', 'service': 'requests_rate', 'metric': 10, 'time': 0},
+      {'host': 'foo.org', 'service': 'requests_rate', 'metric': 20, 'time': 60},
+      {'host': 'foo.org', 'service': 'requests_rate', 'metric': 40, 'time': 120},
+      {'host': 'foo.org', 'service': 'requests_rate', 'metric': 45, 'time': 180},
+      {'host': 'foo.org', 'service': 'requests_rate', 'metric': 45, 'time': 240},
+      {'host': 'foo.org', 'service': 'requests_rate', 'metric': 20, 'time': 300},
+      {'host': 'foo.org', 'service': 'requests_rate', 'metric': 10, 'time': 360}]
+```
+
+Let's have a look at the default rules again:
+
+```cpp
+        
+       [...]
+      
+       auto s =  where(service_pred("requests_rate"))
+                   >> above(40)
+                     >> with({{"state", "critical"}})
+                       >> changed_state("ok")
+                         >>  mail_stream;
+
+       [...]
+
+```
+
+As you can see, the events defined in *test_rules.py* will trigger an alert when the metric is above 40.
+This happens with the event sent at time *180*.
+
+You can execute *test_rules.py* from the root directory of *cavalieri-template*. And you will magically see
+what happens to your rules when those events are sent:
+
+```json
+{
+   "index" : [],
+   "reports" : [
+      [
+         "email",
+         {
+            "event" : {
+               "description" : "",
+               "host" : "foo.org",
+               "metric" : 45.0,
+               "service" : "requests_rate",
+               "state" : "critical",
+               "tags" : [],
+               "time" : 180
+            },
+            "extra" : "",
+            "message" : "send email from: cavalieri@localhost to: devops@localhost",
+            "time" : 180
+         }
+      ]
+   ]
+}
+
+```
+
+As you can see in the above output, *test_rules.py* is reporting that an email would have been send at time *180*
+to report that the service *requests_rate* is critical.
+
+*test_rules.py* makes use of *cavalieri_tester*, a binary that is capable of loading your rules and send events to them.
+However, it does so in an special environment where all the external calls such as email or pagerduty are mocked.
+It also mocks the scheduler, so you can test months of events in just a few seconds.
+
+This feature allows you to easily add your alert rules to your continous integration process.
+
 
 Sending events
 --------------
