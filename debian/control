@@ -1,5 +1,5 @@
 Source: cavalieri
-Section: unknown
+Section: universe/net
 Priority: extra
 Maintainer: Javier Uruen <javi.uruen@gmail.com>
 Build-Depends: debhelper (>= 8.0.0), cmake, subversion, protobuf-compiler,
