@@ -8,6 +8,44 @@ Introduction
 Install
 -------
 
+#### Ubuntu packages
+
+You can install a deb package for Ubuntu 13.10 and 14.04 by adding this ppa:
+
+```
+sudo add-apt-repository ppa:juruen/cavalieri
+sudo apt-get update
+sudo apt-get install cavalieri
+```
+
+#### Debian
+
+Packges coming soon!
+
+#### Build from source
+
+Have a look at the build dependencies extracted from the deb package:
+
+
+```
+cmake, subversion, protobuf-compiler,libprotobuf-dev, libev-dev, libgflags-dev, 
+libgoogle-glog-dev, libpython-dev,libcurl4-openssl-dev, libssl-dev, libtbb-dev,
+libjsoncpp-dev, lcov, flex, bison, libgoogle-glog-dev, libboost-filesystem-dev,
+libboost-system-dev
+  
+```
+
+You will also need a C++11 enabled compiler. GCC >= 4.7 or an equivalent Clang.
+
+Once the depencies are met. To build and install, do the following:
+
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+
 Create your rules
 -----------------
 
