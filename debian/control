@@ -12,5 +12,5 @@ Homepage: http://github.com/juruen/cavalieri
 Package: cavalieri
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: A C++ stream processing tool to monitor and alert
- A C++ stream processing tool to monitor and alert
+Description: A C++ event stream processing tool to monitor and alert
+ A C++ event stream processing tool to monitor and alert
