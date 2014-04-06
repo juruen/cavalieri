@@ -5,6 +5,15 @@ Cavalieri [![Build Status](https://drone.io/github.com/juruen/cavalieri/status.p
 Introduction
 ------------
 
+*Cavalieri* is a C++ event stream processing tool inspired by the awesome [riemann.io](http://riemann.io) project.
+
+It implements the original [riemann.io](http://riemann.io) protocol. That means you can leverage the existing *riemann*
+clients and tools. It also tries to mimic its stream API where possible.
+
+Cavalieri's current version *0.0.1* is considered **alpha**. We expect to release a beta version in the following
+weeks.
+
+
 Install
 -------
 
@@ -198,6 +207,9 @@ continous integration process.
 
 Sending events
 --------------
+
+You can use any of the existing [riemann.io](http://riemann.io/clients.html) clients. Just make them send events to
+a host running *cavalieri*.
 
 Streams API
 ------------
