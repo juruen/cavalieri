@@ -8,6 +8,44 @@ Introduction
 Install
 -------
 
+#### Ubuntu packages
+
+You can install a deb package for Ubuntu 13.10 and 14.04 by adding this ppa:
+
+```
+sudo add-apt-repository ppa:juruen/cavalieri
+sudo apt-get update
+sudo apt-get install cavalieri
+```
+
+#### Debian
+
+Packges coming soon!
+
+#### Build from source
+
+Have a look at the build dependencies extracted from the deb package:
+
+
+```
+cmake, subversion, protobuf-compiler,libprotobuf-dev, libev-dev, libgflags-dev, 
+libgoogle-glog-dev, libpython-dev,libcurl4-openssl-dev, libssl-dev, libtbb-dev,
+libjsoncpp-dev, lcov, flex, bison, libgoogle-glog-dev, libboost-filesystem-dev,
+libboost-system-dev
+  
+```
+
+You will also need a C++11 enabled compiler. GCC >= 4.7 or an equivalent Clang.
+
+Once the depencies are met. To build and install, do the following:
+
+```
+mkdir build
+cd build
+cmake ..
+make install
+```
+
 Create your rules
 -----------------
 
@@ -19,7 +57,7 @@ cd cavalieri-rules
 ```
 
 Open *rules.cpp* and add your rules. The default rule will send an email
-with a critical event when a metric from the *requests_rate*
+containing a critical event when a metric from *requests_rate*
 service is above 40.
 
 ```cpp
@@ -42,7 +80,7 @@ streams_t* rules() {
 }
 ```
 
- Build a plugin containing your rules that will be loaded by *cavalieri*.
+Build a plugin containing your rules that will be loaded by *cavalieri*.
 
 ```sh
 mkdir build
@@ -52,6 +90,7 @@ make
 ```
 
 The above step generates a *librules.so* file that *cavalieri* will load.
+
 Execute cavalieri in the build directory or use the **-rules_directory**
 flag to specifify where the plugin is.
 
@@ -73,8 +112,9 @@ Test your rules
 ---------------
 
 You can easily test your rules without putting them in production.
+
 In the root directory of *cavalieri-template* there is a Python script that will
-help you to find out if your rules are doing what you expect.
+help you to find out whether your rules are doing what you expect or not.
 
 The way it works is pretty simple. Open *test_rules.py* and add the events that 
 are supposed to trigger your alerts.  By default, you already have some events
@@ -108,11 +148,12 @@ auto s =  where(service_pred("requests_rate"))
 ```
 
 As you can see, the events defined in *test_rules.py* will trigger an alert
-when the metric is above 40.  This happens with the event sent at time *180*.
+when the metric is above 40. This happens for the event that is sent
+at time *180*.
 
 You can execute *test_rules.py* from the root directory of
 *cavalieri-template*. And you will magically see what happens to your
-rules when those events are sent:
+rules when those events are passed through them:
 
 ```json
 {
@@ -140,14 +181,19 @@ rules when those events are sent:
 
 ```
 
-As you can see in the above output, *test_rules.py* is reporting that an email would have been send at time *180*
-to report that the service *requests_rate* is critical.
+As you can see in the above output, *test_rules.py* is reporting that an email
+would have been sent at time *180* to report that the *requests_rate* service
+is critical.
 
-*test_rules.py* makes use of *cavalieri_tester*, a binary that is capable of loading your rules and send events to them.
-However, it does so in an special environment where all the external calls such as email or pagerduty are mocked.
-It also mocks the scheduler, so you can test months of events in just a few seconds.
+*test_rules.py* makes use of *cavalieri_tester*, a binary that is capable of
+loading your rules and send events to them.
 
-This feature allows you to easily add your alert rules to your continous integration process.
+However, it does so in an special environment,  where all the external calls
+such as email or pagerduty are mocked.  It also mocks the scheduler, that means
+you can test months worth of events in just a few seconds.
+
+This feature allows you to easily add your alert rules to your
+continous integration process.
 
 
 Sending events
@@ -170,7 +216,8 @@ Prints events that pass through it and also the string that takes as an argument
 
 #### with (const with_changes_t & changes)
 
-Modifies the event. It takes a map that contains the keys to be modified and their corresponding new value.
+Modifies the event. It takes a map that contains the keys to be modified
+and their corresponding new value.
 
 ```cpp
 // Change host field and description
@@ -178,17 +225,20 @@ with({{"host", "cluster-001"}, {"description", "aggregated master metrics"});
 ```
 #### default_to (const with_changes_t & changes)
 
-It takes a map that contains the keys to be added to the event if the key is not set.
+It takes a map that contains key-value pairs to be added to the event, but only
+in case the key is not set in the event already.
+
 
 ```cpp
-// Default ttl to 120
+// Default ttl to 120. Only events with the ttl field not set are modified.
 default_to({"ttl", 120});
 ```
 
 #### split (const split_clauses_t clauses)
 
 It takes a list of pairs. Each pair contains a predicate function and a stream.
-When an event is received, the event is passed to the first stream which predicate returns true.
+When an event is received, the event is passed to the first stream which
+predicate returns true.
 
 ```cpp
 split({above_pred(10), set_state("ok")},
@@ -197,9 +247,10 @@ split({above_pred(10), set_state("ok")},
 
 #### split (const split_clauses_t clauses, const streams_t default_stream)
 
-It takes a list of pairs and a default stream. Each pair contains a predicate function and a stream.
-When an event is received, the event is passed to the first stream which predicate returns true. If
-none of the predicates match, the event is passed to the default stream.
+It takes a list of pairs and a default stream. Each pair contains a predicate
+function and a stream.  When an event is received, the event is passed to the
+first stream which predicate returns true. If none of the predicates match,
+the event is passed to the default stream.
 
 ```cpp
 split({above_pred(10), set_state("ok")},
@@ -217,7 +268,8 @@ where(under_pred(5)) >> set_state("critical") >> notiy_email();
 
 #### where (const predicate_t & predicate, const streams_t else_stream)
 
-It passes events that make the predicate function return true. Otherwise, events are passed to *else_stream*.
+It passes events that make the predicate function return true.
+Otherwise, events are passed to *else_stream*.
 
 ```cpp
 above_stream = set_state("ok") >> prn("metric is above 5");
@@ -227,39 +279,48 @@ where(under_pred(5), above_stream) >> set_state("critical") >> notiy_email();
 
 #### by (const by_keys_t  & keys, const by_stream_t stream)
 
-It takes a list of event's fields. When an event enters this function, the field(s) is retrieved, for every
-new value that has not been seen before, it will create a copy of  *stream* and the event will be passed
-to it. If the value was seen before, it will pass the event to the previously created stream.
+It takes a list of event's fields. When an event enters this function,
+the field(s) are retrieved, for every new value that has not been seen before,
+it will create a copy of *stream* and the event will be passed to it.
+If the value was seen before, it will pass the event to the previously
+created stream.
 
-Let's see an example. We are going to use a stream function called *rate* which simply sums the event
-metrics that receives during *dt* seconds and divides the result by *dt*. Let's assume our servers
-send an event called *backend_exception* everytime a request can't be handled and we would
+Let's see this in action. We are going to use a stream function called *rate*
+which simply sums the event metrics that receives during *dt* seconds and
+divides the result by *dt*. Let's assume our servers send an event called
+*backend_exception* every time a request can't be handled and we would
 like to see the exception rate per server.
 
-Note that if we just do what is below, we wouldn't get a per host rate, we would get a global rate.
+Note that if we just do what is below, we wouldn't get a per host rate,
+we would get a global rate.
 
 ```cpp
 auto rate_stream = with({"metric", 1}) >> rate(60) >> prn("exceptions per second:");
 ```
 
-If we want to compute the rate per host, that's when *by()* comes in handy. It helps us to replicate the
-stream per each host so we can compute the rates individually.
+If we want to compute the rate per host, that's when *by()* comes in handy.
+It helps us  replicate the stream per each host so we can compute the rates
+individually.
 
 ```cpp
-auto rate_stream = BY(with({"metric", 1}) >> rate(60) >> prn("exceptions per second:"));
+auto rate_stream = BY(with({"metric", 1})
+                        >> rate(60)
+                          >> prn("exceptions per second:"));
 
-// Use the field host and replicate rate_stream for evey distinct host.
+// Use the host field and replicate rate_stream for evey distinct host.
 by({"host"}, rate_stream);
 ```
 
-Note that we need to wrap the stream function that we want to replicate with the *BY()* macro.
+Note that we need to wrap the stream function that we want to replicate with
+the *BY()* macro.
 
 You can pass several fields to *by()*.
 
 #### rate (const uint32 & dt)
 
-It sums the metrics of the received events for *dt* seconds. After that period, an event is forwarded where
-its metric contains the accumulated value divided by *dt*.
+It sums the metrics of the received events for *dt* seconds. After that period,
+an event is forwarded and its metric contains the accumulated value divided
+by *dt*.
 
 
 ```cpp
@@ -269,16 +330,21 @@ with({"metric", 1) >> rate(60) >> prn("events per second");
 
 #### coalesce (const fold_fn_t & fold_fn)
 
-It keeps a map with the receivied events. Events are inserted in the map by using their host and service as a key.
-Every time a new event is received, the map is updated and all the events in it are forwarded to the fold function.
+It keeps a map with the receivied events. Events are inserted in the map by
+using the combination of ttheir host and service as a key.
+
+Every time a new event is received, the map is updated and all the events in it
+are forwarded to the fold function.
 
 This function is useful to aggregate metrics from different hosts.
 
 
 #### project (const predicates_t predicates, const fold_fn_t & fold_fn)
 
-Similar to *coalesce* and more suitable when you just need a few events. It takes a list of predicates.
-For every predicate, the last event that matches is stored. Whenever a new event arrives and matches
+Similar to *coalesce* and more suitable when you just need a few events.
+
+It takes a list of predicates.  For every predicate, the last event that
+matches is stored. Whenever a new event arrives and matches
 any of the predicates, all the stored events are forwared to *fold_fn*.
 
 
@@ -289,17 +355,18 @@ project({service_pred("foo"), service_pred("bar"), sum) >> prn("foo + bar");
 
 #### changed_state (const std::string & initial)
 
-It only forward events if there is a state change. It assummes *initial* as the first state.
+It only forwards events if there is a state change. It assummes *initial* as
+the first state.
 
-If you are sending emails, this is useful to not spam yourself and only send emails when something goes
-from *ok* to *critical* and viceversa.
+If you are sending emails, this is useful to not spam yourself and only send
+emails when something goes from *ok* to *critical* and viceversa.
 
 #### tagged_any (const tags_t & tags)
 
 It forwards events only if they contain any of the given *tags*.
 
 ```cpp
-tagged_any({"debian", "ubuntu"}) >> where(above_pred(5)) >> email();
+tagged_any({"debian", "ubuntu"}) >> above(5) >> email();
 ```
 
 #### tagged_all (const tags_t & tags)
@@ -307,17 +374,20 @@ tagged_any({"debian", "ubuntu"}) >> where(above_pred(5)) >> email();
 It forwards events only if they contain all the given *tags*.
 
 ```cpp
-tagged_any({"production", "london"}) >> where(above_pred(5)) >> email();
+tagged_any({"production", "london"}) >> above(5) >> email();
 ```
 
 #### smap (const smap_fn_t fn)
 
-Events are recevied and passed to *fn* which returns a new event. This new event is forwarded. Use this
-when you need to modify events dynamically, as in opposed to statically, that you can do using *with()*.
+Events are recevied and passed to *fn* which returns a new event.
+This new event is forwarded.
 
+Use this when you need to modify events dynamically, as in opposed to
+statically, use *with()* for the latter.
 
 ```cpp
-  // Function that takes and event and returns a new event which service has the host appended
+// Function that takes and event and returns a new event which service
+// has the host appended.
 Event host_service(e_t e)
 {
   auto ne(e);
@@ -330,27 +400,29 @@ smap(host_service) >> prn("new shiny service string");
 
 #### moving_event_window (const size_t n, const fold_fn_t fn)
 
-Every time an event is received, the last *n* events are passed to *fn* which returns a new event
-that is forwarded.
+Every time an event is received, the last *n* events are passed to *fn* which
+returns a new event that is forwarded.
 
 
 #### fixed_event_window (const size_t n, const fold_fn_t fn)
 
-It passes non-overlapping windows of *n* events to *fn* which returns a new event that is forward.
+It passes non-overlapping windows of *n* events to *fn* which returns
+a new event that is forwarded.
 
 #### moving_event_window (const size_t dt, const fold_fn_t fn)
 
-Every time an event is received, the last events within a *dt* window are passed to *fn* which returns a new event
-that is forwarded.
+Every time an event is received, the last events within a *dt* window are
+passed to *fn* which returns a new event that is forwarded.
 
 #### fixed_time_window (const size_t dt, const fold_fn_t fn)
 
-It passes non-overlapping windows of the events received within a *dt* window to *fn* 
-which returns a new event that is forward.
+It passes non-overlapping windows of the events received within a *dt* window
+to *fn* which returns a new event that is forwarded.
 
 #### stable (const time_t dt)
 
-It forwards events only when their state is the same for *dt* seconds. This is useful to avoid spikes.
+It forwards events only when their state is the same for *dt* seconds.
+This is useful to avoid spikes.
 
 #### throttle (size_t n, time_t dt)
 
@@ -402,8 +474,6 @@ It adds the list of passed *tags* to events and forwards them.
 ```cpp
 tags({"processed"}) >> prn("tag added")
 ```
-
-
 
 
 ### Fold functions
