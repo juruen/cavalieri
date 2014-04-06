@@ -30,7 +30,7 @@ service is above 40.
 streams_t* rules() {
 
   auto mail_stream = email("localhost", "cavalieri@localhost",
-                         "devops@localhost");
+                           "devops@localhost");
 
   auto s =  where(service_pred("requests_rate"))
                >> above(40)
