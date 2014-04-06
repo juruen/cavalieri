@@ -1,5 +1,6 @@
-cavalieri
+Cavalieri [![Build Status](https://drone.io/github.com/juruen/cavalieri/status.png)](https://drone.io/github.com/juruen/cavalieri/latest)
 =========
+
 
 Introduction
 ------------
