@@ -116,6 +116,7 @@ operator: EQUAL
 
 action : TAGGED EQUAL STRING
           {
+            delete $2;
             $$ = new QueryTagged($3);
           }
         | UNQUOTEDSTRING operator STRING
@@ -154,11 +155,11 @@ expr: '(' expr ')'
 
 start :   all
           {
-            driver.query.expression = $1;
+            driver.query.expression.reset($1);
           }
         | expr
           {
-            driver.query.expression = $1;
+            driver.query.expression.reset($1);
           }
 
 %%

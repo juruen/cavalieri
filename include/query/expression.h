@@ -4,6 +4,7 @@
 #include <vector>
 #include <ostream>
 #include <iostream>
+#include <memory>
 #include <functional>
 #include <boost/variant/variant.hpp>
 #include <proto.pb.h>
@@ -30,7 +31,7 @@ public:
 
 class QueryTagged : public QueryNode
 {
-  std::string* string;
+  std::unique_ptr<std::string> string;
 
 public:
   QueryTagged(std::string* string);
@@ -40,9 +41,9 @@ public:
 
 class QueryField : public QueryNode
 {
-  std::string* op;
-  std::string* field;
-  boost::variant<std::string, int, double> value;
+  std::unique_ptr<std::string> op;
+  std::unique_ptr<std::string> field;
+  boost::variant<std::shared_ptr<std::string>, int, double> value;
 
 public:
   QueryField(std::string* field, std::string* value, std::string* op);
@@ -59,8 +60,8 @@ private:
 
 class QueryAnd : public QueryNode
 {
-  QueryNode* left;
-  QueryNode* right;
+  std::unique_ptr<QueryNode> left;
+  std::unique_ptr<QueryNode> right;
 
 public:
  QueryAnd(QueryNode* left, QueryNode* right);
@@ -70,8 +71,8 @@ public:
 
 class QueryOr : public QueryNode
 {
-  QueryNode* left;
-  QueryNode* right;
+  std::unique_ptr<QueryNode> left;
+  std::unique_ptr<QueryNode> right;
 
 public:
   QueryOr(QueryNode* left, QueryNode* right);
@@ -81,7 +82,7 @@ public:
 
 class QueryNot : public QueryNode
 {
-  QueryNode* right;
+  std::unique_ptr<QueryNode> right;
 
 public:
   QueryNot(QueryNode* right);
@@ -93,7 +94,7 @@ public:
 class QueryContext
 {
   public:
-    QueryNode* expression;
+    std::unique_ptr<QueryNode> expression;
 
      QueryContext();
     ~QueryContext();

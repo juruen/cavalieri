@@ -53,7 +53,7 @@ QueryField::QueryField(std::string* field, std::string* value, std::string* op)
   QueryNode(),
   op(op),
   field(field),
-  value(*value)
+  value(std::shared_ptr<std::string>(value))
 {
 }
 
@@ -85,7 +85,7 @@ query_f_t QueryField::evaluate() const {
   switch (value.which()) {
 
     case 0:
-      return evaluate(boost::get<std::string>(value));
+      return evaluate(*(boost::get<std::shared_ptr<std::string>>(value)));
       break;
 
     case 1:
@@ -315,7 +315,7 @@ query_f_t QueryNot::evaluate() const {
 }
 
 
-QueryContext::QueryContext() : expression(0) {};
+QueryContext::QueryContext()  {};
 
 QueryContext::~QueryContext()
 {
@@ -326,10 +326,7 @@ void	QueryContext::clearExpressions()
 {
 
   if (!expression) {
-
-    delete expression;
-
-    expression = 0;
+    expression.release();
   }
 
 }

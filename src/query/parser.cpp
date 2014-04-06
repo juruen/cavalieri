@@ -532,6 +532,7 @@ namespace queryparser {
 /* Line 690 of lalr1.cc  */
 #line 118 "parser.yy"
     {
+            delete (yysemantic_stack_[(3) - (2)].stringVal);
             (yyval.querynode) = new QueryTagged((yysemantic_stack_[(3) - (3)].stringVal));
           }
     break;
@@ -539,7 +540,7 @@ namespace queryparser {
   case 10:
 
 /* Line 690 of lalr1.cc  */
-#line 122 "parser.yy"
+#line 123 "parser.yy"
     {
             (yyval.querynode) = new QueryField((yysemantic_stack_[(3) - (1)].unquotedstringVal), (yysemantic_stack_[(3) - (3)].stringVal), (yysemantic_stack_[(3) - (2)].stringVal));
           }
@@ -548,7 +549,7 @@ namespace queryparser {
   case 11:
 
 /* Line 690 of lalr1.cc  */
-#line 126 "parser.yy"
+#line 127 "parser.yy"
     {
             (yyval.querynode) = new QueryField((yysemantic_stack_[(3) - (1)].unquotedstringVal), (yysemantic_stack_[(3) - (3)].integerVal), (yysemantic_stack_[(3) - (2)].stringVal));
           }
@@ -557,7 +558,7 @@ namespace queryparser {
   case 12:
 
 /* Line 690 of lalr1.cc  */
-#line 130 "parser.yy"
+#line 131 "parser.yy"
     {
             (yyval.querynode) = new QueryField((yysemantic_stack_[(3) - (1)].unquotedstringVal), (yysemantic_stack_[(3) - (3)].doubleVal), (yysemantic_stack_[(3) - (2)].stringVal));
           }
@@ -566,7 +567,7 @@ namespace queryparser {
   case 13:
 
 /* Line 690 of lalr1.cc  */
-#line 135 "parser.yy"
+#line 136 "parser.yy"
     {
           (yyval.querynode) = (yysemantic_stack_[(3) - (2)].querynode);
         }
@@ -575,7 +576,7 @@ namespace queryparser {
   case 14:
 
 /* Line 690 of lalr1.cc  */
-#line 139 "parser.yy"
+#line 140 "parser.yy"
     {
           (yyval.querynode) = new QueryAnd((yysemantic_stack_[(3) - (1)].querynode), (yysemantic_stack_[(3) - (3)].querynode));
         }
@@ -584,7 +585,7 @@ namespace queryparser {
   case 15:
 
 /* Line 690 of lalr1.cc  */
-#line 143 "parser.yy"
+#line 144 "parser.yy"
     {
           (yyval.querynode) = new QueryOr((yysemantic_stack_[(3) - (1)].querynode), (yysemantic_stack_[(3) - (3)].querynode));
         }
@@ -593,7 +594,7 @@ namespace queryparser {
   case 16:
 
 /* Line 690 of lalr1.cc  */
-#line 147 "parser.yy"
+#line 148 "parser.yy"
     {
           (yyval.querynode) = new QueryNot((yysemantic_stack_[(2) - (2)].querynode));
         }
@@ -602,7 +603,7 @@ namespace queryparser {
   case 17:
 
 /* Line 690 of lalr1.cc  */
-#line 151 "parser.yy"
+#line 152 "parser.yy"
     {
           (yyval.querynode) = (yysemantic_stack_[(1) - (1)].querynode);
         }
@@ -611,25 +612,25 @@ namespace queryparser {
   case 18:
 
 /* Line 690 of lalr1.cc  */
-#line 156 "parser.yy"
+#line 157 "parser.yy"
     {
-            driver.query.expression = (yysemantic_stack_[(1) - (1)].querynode);
+            driver.query.expression.reset((yysemantic_stack_[(1) - (1)].querynode));
           }
     break;
 
   case 19:
 
 /* Line 690 of lalr1.cc  */
-#line 160 "parser.yy"
+#line 161 "parser.yy"
     {
-            driver.query.expression = (yysemantic_stack_[(1) - (1)].querynode);
+            driver.query.expression.reset((yysemantic_stack_[(1) - (1)].querynode));
           }
     break;
 
 
 
 /* Line 690 of lalr1.cc  */
-#line 633 "parser.cpp"
+#line 634 "parser.cpp"
 	default:
           break;
       }
@@ -1042,7 +1043,7 @@ namespace queryparser {
   Parser::yyrline_[] =
   {
          0,    86,    86,    91,    96,   100,   104,   108,   112,   117,
-     121,   125,   129,   134,   138,   142,   146,   150,   155,   159
+     122,   126,   130,   135,   139,   143,   147,   151,   156,   160
   };
 
   // Print the state stack on the debug stream.
@@ -1133,11 +1134,11 @@ namespace queryparser {
 } // queryparser
 
 /* Line 1136 of lalr1.cc  */
-#line 1137 "parser.cpp"
+#line 1138 "parser.cpp"
 
 
 /* Line 1138 of lalr1.cc  */
-#line 164 "parser.yy"
+#line 165 "parser.yy"
 
 
 void queryparser::Parser::error(const Parser::location_type& l,
