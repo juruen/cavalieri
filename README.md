@@ -43,7 +43,7 @@ Once the depencies are met. To build and install, do the following:
 mkdir build
 cd build
 cmake ..
-make
+make install
 ```
 
 Create your rules
