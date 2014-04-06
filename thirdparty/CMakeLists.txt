@@ -17,7 +17,7 @@ ExternalProject_Add(
 INCLUDE (CheckTypeSize)
 check_type_size("void *" SIZEOF_VOID_P)
 IF( ${SIZEOF_VOID_P} STREQUAL  "8" )
-    set (CDS_SYSTEM_PROCESSOR "amd64")
+    set (CDS_SYSTEM_PROCESSOR "64")
     #set (CDS_LIB_DIR "gcc-amd64-linux-0")
     set (CDS_LIB_DIR "gcc-x86_64-linux-0")
     MESSAGE( STATUS "64 bit architecture detected size of void * is " ${SIZEOF_VOID_P})
