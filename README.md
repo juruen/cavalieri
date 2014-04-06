@@ -72,7 +72,7 @@ Test your rules
 ---------------
 
 You can easily test your rules without putting them in production.
-In the root directory of *cavalieri-template* there is Python script that will
+In the root directory of *cavalieri-template* there is a Python script that will
 help you to find out if your rules are doing what you expect.
 
 The way it works is pretty simple. Open *test_rules.py* and add the events that 
