@@ -90,7 +90,7 @@ streams_t expired();
 
 streams_t tag(tags_t tags);
 
-streams_t send_index(class index&);
+streams_t send_index();
 
 predicate_t above_eq_pred(const double value);
 

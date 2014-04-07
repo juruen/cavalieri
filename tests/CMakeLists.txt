@@ -8,6 +8,10 @@ SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
 SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/core.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/mock_core.cpp
+    ${CMAKE_SOURCE_DIR}/src/index/index.cpp
+    ${CMAKE_SOURCE_DIR}/src/index/mock_index.cpp
     ${CMAKE_SOURCE_DIR}/src/mock_os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_connection.cpp

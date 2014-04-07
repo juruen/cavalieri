@@ -5,6 +5,7 @@
 #include <atomic>
 #include <atom/atom.h>
 #include <util.h>
+#include <core/core.h>
 #include <scheduler/scheduler.h>
 #include <streams/stream_functions.h>
 
@@ -795,6 +796,14 @@ streams_t tag(tags_t tags) {
       }
 
       forward(ne);
+    }
+  );
+}
+
+streams_t send_index() {
+  return create_stream(
+    [=](forward_fn_t, e_t e) {
+      g_core->index()->add_event(e);
     }
   );
 }
