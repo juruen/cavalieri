@@ -67,6 +67,8 @@ SET(CAVALIERI_PROTOFILES
 SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/rule_tester.cpp
     ${CMAKE_SOURCE_DIR}/src/rule_tester_util.cpp
+    ${CMAKE_SOURCE_DIR}/src/core.cpp
+    ${CMAKE_SOURCE_DIR}/src/mock_core.cpp
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp

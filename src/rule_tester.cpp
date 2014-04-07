@@ -7,6 +7,7 @@
 #include <rule_tester_util.h>
 #include <util.h>
 #include <rules_loader.h>
+#include <mock_core.h>
 #include <index/mock_index.h>
 #include "atom/atom.h"
 
@@ -41,14 +42,15 @@ int main(int argc, char **argv) {
     bool ok;
     std::vector<Event> events = json_to_events(FLAGS_input_events, ok);
 
+    auto m_core = new mock_core(); // FIXME: don't use raw pointers
+    g_core = std::make_shared<core>(m_core);
+
     if (!ok) {
       LOG(ERROR) << "couldn't parse input events";
       return -1;
     }
 
-    auto idx = std::make_shared<mock_index>();
-
-    class index index(std::dynamic_pointer_cast<index_interface>(idx));
+    start_core(argc, argv);
 
     auto rules = load_rules(FLAGS_rules_directory);
 
@@ -64,7 +66,9 @@ int main(int argc, char **argv) {
       }
     }
 
+    auto idx = m_core->mock_index_impl();
     std::cout << results(idx->events(), g_external_mocks.calls()) << "\n";
+
   }
   atom_terminate();
 
