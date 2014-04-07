@@ -4,7 +4,7 @@
 #include <dlfcn.h>
 #include <iostream>
 #include <util.h>
-#include <core.h>
+#include <core/core.h>
 #include <rules_loader.h>
 
 using namespace boost::filesystem;

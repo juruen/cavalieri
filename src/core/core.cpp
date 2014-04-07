@@ -1,4 +1,4 @@
-#include <core.h>
+#include <core/core.h>
 
 std::shared_ptr<core> g_core;
 

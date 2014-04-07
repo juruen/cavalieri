@@ -1,5 +1,5 @@
-#ifndef CORE_H
-#define CORE_H
+#ifndef CORE_CORE_H
+#define CORE_CORE_H
 
 #include <streams/stream_functions.h>
 #include <async/async_loop.h>

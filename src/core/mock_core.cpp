@@ -1,5 +1,5 @@
 #include <index/mock_index.h>
-#include <mock_core.h>
+#include <core/mock_core.h>
 
 mock_core::mock_core()
   :

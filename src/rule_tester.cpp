@@ -7,7 +7,7 @@
 #include <rule_tester_util.h>
 #include <util.h>
 #include <rules_loader.h>
-#include <mock_core.h>
+#include <core/mock_core.h>
 #include <index/mock_index.h>
 #include "atom/atom.h"
 

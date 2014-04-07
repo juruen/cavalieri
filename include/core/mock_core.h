@@ -1,7 +1,7 @@
-#ifndef MOCK_CORE_H
-#define MOCK_CORE_H
+#ifndef CORE_MOCK_CORE_H
+#define CORE_MOCK_CORE_H
 
-#include <core.h>
+#include <core/core.h>
 #include <index/mock_index.h>
 
 class mock_core : public core_interface {

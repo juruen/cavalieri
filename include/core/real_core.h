@@ -1,7 +1,7 @@
-#ifndef REAL_CORE_H
-#define REAL_CORE_H
+#ifndef CORE_REAL_CORE_H
+#define CORE_REAL_CORE_H
 
-#include <core.h>
+#include <core/core.h>
 #include <streams/stream_functions.h>
 #include <async/async_loop.h>
 #include <pub_sub/pub_sub.h>
