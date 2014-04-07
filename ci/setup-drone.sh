@@ -12,7 +12,11 @@ echo 2 | sudo update-alternatives --config gcc
 sudo add-apt-repository -y ppa:fcitx-team/nightly
 sudo add-apt-repository -y ppa:svn
 sudo add-apt-repository -y ppa:mapnik/boost-backports-1-54
-sudo apt-get update
+
+# Some repos seem to fail quite ofen
+while ! sudo apt-get update; do
+  true
+done
 
 # Instal deps
 sudo apt-get install debhelper cmake subversion protobuf-compiler \
