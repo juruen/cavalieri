@@ -10,26 +10,23 @@
 #include <websocket_pool.h>
 #include <config/config.h>
 
+class core_interface {
+public:
+  virtual void start() = 0;
+  virtual void add_stream(std::shared_ptr<streams_t> stream) = 0;
+  virtual std::shared_ptr<class index> index() = 0;
+};
+
 class core {
 public:
 
-  core(const config &);
+  core(core_interface *impl);
   void start();
   void add_stream(std::shared_ptr<streams_t> stream);
+  std::shared_ptr<class index> index();
 
 private:
-  config config_;
-
-  std::shared_ptr<class main_async_loop> main_loop_;
-  std::shared_ptr<class streams> streams_;
-  std::shared_ptr<class pub_sub> pubsub_;
-  std::shared_ptr<class index> index_;
-  std::shared_ptr<class riemann_tcp_pool> tcp_server_;
-  std::shared_ptr<class riemann_udp_pool> udp_server_;
-  std::shared_ptr<class websocket_pool> ws_server_;
-
-  std::vector<std::shared_ptr<streams_t>> sh_streams_;
-
+  std::unique_ptr<core_interface> impl_;
 };
 
 extern std::shared_ptr<core> g_core;

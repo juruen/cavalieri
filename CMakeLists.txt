@@ -13,6 +13,7 @@ ADD_SUBDIRECTORY(thirdparty)
 SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/cavalieri.cpp
     ${CMAKE_SOURCE_DIR}/src/core.cpp
+    ${CMAKE_SOURCE_DIR}/src/real_core.cpp
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_udp_pool.cpp
