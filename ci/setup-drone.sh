@@ -14,7 +14,7 @@ sudo add-apt-repository -y ppa:svn
 sudo add-apt-repository -y ppa:mapnik/boost-backports-1-54
 
 # Some repos seem to fail quite ofen
-while ! sudo apt-get update; do
+while ! timeout 45 sh -c "sudo apt-get update"; do
   true
 done
 
