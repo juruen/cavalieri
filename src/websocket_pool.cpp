@@ -19,6 +19,7 @@ namespace {
     query_f_t true_query = [](const Event&) -> bool { return true; };
 
     if (!parse_uri(uri, index, params)) {
+      VLOG(1) << "failed to parse uri";
       return true_query;
     }
 
@@ -26,7 +27,9 @@ namespace {
     queryparser::Driver driver(query_ctx);
 
     if (driver.parse_string(params["query"], "query")) {
+      VLOG(1) << "printing expression:";
       query_ctx.expression->print(std::cout);
+      VLOG(1) << "done printing expression";
       return  query_ctx.expression->evaluate();
     } else {
       return true_query;
