@@ -15,6 +15,7 @@ public:
   virtual void start() = 0;
   virtual void add_stream(std::shared_ptr<streams_t> stream) = 0;
   virtual std::shared_ptr<class index> index() = 0;
+  virtual ~core_interface() {};
 };
 
 class core {
