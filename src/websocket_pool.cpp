@@ -133,9 +133,9 @@ void websocket_pool::timer(async_loop & loop) {
       }
 
       auto ws_conn = std::get<0>(fd_conn.second);
-      auto str_queue = std::get<2>(fd_conn.second);
+      auto & str_queue = std::get<2>(fd_conn.second);
 
-      if (ws_conn.send_frame(str_event)) {
+      if (str_queue.empty() && ws_conn.send_frame(str_event)) {
         loop.set_fd_mode(fd_conn.first, async_fd::readwrite);
         continue;
       }
@@ -152,7 +152,7 @@ void websocket_pool::timer(async_loop & loop) {
   for (auto & fd_conn : fd_event_queues_[loop_id]) {
 
     auto ws_conn = std::get<0>(fd_conn.second);
-    auto str_queue = std::get<2>(fd_conn.second);
+    auto & str_queue = std::get<2>(fd_conn.second);
 
     while (!str_queue.empty()) {
 
@@ -162,6 +162,8 @@ void websocket_pool::timer(async_loop & loop) {
         VLOG(1) << "buffer full to send frame";
         break;
       }
+
+      str_queue.pop();
 
       loop.set_fd_mode(fd_conn.first, async_fd::readwrite);
     }
