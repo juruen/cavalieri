@@ -1,17 +1,17 @@
-#ifndef DRIVER_H
-#define DRIVER_H
+#ifndef QUERY_DRIVER_H
+#define QUERY_DRIVER_H
 
 #include <string>
 #include <vector>
 
-class QueryContext;
+class query_context;
 
 namespace queryparser {
 
-class Driver
+class driver
 {
 public:
-    Driver(class QueryContext& query);
+    driver(query_context & query);
 
     bool trace_scanning;
 
@@ -31,9 +31,9 @@ public:
 
     class Scanner* lexer;
 
-    class QueryContext& query;
+    class query_context & query;
 };
 
-} // namespace queryparser
+}
 
-#endif // EXAMPLE_DRIVER_H
+#endif

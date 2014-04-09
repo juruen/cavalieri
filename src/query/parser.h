@@ -78,11 +78,11 @@ namespace queryparser {
 /* Line 35 of lalr1.cc  */
 #line 46 "parser.yy"
 
-    int integerVal;
-    double doubleVal;
-    std::string*		stringVal;
-    std::string*		unquotedstringVal;
-    class QueryNode*	querynode;
+    int                 integerVal;
+    double              doubleVal;
+    std::string      *	stringVal;
+    std::string      *  unquotedstringVal;
+    class query_node *	querynode;
 
 
 
@@ -123,7 +123,7 @@ namespace queryparser {
     typedef token::yytokentype token_type;
 
     /// Build a parser object.
-    Parser (class Driver& driver_yyarg);
+    Parser (class driver & driver_yyarg);
     virtual ~Parser ();
 
     /// Parse.
@@ -289,7 +289,7 @@ namespace queryparser {
     static const token_number_type yyundef_token_;
 
     /* User arguments.  */
-    class Driver& driver;
+    class driver & driver;
   };
 
 } // queryparser

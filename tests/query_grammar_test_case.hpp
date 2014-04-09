@@ -8,13 +8,13 @@
 
 TEST(query_grammar_true_test_case, test)
 {
-  QueryContext query_ctx;
-  queryparser::Driver driver(query_ctx);
+  query_context query_ctx;
+  queryparser::driver driver(query_ctx);
 
   std::string query = "(true)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  auto eval_fn = query_ctx.expression->evaluate();
+  auto eval_fn = query_ctx.evaluate();
 
   Event e;
   ASSERT_TRUE(eval_fn(e));
@@ -23,13 +23,13 @@ TEST(query_grammar_true_test_case, test)
 
 TEST(query_grammar_tagged_test_case, test)
 {
-  QueryContext query_ctx;
-  queryparser::Driver driver(query_ctx);
+  query_context query_ctx;
+  queryparser::driver driver(query_ctx);
 
   std::string query = "(tagged = \"foo\")";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  auto eval_fn = query_ctx.expression->evaluate();
+  auto eval_fn = query_ctx.evaluate();
 
   Event e;
   // Check empty tags do not match anything
@@ -43,7 +43,7 @@ TEST(query_grammar_tagged_test_case, test)
   query = "(tagged = \"foo\" and tagged = \"bar\")";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   // Check that a missing "bar" tag doesn't match
   ASSERT_FALSE(eval_fn(e));
@@ -55,7 +55,7 @@ TEST(query_grammar_tagged_test_case, test)
   query = "(tagged = \"foo\" or tagged = \"bar\")";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   // Check that only foo matches
   e.clear_tags();
@@ -75,7 +75,7 @@ TEST(query_grammar_tagged_test_case, test)
   query = "((tagged = \"foo\" or tagged = \"bar\") and (tagged = \"baz\"))";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   // Check that missing baz doesn't match
   e.clear_tags();
@@ -105,7 +105,7 @@ TEST(query_grammar_tagged_test_case, test)
   query = "(not tagged = \"foo\")";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   // Check that missing foo matches
   e.clear_tags();
@@ -120,7 +120,7 @@ TEST(query_grammar_tagged_test_case, test)
   query = "((tagged = \"foo\" or tagged = \"bar\") and not (tagged = \"baz\"))";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   // Check that missing baz matches
   e.clear_tags();
@@ -138,13 +138,13 @@ TEST(query_grammar_tagged_test_case, test)
 
 TEST(query_grammar_fields_test_case, test)
 {
-  QueryContext query_ctx;
-  queryparser::Driver driver(query_ctx);
+  query_context query_ctx;
+  queryparser::driver driver(query_ctx);
 
   std::string query = "(service = \"foo\")";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  auto eval_fn = query_ctx.expression->evaluate();
+  auto eval_fn = query_ctx.evaluate();
 
   Event e;
   ASSERT_FALSE(eval_fn(e));
@@ -155,7 +155,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(host = \"foo\")";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 
@@ -166,7 +166,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(state = \"foo\")";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 
@@ -177,7 +177,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(description = \"foo\")";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 
@@ -188,7 +188,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(description =~ \"foob%\")";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 
@@ -200,7 +200,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(time = 7)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 
@@ -211,7 +211,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(ttl = 7)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 
@@ -222,7 +222,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(ttl > 10)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 
@@ -233,7 +233,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(ttl >= 10)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   e.clear_time();
   e.set_ttl(10);
@@ -242,7 +242,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(ttl < 10)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 
@@ -253,7 +253,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(ttl <= 10)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   e.clear_time();
   e.set_ttl(10);
@@ -263,7 +263,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(metric = 7.1)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 
@@ -274,7 +274,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(foo = \"bar\")";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 
@@ -287,7 +287,7 @@ TEST(query_grammar_fields_test_case, test)
   query = "(foo = 7.1)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
-  eval_fn = query_ctx.expression->evaluate();
+  eval_fn = query_ctx.evaluate();
 
   ASSERT_FALSE(eval_fn(e));
 

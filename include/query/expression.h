@@ -1,5 +1,5 @@
-#ifndef EXPRESSION_H
-#define EXPRESSION_H
+#ifndef QUERY_EXPRESSION_H
+#define QUERY_EXPRESSION_H
 
 #include <vector>
 #include <ostream>
@@ -9,96 +9,92 @@
 #include <boost/variant/variant.hpp>
 #include <proto.pb.h>
 
-typedef std::function<bool(const Event&)> query_f_t;
+typedef std::function<bool(const Event&)> query_fn_t;
 
-class QueryNode
+class query_node
 {
 public:
-  virtual void print(std::ostream &os, unsigned int depth=0) const = 0;
-  static inline std::string indent(unsigned int d);
-  virtual query_f_t evaluate() const = 0;
-  virtual ~QueryNode();
+  virtual query_fn_t evaluate() const = 0;
+  virtual ~query_node();
 };
 
-class QueryTrue : public QueryNode
+class query_true : public query_node
 {
 public:
-  QueryTrue();
-  virtual void print(std::ostream &os, unsigned int depth=0) const;
-  virtual query_f_t evaluate() const;
+  virtual query_fn_t evaluate() const;
 };
 
-
-class QueryTagged : public QueryNode
+class query_tagged : public query_node
 {
-  std::unique_ptr<std::string> string;
-
 public:
-  QueryTagged(std::string* string);
-  virtual void print(std::ostream &os, unsigned int depth=0) const;
-  virtual query_f_t evaluate() const;
-};
-
-class QueryField : public QueryNode
-{
-  std::unique_ptr<std::string> op;
-  std::unique_ptr<std::string> field;
-  boost::variant<std::shared_ptr<std::string>, int, double> value;
-
-public:
-  QueryField(std::string* field, std::string* value, std::string* op);
-  QueryField(std::string* field, const int &  value, std::string* op);
-  QueryField(std::string* field, const double & value, std::string* op);
-  virtual void print(std::ostream &os, unsigned int depth=0) const;
-  virtual query_f_t evaluate() const;
+  query_tagged(std::string * string);
+  virtual query_fn_t evaluate() const;
 
 private:
-  query_f_t evaluate(const std::string & value) const;
-  query_f_t evaluate(const int & value) const;
-  query_f_t evaluate(const double & value) const;
+  std::unique_ptr<std::string> string_;
 };
 
-class QueryAnd : public QueryNode
-{
-  std::unique_ptr<QueryNode> left;
-  std::unique_ptr<QueryNode> right;
-
-public:
- QueryAnd(QueryNode* left, QueryNode* right);
- virtual void print(std::ostream &os, unsigned int depth=0) const;
- virtual query_f_t evaluate() const;
-};
-
-class QueryOr : public QueryNode
-{
-  std::unique_ptr<QueryNode> left;
-  std::unique_ptr<QueryNode> right;
-
-public:
-  QueryOr(QueryNode* left, QueryNode* right);
-  virtual void print(std::ostream &os, unsigned int depth=0) const;
-  virtual query_f_t evaluate() const;
-};
-
-class QueryNot : public QueryNode
-{
-  std::unique_ptr<QueryNode> right;
-
-public:
-  QueryNot(QueryNode* right);
-  virtual void print(std::ostream &os, unsigned int depth=0) const;
-  virtual query_f_t evaluate() const;
-};
-
-
-class QueryContext
+class query_field : public query_node
 {
   public:
-    std::unique_ptr<QueryNode> expression;
+  query_field(std::string * field, std::string * value, std::string * op);
+  query_field(std::string * field, const int   value, std::string * op);
+  query_field(std::string * field, const double  value, std::string * op);
+  query_fn_t evaluate() const;
 
-     QueryContext();
-    ~QueryContext();
-    void	clearExpressions();
+private:
+
+  query_fn_t evaluate(const std::string & value) const;
+  query_fn_t evaluate(const int & value) const;
+  query_fn_t evaluate(const double & value) const;
+
+  std::unique_ptr<std::string> op_;
+  std::unique_ptr<std::string> field_;
+  boost::variant<std::shared_ptr<std::string>, int, double> value_;
+};
+
+class query_and : public query_node
+{
+public:
+ query_and(query_node * left, query_node * right);
+ query_fn_t evaluate() const;
+
+private:
+  std::unique_ptr<query_node> left_;
+  std::unique_ptr<query_node> right_;
+};
+
+class query_or : public query_node
+{
+public:
+  query_or(query_node * left, query_node * right);
+  query_fn_t evaluate() const;
+
+private:
+  std::unique_ptr<query_node> left_;
+  std::unique_ptr<query_node> right_;
+};
+
+class query_not : public query_node
+{
+public:
+  query_not(query_node* right);
+  query_fn_t evaluate() const;
+
+private:
+ std::unique_ptr<query_node> right_;
+};
+
+
+class query_context
+{
+public:
+  void set_expression(query_node * expression);
+  query_fn_t evaluate();
+
+private:
+ std::unique_ptr<query_node> expression_;
+
 };
 
 template<typename T>

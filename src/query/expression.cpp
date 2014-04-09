@@ -6,99 +6,79 @@
 #include <util.h>
 
 
-inline std::string QueryNode::indent(unsigned int d) {
-  return std::string(d * 2, ' ');
-}
+query_node::~query_node() {};
 
-QueryNode::~QueryNode() {};
+query_fn_t query_true::evaluate() const {
 
-QueryTrue::QueryTrue() : QueryNode()
-{
-}
-
-void QueryTrue::print(std::ostream &os, unsigned int depth) const {
-  os << indent(depth) << "true" << std::endl;
-}
-
-query_f_t QueryTrue::evaluate() const {
-
-  return [=](const Event&) {
-    VLOG(3) << "QueryTrue()::evaluate()";
+  return [=](const Event &) {
     return true;
   };
 
 }
 
-QueryTagged::QueryTagged(std::string* string) : QueryNode(), string(string)
+query_tagged::query_tagged(std::string * string) : query_node(), string_(string)
 {
 }
 
-void QueryTagged::print(std::ostream &os, unsigned int depth) const {
-  os << indent(depth) << "tagged = " << *string << std::endl;
-}
+query_fn_t query_tagged::evaluate() const {
 
-query_f_t QueryTagged::evaluate() const {
+  std::string tag(string_->substr(1, string_->size() - 2));
 
-  std::string tag(string->substr(1, string->size() - 2));
-
-  return [=](const Event& e) {
-    VLOG(3) << "QueryTagged()::evaluate() tag: " << tag;
+  return [=](const Event & e) {
     return tag_exists(e, tag);
   };
 
 }
 
-QueryField::QueryField(std::string* field, std::string* value, std::string* op)
+query_field::query_field(std::string * field, std::string * value,
+                         std::string * op)
 :
-  QueryNode(),
-  op(op),
-  field(field),
-  value(std::shared_ptr<std::string>(value))
+  query_node(),
+  op_(op),
+  field_(field),
+  value_(std::shared_ptr<std::string>(value))
 {
 }
 
-QueryField::QueryField(std::string* field, const int  & value, std::string* op)
+query_field::query_field(std::string * field, const int value, std::string * op)
 :
-  QueryNode(),
-  op(op),
-  field(field),
-  value(value)
+  query_node(),
+  op_(op),
+  field_(field),
+  value_(value)
 {
 }
 
-QueryField::QueryField(std::string* field, const double & value, std::string* op)
+query_field::query_field(std::string * field, const double value,
+                         std::string * op)
 :
-  QueryNode(),
-  op(op),
-  field(field),
-  value(value)
+  query_node(),
+  op_(op),
+  field_(field),
+  value_(value)
 {
 }
 
 
-void QueryField::print(std::ostream &os, unsigned int depth) const {
-  os << indent(depth) << *field << " = "  << value << std::endl;
-}
+query_fn_t query_field::evaluate() const {
 
-query_f_t QueryField::evaluate() const {
-
-  switch (value.which()) {
+  switch (value_.which()) {
 
     case 0:
-      return evaluate(*(boost::get<std::shared_ptr<std::string>>(value)));
+      return evaluate(*(boost::get<std::shared_ptr<std::string>>(value_)));
       break;
 
     case 1:
-      return evaluate(boost::get<int>(value));
+      return evaluate(boost::get<int>(value_));
       break;
 
     case 2:
-      return evaluate(boost::get<double>(value));
+      return evaluate(boost::get<double>(value_));
       break;
 
     default:
-      VLOG(2) << "QueryField::evluate() unknown rvalue";
-      return [=](const Event&) { return false; };
+      VLOG(2) << "query_field::evluate() unknown rvalue";
+      return [=](const Event &) { return false; };
       break;
 
   }
@@ -127,36 +107,37 @@ bool  compare(const std::string & left,
   return false;
 }
 
-query_f_t QueryField::evaluate(const std::string & value) const {
+query_fn_t query_field::evaluate(const std::string & value) const {
 
-  const std::string key(*field);
+  const std::string key(*field_);
   std::string strip_val(value);
+  std::string op(*op_);
 
   if (value.size() > 2 && value[0] == '"') {
     strip_val = value.substr(1, value.size() - 2);
   }
 
-  if (*field == "host") {
+  if (*field_ == "host") {
 
-    return [=](const Event& e) { return compare(e.host(), strip_val, *op); };
+    return [=](const Event & e) { return compare(e.host(), strip_val, op); };
 
-  } else if (*field == "service") {
+  } else if (*field_ == "service") {
 
-    return [=](const Event& e) { return compare(e.service(), strip_val, *op); };
+    return [=](const Event & e) { return compare(e.service(), strip_val, op); };
 
-  } else if (*field == "state") {
+  } else if (*field_ == "state") {
 
-    return [=](const Event& e) { return compare(e.state(), strip_val, *op); };
+    return [=](const Event & e) { return compare(e.state(), strip_val, op); };
 
-  } else if (*field == "description") {
+  } else if (*field_ == "description") {
 
-    return [=](const Event& e) {
-      return compare(e.description(), strip_val, *op);
+    return [=](const Event & e) {
+      return compare(e.description(), strip_val, op);
     };
 
   } else {
 
-    return [=](const Event& e) {
+    return [=](const Event & e) {
 
       if (attribute_exists(e, key)) {
 
@@ -169,39 +150,40 @@ query_f_t QueryField::evaluate(const std::string & value) const {
   }
 }
 
-query_f_t QueryField::evaluate(const int & value) const {
+query_fn_t query_field::evaluate(const int & value) const {
 
-  const std::string key(*field);
-  const int ival = value; // XXX gcc bug workaround
+  const std::string key(*field_);
+  const int ival = value;
+  const std::string op(*op_);
 
-  if (*field == "time") {
+  if (*field_ == "time") {
 
-    return [=](const Event& e) {
-      return compare(e.time(), static_cast<int64_t>(ival), *op);
+    return [=](const Event & e) {
+      return compare(e.time(), static_cast<int64_t>(ival), op);
     };
 
-  } else if (*field == "ttl") {
+  } else if (*field_ == "ttl") {
 
-    return [=](const Event& e) {
+    return [=](const Event & e) {
       return compare(static_cast<double>(e.ttl()),
-                     static_cast<double>(ival), *op);
+                     static_cast<double>(ival), op);
     };
 
-  } else if (*field == "metric") {
+  } else if (*field_ == "metric") {
 
-    return [=](const Event& e) {
-      return compare(e.metric_sint64(), static_cast<int64_t>(ival), *op);
+    return [=](const Event & e) {
+      return compare(e.metric_sint64(), static_cast<int64_t>(ival), op);
     };
 
   } else {
 
-    return [=](const Event& e) {
+    return [=](const Event & e) {
 
       if (attribute_exists(e, key)) {
 
         try {
 
-          return compare(std::stoi(attribute_value(e, key)), ival, *op);
+          return compare(std::stoi(attribute_value(e, key)), ival, op);
 
         } catch (std::invalid_argument &) { }
 
@@ -213,25 +195,26 @@ query_f_t QueryField::evaluate(const int & value) const {
 
 }
 
-query_f_t QueryField::evaluate(const double & value) const {
+query_fn_t query_field::evaluate(const double & value) const {
 
-  const std::string key(*field);
-  const double ival = value; // XXX gcc bug workaround
+  const std::string key(*field_);
+  const double ival = value;
+  const std::string op(*op_);
 
-  if (*field == "metric") {
+  if (*field_ == "metric") {
 
-    return [=](const Event& e) {
-      return compare(metric_to_double(e), ival, *op);
+    return [=](const Event & e) {
+      return compare(metric_to_double(e), ival, op);
     };
 
   } else {
 
-    return [=](const Event& e) {
+    return [=](const Event & e) {
 
       if (attribute_exists(e, key)) {
 
         try {
-          return compare(std::stod(attribute_value(e, key)), ival, *op);
+          return compare(std::stod(attribute_value(e, key)), ival, op);
         } catch (std::invalid_argument &) { }
 
       }
@@ -242,91 +225,60 @@ query_f_t QueryField::evaluate(const double & value) const {
   }
 }
 
-QueryAnd::QueryAnd(QueryNode* left, QueryNode* right) :
-  QueryNode(),
-  left(left),
-  right(right)
+query_and::query_and(query_node * left, query_node * right) :
+  query_node(),
+  left_(left),
+  right_(right)
 {
 }
 
-void QueryAnd::print(std::ostream &os, unsigned int depth) const {
-  os << indent(depth) << " and" << std::endl;
+query_fn_t query_and::evaluate() const {
 
-  left->print(os, depth + 1);
-  right->print(os, depth + 1);
-}
+  query_fn_t left_f = left_->evaluate();
+  query_fn_t right_f = right_->evaluate();
 
-query_f_t QueryAnd::evaluate() const {
-  query_f_t left_f = left->evaluate();
-  query_f_t right_f = right->evaluate();
-
-  return [=](const Event& e) {
-    VLOG(3) << "QueryAnd()::evaluate()";
+  return [=](const Event & e) {
     return (left_f(e) && right_f(e));
   };
 
 }
 
-QueryOr::QueryOr(QueryNode* left, QueryNode* right) :
-  QueryNode(),
-  left(left),
-  right(right)
+query_or::query_or(query_node * left, query_node * right) :
+  query_node(),
+  left_(left),
+  right_(right)
 {
 }
 
-void QueryOr::print(std::ostream &os, unsigned int depth) const {
-  os << indent(depth) << " or" << std::endl;
+query_fn_t query_or::evaluate() const {
+  query_fn_t left_f = left_->evaluate();
+  query_fn_t right_f = right_->evaluate();
 
-  left->print(os, depth + 1);
-  right->print(os, depth + 1);
-}
-
-query_f_t QueryOr::evaluate() const {
-  query_f_t left_f = left->evaluate();
-  query_f_t right_f = right->evaluate();
-
-  return [=](const Event& e) {
-    VLOG(3) << "QueryOr()::evaluate()";
+  return [=](const Event & e) {
     return (left_f(e) || right_f(e));
   };
 
 }
 
-QueryNot::QueryNot(QueryNode* right) :
-  QueryNode(),
-  right(right)
+query_not::query_not(query_node * right) :
+  query_node(),
+  right_(right)
 {
 }
 
-void QueryNot::print(std::ostream &os, unsigned int depth) const {
-  os << indent(depth) << " not" << std::endl;
+query_fn_t query_not::evaluate() const {
+  query_fn_t right_f = right_->evaluate();
 
-  right->print(os, depth + 1);
-}
-
-query_f_t QueryNot::evaluate() const {
-  query_f_t right_f = right->evaluate();
-
-  return [=](const Event& e) {
-    VLOG(3) << "QueryNot()::evaluate()";
+  return [=](const Event & e) {
     return (!right_f(e));
   };
 
 }
 
-
-QueryContext::QueryContext()  {};
-
-QueryContext::~QueryContext()
-{
-  clearExpressions();
+void query_context::set_expression(query_node * expression) {
+  expression_.reset(expression);
 }
 
-void	QueryContext::clearExpressions()
-{
-
-  if (!expression) {
-    expression.release();
-  }
-
+query_fn_t query_context::evaluate() {
+  return expression_->evaluate();
 }

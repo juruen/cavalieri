@@ -16,21 +16,18 @@ namespace {
     std::string index;
     std::map<std::string, std::string> params;
 
-    query_f_t true_query = [](const Event&) -> bool { return true; };
+    query_fn_t true_query = [](const Event&) -> bool { return true; };
 
     if (!parse_uri(uri, index, params)) {
       VLOG(1) << "failed to parse uri";
       return true_query;
     }
 
-    QueryContext query_ctx;
-    queryparser::Driver driver(query_ctx);
+    query_context query_ctx;
+    queryparser::driver driver(query_ctx);
 
     if (driver.parse_string(params["query"], "query")) {
-      VLOG(1) << "printing expression:";
-      query_ctx.expression->print(std::cout);
-      VLOG(1) << "done printing expression";
-      return  query_ctx.expression->evaluate();
+      return  query_ctx.evaluate();
     } else {
       return true_query;
     }

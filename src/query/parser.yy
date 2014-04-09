@@ -38,17 +38,17 @@
     @$.begin.filename = @$.end.filename = &driver.streamname;
 };
 
-%parse-param { class Driver& driver }
+%parse-param { class driver & driver }
 
 /* verbose error messages */
 %error-verbose
 
 %union {
-    int integerVal;
-    double doubleVal;
-    std::string*		stringVal;
-    std::string*		unquotedstringVal;
-    class QueryNode*	querynode;
+    int                 integerVal;
+    double              doubleVal;
+    std::string      *	stringVal;
+    std::string      *  unquotedstringVal;
+    class query_node *	querynode;
 }
 
 %token			END	     0	"end of file"
@@ -85,7 +85,7 @@
 
 all : '(' TRUE ')'
       {
-        $$ = new QueryTrue();
+        $$ = new query_true();
       }
 
 operator: EQUAL
@@ -117,19 +117,19 @@ operator: EQUAL
 action : TAGGED EQUAL STRING
           {
             delete $2;
-            $$ = new QueryTagged($3);
+            $$ = new query_tagged($3);
           }
         | UNQUOTEDSTRING operator STRING
           {
-            $$ = new QueryField($1, $3, $2);
+            $$ = new query_field($1, $3, $2);
           }
         | UNQUOTEDSTRING operator INTEGER
           {
-            $$ = new QueryField($1, $3, $2);
+            $$ = new query_field($1, $3, $2);
           }
         | UNQUOTEDSTRING operator DOUBLE
           {
-            $$ = new QueryField($1, $3, $2);
+            $$ = new query_field($1, $3, $2);
           }
 
 expr: '(' expr ')'
@@ -138,15 +138,15 @@ expr: '(' expr ')'
         }
       | expr AND expr
         {
-          $$ = new QueryAnd($1, $3);
+          $$ = new query_and($1, $3);
         }
       | expr OR expr
         {
-          $$ = new QueryOr($1, $3);
+          $$ = new query_or($1, $3);
         }
       | NOT expr
         {
-          $$ = new QueryNot($2);
+          $$ = new query_not($2);
         }
       | action
         {
@@ -155,11 +155,11 @@ expr: '(' expr ')'
 
 start :   all
           {
-            driver.query.expression.reset($1);
+            driver.query.set_expression($1);
           }
         | expr
           {
-            driver.query.expression.reset($1);
+            driver.query.set_expression($1);
           }
 
 %%
