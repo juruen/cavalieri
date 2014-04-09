@@ -803,7 +803,13 @@ streams_t tag(tags_t tags) {
 streams_t send_index() {
   return create_stream(
     [=](forward_fn_t, e_t e) {
-      g_core->index()->add_event(e);
+
+      if (!expired_(e)) {
+
+        g_core->index()->add_event(e);
+
+      }
+
     }
   );
 }
