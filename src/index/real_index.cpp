@@ -101,6 +101,7 @@ void real_index::expire_events() {
 
   for (auto & event : expired_events) {
     event.set_state("expired");
+    pubsub_.publish(k_default_index, event);
     push_event_fn_(event);
   }
 
