@@ -101,7 +101,17 @@ void websocket_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
   // Set query_fn if websocket is ready
   auto & query_fn = std::get<1>(it->second);
   if (!query_fn && (ws_conn.state() | ws_connection::k_read_frame_header)) {
+
     query_fn = filter_query(ws_conn.uri());
+
+    auto & str_queue = std::get<2>(it->second);
+    for (const auto & event : all_events_fn_()) {
+
+      if (query_fn(event)) {
+        str_queue.push(event_to_json(event));
+      }
+    }
+
   }
 }
 
