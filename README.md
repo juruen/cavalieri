@@ -5,13 +5,15 @@ Cavalieri [![Build Status](https://drone.io/github.com/juruen/cavalieri/status.p
 Introduction
 ------------
 
-*Cavalieri* is a C++ event stream processing tool inspired by the awesome [riemann.io](http://riemann.io) project.
+*Cavalieri* is a C++ event stream processing tool inspired by the
+awesome [riemann.io](http://riemann.io) project.
 
-It implements the original [riemann.io](http://riemann.io) protocol. That means you can leverage the existing *riemann*
-clients and tools. It also tries to mimic its stream API where possible.
+It implements the original [riemann.io](http://riemann.io) protocol. That means
+you can leverage the existing *riemann* clients and tools. It also tries to
+mimic its stream API where possible.
 
-Cavalieri's current version *0.0.1* is considered **alpha**. We expect to release a beta version in the following
-weeks.
+Cavalieri's current version *0.0.2* is considered **alpha**. We expect to
+release a beta version in the following weeks.
 
 
 Install
@@ -105,15 +107,15 @@ flag to specifify where the plugin is.
 
 ```
 $ cavalieri
-I0403 23:15:44.006975 13082 config.cpp:36] config:
-I0403 23:15:44.007417 13082 config.cpp:37]      events_port: 5555
-I0403 23:15:44.007490 13082 config.cpp:38]      rimeann_tcp_pool_size:: 1
-I0403 23:15:44.007547 13082 config.cpp:39]      ws_port: 5556
-I0403 23:15:44.007622 13082 config.cpp:40]      ws_pool_size: 1
-I0403 23:15:44.007675 13082 config.cpp:41]      index_expire_interval: 60
-I0403 23:15:44.007763 13082 config.cpp:42]      rules_directory: .
-I0403 23:15:44.007843 13082 config.cpp:43] --
-I0403 23:15:44.012259 13082 rules_loader.cpp:60] rules loaded succesfully from librules.so
+I0403 23:15:44 config.cpp:36] config:
+I0403 23:15:44 config.cpp:37]      events_port: 5555
+I0403 23:15:44 config.cpp:38]      rimeann_tcp_pool_size:: 1
+I0403 23:15:44 config.cpp:39]      ws_port: 5556
+I0403 23:15:44 config.cpp:40]      ws_pool_size: 1
+I0403 23:15:44 config.cpp:41]      index_expire_interval: 60
+I0403 23:15:44 config.cpp:42]      rules_directory: .
+I0403 23:15:44 config.cpp:43] --
+I0403 23:15:44 rules_loader.cpp:60] rules loaded succesfully from librules.so
 
 ```
 
@@ -498,3 +500,7 @@ tags({"processed"}) >> prn("tag added")
 
 Dashboard
 ---------
+
+You can use the standard [riemann.io dahsboard](http://riemann.io/dashboard.html)
+to query and visualize the state of the index.
+
