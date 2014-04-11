@@ -34,6 +34,7 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_connection.cpp
+    ${CMAKE_SOURCE_DIR}/src/transport/tcp_client_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/listen_tcp_socket.cpp
