@@ -7,10 +7,13 @@
 #include <pool/thread_pool.h>
 
 class tcp_connection;
+
 typedef std::map<const int, tcp_connection> conn_map_t;
+
 typedef std::function<void(int fd,
-                           async_loop &loop,
-                           tcp_connection&)> tcp_create_conn_fn_t;
+                           async_loop & loop,
+                           tcp_connection &)> tcp_create_conn_fn_t;
+
 typedef std::function<void(async_fd &, tcp_connection&)> tcp_ready_fn_t;
 
 class tcp_pool {
