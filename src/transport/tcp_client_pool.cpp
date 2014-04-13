@@ -1,16 +1,80 @@
 #include <glog/logging.h>
 #include <functional>
 #include <utility>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <fcntl.h>
 #include <transport/tcp_connection.h>
 #include <transport/tcp_client_pool.h>
 
 namespace {
-  const size_t k_queue_capacity = 10000;
+
+const size_t k_queue_capacity = 10000;
+const size_t k_reconnect_interval_secs = 5;
+
+int connect_client(const std::string host, const int port) {
+
+  auto sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+  if (sock_fd < 0) {
+    LOG(ERROR) << "failed to create socket for graphite";
+    return -1;
+  }
+
+  struct hostent * server = gethostbyname(host.c_str());
+  if (server == NULL) {
+    LOG(ERROR) << "failed to gethostbyname()";
+    return -1;
+  }
+
+  struct sockaddr_in serv_addr;
+  bzero((char *) &serv_addr, sizeof(serv_addr));
+
+  serv_addr.sin_family = AF_INET;
+  bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr,
+        server->h_length);
+  serv_addr.sin_port = htons(port);
+
+  if (connect(sock_fd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+
+    LOG(ERROR) << "failed to connect() graphite";
+
+    close(sock_fd);
+
+    return -1;
+  }
+
+  fcntl(sock_fd, F_SETFL, fcntl(sock_fd, F_GETFL, 0) | O_NONBLOCK);
+
+  VLOG(1) << "graphite socket connected";
+
+  return sock_fd;
+
+}
+
+bool add_client(tcp_pool & tcp_pool, const std::string host, const int port) {
+
+  auto socket_fd = connect_client(host, port);
+  bool ok = socket_fd != -1;
+
+  if (ok) {
+
+    tcp_pool.add_client(socket_fd);
+
+  }
+
+  return ok;
+}
+
+
 }
 
 using namespace std::placeholders;
 
-tcp_client_pool::tcp_client_pool(size_t thread_num,
+tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
+                                 const int port,
                                  output_event_fn_t output_event_fn)
 :
   tcp_pool_(
@@ -18,8 +82,12 @@ tcp_client_pool::tcp_client_pool(size_t thread_num,
     {},
     std::bind(&tcp_client_pool::create_conn, this, _1, _2, _3),
     std::bind(&tcp_client_pool::data_ready, this, _1, _2),
+    k_reconnect_interval_secs,
+    std::bind(&tcp_client_pool::timer, this, _1),
     std::bind(&tcp_client_pool::async, this, _1)
   ),
+  host_(host),
+  port_(port),
   thread_event_queues_(0),
   fd_event_queues_(thread_num),
   output_event_fn_(output_event_fn)
@@ -35,18 +103,16 @@ tcp_client_pool::tcp_client_pool(size_t thread_num,
   }
 
   tcp_pool_.start_threads();
-}
 
-void tcp_client_pool::add_client(int fd) {
-  tcp_pool_.add_client(fd);
 }
 
 void tcp_client_pool::push_event(const Event & event) {
 
   for (auto & queue: thread_event_queues_) {
-    queue->push(event);
-    // TODO signal threads
+    queue->try_push(event);
   }
+
+  tcp_pool_.signal_threads();
 
 }
 
@@ -65,16 +131,28 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
 
   CHECK(it != fd_conn.end()) << "couldn't find fd";
 
+  /* First things first, check whether the connection is closed */
+  if (async.ready_read()) {
+
+    tcp_conn.read(1);
+
+    if (tcp_conn.close_connection) {
+
+      fd_conn.erase(it);
+
+      return;
+    }
+
+  }
+
   auto & out_queue = it->second.second;
 
   if (tcp_conn.bytes_to_write == 0 && out_queue.empty()) {
-    VLOG(3) << "fd: " << async.fd() << " nothing to send.";
     async.loop().set_fd_mode(async.fd(), async_fd::read);
     return;
   }
 
   if (!async.ready_write()) {
-    VLOG(3) << "fd: " << async.fd() << " is not ready to write.";
     return;
   }
 
@@ -82,13 +160,11 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
     return;
   }
 
-  if (tcp_conn.close_connection) {
-
-    VLOG(1) << "Closing tcp_client connection";
-    fd_conn.erase(it);
-
+  if (tcp_conn.bytes_to_write > 0) {
     return;
   }
+
+  tcp_conn.bytes_written = 0;
 
   while (!out_queue.empty()) {
 
@@ -111,11 +187,14 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
 void tcp_client_pool::async(async_loop & loop) {
 
   size_t loop_id =  loop.id();
-  VLOG(3) << "loop_id: " << loop_id;
+
+  if (fd_event_queues_[loop_id].empty()) {
+    return;
+  }
 
   auto event_queue = thread_event_queues_[loop_id];
 
-  while (!event_queue->empty()) {
+   while (!event_queue->empty()) {
 
     Event event;
     if (!event_queue->try_pop(event)) {
@@ -126,25 +205,29 @@ void tcp_client_pool::async(async_loop & loop) {
 
     for (auto & fd_conn : fd_event_queues_[loop_id]) {
 
-      auto & tcp_conn = fd_conn.second.first;
       auto & out_queue = fd_conn.second.second;
-
-      auto out_ptr = reinterpret_cast<char *>(&output_event[0]);
-      auto out_len = output_event.size();
-
-      if (out_queue.empty() && tcp_conn.copy_to_write_buffer(out_ptr, out_len))
-      {
-        loop.set_fd_mode(fd_conn.first, async_fd::readwrite);
-        continue;
-      }
 
       if (out_queue.size() > k_queue_capacity) {
         VLOG(1) << "Per connection event queue is full";
       } else {
         out_queue.push(output_event);
+        loop.set_fd_mode(fd_conn.first, async_fd::readwrite);
       }
 
     }
   }
+
+}
+
+void tcp_client_pool::timer(async_loop & loop) {
+
+  size_t loop_id =  loop.id();
+
+  if (!fd_event_queues_[loop_id].empty()) {
+    return;
+  }
+
+  // TODO Add fd to right thread
+  add_client(tcp_pool_, host_, port_);
 
 }

@@ -46,8 +46,9 @@ class tcp_pool {
         size_t thread_num,
         hook_fn_t run_fn,
         tcp_create_conn_fn_t create_conn_fn,
-        tcp_ready_fn_t tcp_ready_fn,
-        async_fn_t async_fn
+        tcp_ready_fn_t tcp_ready_fn_t,
+        const float inteval,
+        timer_cb_fn_t timer_cb_fn
     );
     tcp_pool(
         size_t thread_num,
@@ -55,9 +56,11 @@ class tcp_pool {
         tcp_create_conn_fn_t create_conn_fn,
         tcp_ready_fn_t tcp_ready_fn_t,
         const float inteval,
-        timer_cb_fn_t timer_cb_fn
+        timer_cb_fn_t timer_cb_fn,
+        async_fn_t async_fn
     );
     void add_client(int fd);
+    void signal_threads();
     void start_threads();
     void stop_threads();
     virtual ~tcp_pool();
@@ -68,7 +71,7 @@ class tcp_pool {
     void socket_callback(async_fd & async);
 
   private:
-    typedef std::map<const int, tcp_connection> conn_map_t;
+    typedef std::map<int, tcp_connection> conn_map_t;
 
     thread_pool thread_pool_;
     std::vector<std::mutex> mutexes_;

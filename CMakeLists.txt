@@ -18,6 +18,8 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/graphite/graphite_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/graphite/graphite.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/config/config.cpp

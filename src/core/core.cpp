@@ -18,3 +18,9 @@ std::shared_ptr<class index> core::index() {
   return impl_->index();
 }
 
+
+void core::send_to_graphite(const std::string host, const int port,
+                            const Event & event)
+{
+  impl_->send_to_graphite(host, port, event);
+}

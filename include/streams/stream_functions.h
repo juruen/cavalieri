@@ -92,6 +92,8 @@ streams_t tag(tags_t tags);
 
 streams_t send_index();
 
+streams_t send_graphite(const std::string host, const int port);
+
 predicate_t above_eq_pred(const double value);
 
 predicate_t above_pred(const double value);
