@@ -812,7 +812,20 @@ streams_t send_index() {
 
     }
   );
+
 }
+
+streams_t send_graphite(const std::string host, const int port) {
+  return create_stream(
+    [=](forward_fn_t, e_t e) {
+
+      g_core->send_to_graphite(host, port, e);
+
+    }
+  );
+}
+
+
 
 predicate_t above_eq_pred(const double value) {
   return PRED(above_eq_(e, value));
