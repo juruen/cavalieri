@@ -110,7 +110,9 @@ real_core::real_core(const config & conf)
 
     ws_server_(init_ws_server(conf, main_loop_, pubsub_)),
 
-    graphite_(new graphite())
+    graphite_(new graphite()),
+
+    riemann_client_(new riemann_tcp_client())
 {
 
 }
@@ -148,6 +150,12 @@ void real_core::send_to_graphite(const std::string host, const int port,
                                  const Event & event)
 {
   graphite_->push_event(host, port, event);
+}
+
+void real_core::forward(const std::string host, const int port,
+                        const Event & event)
+{
+  riemann_client_->push_event(host, port, event);
 }
 
 void start_core(int argc, char **argv) {

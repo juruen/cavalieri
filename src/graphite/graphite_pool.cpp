@@ -1,7 +1,6 @@
 #include <glog/logging.h>
 #include <util.h>
 #include <stdio.h>
-#include <scheduler/scheduler.h>
 #include <graphite/graphite_pool.h>
 
 using namespace std::placeholders;

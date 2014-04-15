@@ -825,7 +825,15 @@ streams_t send_graphite(const std::string host, const int port) {
   );
 }
 
+streams_t forward(const std::string host, const int port) {
+  return create_stream(
+    [=](forward_fn_t, e_t e) {
 
+      g_core->forward(host, port, e);
+
+    }
+  );
+}
 
 predicate_t above_eq_pred(const double value) {
   return PRED(above_eq_(e, value));

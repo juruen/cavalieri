@@ -23,4 +23,6 @@ std::shared_ptr<mock_index> mock_core::mock_index_impl() {
 
 void mock_core::send_to_graphite(const std::string, const int, const Event &){ }
 
+void mock_core::forward(const std::string, const int, const Event & ) {}
+
 void start_core(int, char**) { }

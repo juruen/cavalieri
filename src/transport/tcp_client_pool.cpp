@@ -136,7 +136,7 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
   /* First things first, check whether the connection is closed */
   if (async.ready_read()) {
 
-    tcp_conn.read(1);
+    tcp_conn.read(256);
 
     if (tcp_conn.close_connection) {
 
