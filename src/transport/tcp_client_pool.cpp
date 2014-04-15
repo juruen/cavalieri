@@ -23,24 +23,24 @@ int connect_client(const std::string host, const int port) {
     return -1;
   }
 
-  struct hostent * server = gethostbyname(host.c_str());
-  if (server == NULL) {
-    LOG(ERROR) << "failed to gethostbyname()";
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof(struct addrinfo));
+
+  hints.ai_family = AF_INET;
+
+  struct addrinfo* server;
+
+  if (getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints,
+                  &server) != 0)
+  {
+    LOG(ERROR) << "failed to resolve: " << host;
     return -1;
   }
 
-  struct sockaddr_in serv_addr;
-  bzero((char *) &serv_addr, sizeof(serv_addr));
-
-  serv_addr.sin_family = AF_INET;
-  bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr,
-        server->h_length);
-  serv_addr.sin_port = htons(port);
-
-  if (connect(sock_fd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-
+  if (connect(sock_fd, server->ai_addr, server->ai_addrlen) < 0) {
     LOG(ERROR) << "failed to connect() graphite";
 
+    freeaddrinfo(server);
     close(sock_fd);
 
     return -1;
@@ -54,14 +54,15 @@ int connect_client(const std::string host, const int port) {
 
 }
 
-bool add_client(tcp_pool & tcp_pool, const std::string host, const int port) {
+bool add_client(const int loop_id, tcp_pool & tcp_pool,
+                const std::string host, const int port) {
 
   auto socket_fd = connect_client(host, port);
   bool ok = socket_fd != -1;
 
   if (ok) {
 
-    tcp_pool.add_client(socket_fd);
+    tcp_pool.add_client(loop_id, socket_fd);
 
   }
 
@@ -90,7 +91,8 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
   port_(port),
   thread_event_queues_(0),
   fd_event_queues_(thread_num),
-  output_event_fn_(output_event_fn)
+  output_event_fn_(output_event_fn),
+  next_thread_(0)
 {
 
   for (size_t i = 0; i < thread_num; i++) {
@@ -108,11 +110,11 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
 
 void tcp_client_pool::push_event(const Event & event) {
 
-  for (auto & queue: thread_event_queues_) {
-    queue->try_push(event);
-  }
+  thread_event_queues_[next_thread_]->try_push(event);
 
-  tcp_pool_.signal_threads();
+  tcp_pool_.signal_thread(next_thread_);
+
+  next_thread_ = (next_thread_ + 1) % thread_event_queues_.size();
 
 }
 
@@ -145,14 +147,21 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
 
   }
 
+  /* Connection is open */
+
   auto & out_queue = it->second.second;
 
   if (tcp_conn.bytes_to_write == 0 && out_queue.empty()) {
+
+    /* There isn't anything to send, we only want read notifications. */
     async.loop().set_fd_mode(async.fd(), async_fd::read);
+
     return;
   }
 
   if (!async.ready_write()) {
+
+    /* fd is not ready to write */
     return;
   }
 
@@ -161,8 +170,12 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
   }
 
   if (tcp_conn.bytes_to_write > 0) {
+
+    /* There is still data in the buffer that has not been sent */
     return;
   }
+
+  /* Fill the buffer with more data to send */
 
   tcp_conn.bytes_written = 0;
 
@@ -227,7 +240,6 @@ void tcp_client_pool::timer(async_loop & loop) {
     return;
   }
 
-  // TODO Add fd to right thread
-  add_client(tcp_pool_, host_, port_);
+  add_client(loop_id, tcp_pool_, host_, port_);
 
 }

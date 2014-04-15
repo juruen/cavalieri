@@ -37,6 +37,7 @@ class tcp_client_pool {
     std::vector<std::shared_ptr<event_queue_t>> thread_event_queues_;
     std::vector<std::unordered_map<int, fd_conn_data_t>> fd_event_queues_;
     output_event_fn_t output_event_fn_;
+    size_t next_thread_;
 };
 
 #endif

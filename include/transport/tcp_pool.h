@@ -59,7 +59,9 @@ class tcp_pool {
         timer_cb_fn_t timer_cb_fn,
         async_fn_t async_fn
     );
-    void add_client(int fd);
+    void add_client(const int fd);
+    void add_client(const size_t loop_id, int fd);
+    void signal_thread(const size_t loop_id);
     void signal_threads();
     void start_threads();
     void stop_threads();

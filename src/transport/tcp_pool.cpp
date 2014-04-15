@@ -91,6 +91,16 @@ void tcp_pool::add_client(const int fd) {
   thread_pool_.signal_thread(tid);
 }
 
+void tcp_pool::add_client(const size_t loop_id, const int fd) {
+  VLOG(3) << "add_client() sfd: " << fd << " to loop_id: " << loop_id;
+
+  mutexes_[loop_id].lock();
+  new_fds_[loop_id].push(fd);
+  mutexes_[loop_id].unlock();
+
+  thread_pool_.signal_thread(loop_id);
+}
+
 void tcp_pool::signal_threads() {
   VLOG(3) << "signaling all threads";
 
@@ -99,6 +109,15 @@ void tcp_pool::signal_threads() {
   }
 
 }
+
+void tcp_pool::signal_thread(const size_t loop_id) {
+  VLOG(3) << "signaling thread: " << loop_id;
+
+  thread_pool_.signal_thread(loop_id);
+
+}
+
+
 
 void tcp_pool::async_hook(async_loop & loop) {
 
