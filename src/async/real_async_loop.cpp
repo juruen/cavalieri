@@ -244,12 +244,27 @@ void listen_io::io_accept_cb(ev::io & io, int revents) {
   on_new_client_(fd);
 }
 
+timer_io::timer_io(task_cb_fn_t task, float interval)
+:
+  timer_(),
+  task_fn_(task)
+{
+  timer_.set<timer_io, &timer_io::timer>(this);
+  timer_.start(0, interval);
+}
+
+void timer_io::timer(ev::timer &, int) {
+  task_fn_();
+}
+
 
 real_main_async_loop::real_main_async_loop()
 :
   default_loop_(),
   sig_(default_loop_),
-  listen_ios_()
+  listen_ios_(),
+  timer_ios_(),
+  new_tasks_()
 {
   sig_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
   sig_.start(SIGINT);
@@ -266,6 +281,29 @@ void real_main_async_loop::add_tcp_listen_fd(const int fd,
 
 void real_main_async_loop::signal_cb(ev::sig &, int) {
   default_loop_.break_loop();
+}
+
+void real_main_async_loop::add_periodic_task(task_cb_fn_t task,
+                                             float interval)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  new_tasks_.push({task, interval});
+
+  async_.send();
+}
+
+void real_main_async_loop::async_callback(ev::async &, int) {
+
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  while (!new_tasks_.empty()) {
+    auto p = new_tasks_.front();
+    new_tasks_.pop();
+
+    timer_ios_.push_back(std::make_shared<timer_io>(p.first, p.second));
+  }
+
 }
 
 main_async_loop create_main_async_loop() {

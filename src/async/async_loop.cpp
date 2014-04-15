@@ -39,3 +39,8 @@ void main_async_loop::add_tcp_listen_fd(const int fd,
 {
   impl_->add_tcp_listen_fd(fd, on_new_client);
 }
+
+void main_async_loop::add_periodic_task(task_cb_fn_t task, float interval) {
+  impl_->add_periodic_task(task, interval);
+}
+
