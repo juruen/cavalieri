@@ -12,8 +12,8 @@ It implements the original [riemann.io](http://riemann.io) protocol. That means
 you can leverage the existing *riemann* clients and tools. It also tries to
 mimic its stream API where possible.
 
-Cavalieri's current version *0.0.2* is considered to be  in **alpha** state. We expect to
-release a beta version in the following weeks.
+Cavalieri's current version *0.0.2* is considered to be  in **alpha** state.
+We expect to release a beta version in the following weeks.
 
 
 Install
@@ -43,7 +43,7 @@ cmake, subversion, protobuf-compiler,libprotobuf-dev, libev-dev, libgflags-dev,
 libgoogle-glog-dev, libpython-dev,libcurl4-openssl-dev, libssl-dev, libtbb-dev,
 libjsoncpp-dev, lcov, flex, bison, libgoogle-glog-dev, libboost-filesystem-dev,
 libboost-system-dev
-  
+
 ```
 
 You will also need a C++11 enabled compiler. GCC >= 4.7 or an equivalent Clang.
@@ -484,10 +484,20 @@ It forwards events that are expired.
 
 It adds the list of passed *tags* to events and forwards them.
 
-
 ```cpp
 tags({"processed"}) >> prn("tag added")
 ```
+
+#### send_graphite(const std::string host, const int)
+
+It forwards the received events to a graphite server using new line carbon
+TCP protocol.
+
+#### forward(const std::string host, const int)
+
+It forwards the received events to a cavalieri or riemann server using
+TCP.
+
 
 
 ### Fold functions
