@@ -488,12 +488,12 @@ It adds the list of passed *tags* to events and forwards them.
 tags({"processed"}) >> prn("tag added")
 ```
 
-#### send_graphite(const std::string host, const int)
+#### send_graphite(const std::string host, const int port)
 
 It forwards the received events to a graphite server using new line carbon
 TCP protocol.
 
-#### forward(const std::string host, const int)
+#### forward(const std::string host, const int port)
 
 It forwards the received events to a cavalieri or riemann server using
 TCP.
