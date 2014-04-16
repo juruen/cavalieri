@@ -14,8 +14,10 @@ public:
                         const Event & event);
   void forward(const std::string, const int port, const Event & event);
   std::shared_ptr<mock_index> mock_index_impl();
+  std::shared_ptr<class scheduler> sched();
 
 private:
+  std::shared_ptr<class scheduler> sched_;
   std::shared_ptr<mock_index> mock_index_;
   std::shared_ptr<class index> index_;
 };

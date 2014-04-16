@@ -25,6 +25,7 @@ private:
 
 
 class index create_index(pub_sub & pubsub, push_event_fn_t push_event,
+                         std::shared_ptr<class scheduler> sched,
                          const int64_t expire_interval,
                          spwan_thread_fn_t spwan_thread_fn);
 

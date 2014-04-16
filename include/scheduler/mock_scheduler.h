@@ -22,7 +22,7 @@ public:
   void add_periodic_task(task_fn_t task, float interval);
   void add_once_task(task_fn_t task, float dt);
   time_t unix_time();
-  void process_event_time(time_t event_time);
+  void set_time(const time_t t);
   void clear();
 
 private:

@@ -120,7 +120,7 @@ TEST(agg_sum_trigger_above_test_case,test)
   std::vector<Event> v;
 
   auto agg =  agg_sum_trigger_above(5, 5, 3) >> sink(v);
-  mock_sched.clear();
+  g_core->sched()->clear();
 
   Event e1,e2;
   e1.set_host("a");

@@ -1,11 +1,12 @@
 #include <external_mocks.h>
+#include <core/core.h>
 #include <streams/stream_infra.h>
 #include <scheduler/scheduler.h>
 
 void external_mocks::add_call(const std::string & external,
                               const std::string & message,
                               const std::string & extra, const Event & e) {
-  calls_.push_back({external, message, extra, g_scheduler.unix_time(), e});
+  calls_.push_back({external, message, extra, g_core->sched()->unix_time(), e});
 }
 
 std::vector<external_event_t> external_mocks::calls() const {

@@ -5,6 +5,7 @@
 #include <async/async_loop.h>
 #include <pub_sub/pub_sub.h>
 #include <index/index.h>
+#include <scheduler/scheduler.h>
 #include <riemann_tcp_pool.h>
 #include <riemann_udp_pool.h>
 #include <websocket_pool.h>
@@ -15,6 +16,7 @@ public:
   virtual void start() = 0;
   virtual void add_stream(std::shared_ptr<streams_t> stream) = 0;
   virtual std::shared_ptr<class index> index() = 0;
+  virtual std::shared_ptr<scheduler> sched() = 0;
   virtual void send_to_graphite(const std::string, const int port,
                                 const Event &) = 0;
   virtual void forward(const std::string, const int port, const Event &) = 0;
@@ -29,7 +31,9 @@ public:
   void add_stream(std::shared_ptr<streams_t> stream);
   void send_to_graphite(const std::string host, const int port, const Event &);
   void forward(const std::string, const int port, const Event & event);
+  void process_event_time(const time_t t);
   std::shared_ptr<class index> index();
+  std::shared_ptr<scheduler> sched();
 
 private:
   std::unique_ptr<core_interface> impl_;

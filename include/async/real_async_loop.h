@@ -118,7 +118,7 @@ public:
 
 private:
   void signal_cb(ev::sig & signal, int revents);
-  void async_callback(ev::async &, int);
+  void async_cb(ev::async &, int);
 
 private:
   ev::default_loop default_loop_;

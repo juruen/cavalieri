@@ -262,12 +262,17 @@ real_main_async_loop::real_main_async_loop()
 :
   default_loop_(),
   sig_(default_loop_),
+  async_(),
   listen_ios_(),
   timer_ios_(),
   new_tasks_()
 {
   sig_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
   sig_.start(SIGINT);
+
+  async_.set<real_main_async_loop, &real_main_async_loop::async_cb>(this);
+  async_.start();
+
 }
 
 void real_main_async_loop::start() {
@@ -293,7 +298,7 @@ void real_main_async_loop::add_periodic_task(task_cb_fn_t task,
   async_.send();
 }
 
-void real_main_async_loop::async_callback(ev::async &, int) {
+void real_main_async_loop::async_cb(ev::async &, int) {
 
   std::lock_guard<std::mutex> lock(mutex_);
 

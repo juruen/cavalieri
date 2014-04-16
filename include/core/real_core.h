@@ -11,6 +11,7 @@
 #include <websocket_pool.h>
 #include <graphite/graphite.h>
 #include <riemann_client/rieman_tcp_client.h>
+#include <scheduler/scheduler.h>
 #include <config/config.h>
 
 class real_core : public core_interface {
@@ -23,11 +24,13 @@ public:
                         const Event & event);
   void forward(const std::string, const int port, const Event & event);
   std::shared_ptr<class index> index();
+  std::shared_ptr<class scheduler> sched();
 
 private:
   config config_;
 
   std::shared_ptr<class main_async_loop> main_loop_;
+  std::shared_ptr<class scheduler> scheduler_;
   std::shared_ptr<class streams> streams_;
   std::shared_ptr<class pub_sub> pubsub_;
   std::shared_ptr<class index> index_;

@@ -16,11 +16,13 @@ void detach_thread(std::function<void()> fn) {
 
 std::shared_ptr<class index> init_index(const config & conf,
                                         std::shared_ptr<pub_sub> pubsub,
-                                        std::shared_ptr<streams> streams)
+                                        std::shared_ptr<streams> streams,
+                                        std::shared_ptr<class scheduler> sched)
 {
   auto push_event = [=](e_t e) { streams->push_event(e); };
 
   return std::make_shared<class index>(create_index(*pubsub, push_event,
+                                                    sched,
                                                     conf.index_expire_interval,
                                                     detach_thread));
 }
@@ -98,11 +100,13 @@ real_core::real_core(const config & conf)
 
     main_loop_(new main_async_loop(create_main_async_loop())),
 
+    scheduler_(new class scheduler(create_scheduler(*main_loop_))),
+
     streams_(new streams()),
 
     pubsub_(new pub_sub()),
 
-    index_(init_index(conf, pubsub_, streams_)),
+    index_(init_index(conf, pubsub_, streams_, scheduler_)),
 
     tcp_server_(init_tcp_server(conf, main_loop_, streams_)),
 
@@ -144,6 +148,10 @@ void real_core::add_stream(std::shared_ptr<streams_t> stream) {
 
 std::shared_ptr<class index> real_core::index() {
   return index_;
+}
+
+std::shared_ptr<class scheduler> real_core::sched() {
+  return scheduler_;
 }
 
 void real_core::send_to_graphite(const std::string host, const int port,
