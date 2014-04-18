@@ -15,6 +15,7 @@ mimic its stream API where possible.
 Cavalieri's current version *0.0.2* is considered to be  in **alpha** state.
 We expect to release a beta version in the following weeks.
 
+Current benchmarks show that it can process more than 1 millon events per second with simple streams.
 
 Install
 -------
