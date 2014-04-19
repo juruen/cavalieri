@@ -1,5 +1,5 @@
-0.0.3 TBD
-=========
+0.0.3 2014-04-19
+================
 
   * Add TCP client pool infra
   * Add graphite support (new line TCP carbon protocl)
