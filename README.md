@@ -12,10 +12,11 @@ It implements the original [riemann.io](http://riemann.io) protocol. That means
 you can leverage the existing *riemann* clients and tools. It also tries to
 mimic its stream API where possible.
 
-Cavalieri's current version *0.0.2* is considered to be  in **alpha** state.
+Cavalieri's current version *0.0.4* is considered to be  in **alpha** state.
 We expect to release a beta version in the following weeks.
 
-Current benchmarks show that it can process more than one million events per second with simple streams.
+Current benchmarks show that it can process more than one million events per
+second with simple streams.
 
 Install
 -------
@@ -82,9 +83,9 @@ streams_t* rules() {
   auto mail_stream = email("localhost", "cavalieri@localhost",
                            "devops@localhost");
 
-  auto s =  where(service_pred("requests_rate"))
+  auto s =  service("requests_rate")
                >> above(40)
-                 >> with({{"state", "critical"}})
+                 >> set_state("critical")
                    >> changed_state("ok")
                      >>  mail_stream;
 
@@ -149,9 +150,9 @@ Let's have a look at the default rules again:
 
 [...]
 
-auto s =  where(service_pred("requests_rate"))
+auto s =  service("requests_rate")
            >> above(40)
-             >> with({{"state", "critical"}})
+             >> set_state("critical")
                >> changed_state("ok")
                  >>  mail_stream;
 
@@ -223,11 +224,46 @@ Streams API
 
 #### prn()
 
-Prints events that pass through it.
+It prints events that pass through it.
 
-#### prn(const std::string & str)
+#### prn (const std::string  str)
 
-Prints events that pass through it and also the string that takes as an argument.
+It prints events that pass through it and also the string that takes as an argument.
+
+#### service (const std::string service)
+
+It forwards events that contain the given service.
+
+#### service_any (const std::vector&lt;std::string> services)
+
+It forwards events that contain any of the given services. This
+behaves just like *service* but it takes a list of services instead of
+a single one.
+
+
+#### service_like (const std::string pattern)
+
+It forards events which services match the given pattern.
+
+```cpp
+service_like("foo%") >> prn("service starting with foo");
+```
+
+#### service_like_any (const std::vector&lt;std::string> patterns)
+
+It forwards events which services match any of the given pattern. This
+behaves just like *service_like* but it takes a list of patterns instead of
+a single one.
+
+#### set_state (const std::string state)
+
+It sets the events state to *state* and forwards them.
+
+
+#### set_metric (const double value);
+
+It sets the events metric to *value* and forwards them.
+
 
 #### with (const with_changes_t & changes)
 
@@ -318,7 +354,7 @@ It helps us  replicate the stream per each host so we can compute the rates
 individually.
 
 ```cpp
-auto rate_stream = BY(with({"metric", 1})
+auto rate_stream = BY(set_metric(1)
                         >> rate(60)
                           >> prn("exceptions per second:"));
 
@@ -466,7 +502,7 @@ It scales events' metric by  *s* and forwards them.
 
 ```cpp
 // Transform bytes in bits
-where(service_pred("eth0_incoming")) >> scale(8);
+service("eth0_incoming") >> scale(8);
 ```
 
 #### sdo ()

@@ -1018,5 +1018,128 @@ TEST(fixed_time_window_streams_test_case, test)
   v.clear();
 }
 
+TEST(service_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto service_stream = service("foo")  >>  sink(v);
+
+  Event e;
+
+  push_event(service_stream, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_service("foo");
+  push_event(service_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("foo", v[0].service());
+}
+
+TEST(service_any_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto service_stream = service_any({"foo", "bar"})  >>  sink(v);
+
+  Event e;
+
+  e.set_service("baz");
+  push_event(service_stream, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_service("foo");
+  push_event(service_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("foo", v[0].service());
+  v.clear();
+
+  e.set_service("bar");
+  push_event(service_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("bar", v[0].service());
+  v.clear();
+
+}
+
+TEST(service_like_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto service_stream = service_like("foo%")  >>  sink(v);
+
+  Event e;
+
+  push_event(service_stream, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_service("foobar");
+  push_event(service_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("foobar", v[0].service());
+}
+
+TEST(service_like_any_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto service_stream = service_like_any({"foo%", "bar%"})  >>  sink(v);
+
+  Event e;
+
+  e.set_service("baz");
+  push_event(service_stream, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_service("foobar");
+  push_event(service_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("foobar", v[0].service());
+  v.clear();
+
+  e.set_service("bart");
+  push_event(service_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("bart", v[0].service());
+  v.clear();
+
+}
+
+TEST(set_state_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto set_stream = set_state("ok")  >>  sink(v);
+
+  Event e;
+
+  push_event(set_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("ok", v[0].state());
+}
+
+TEST(set_metric_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto set_stream = set_metric(1)  >>  sink(v);
+
+  Event e;
+
+  push_event(set_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1, metric_to_double(v[0]));
+}
 
 #endif

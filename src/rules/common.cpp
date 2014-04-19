@@ -1,16 +1,8 @@
 #include <atomic>
 #include <folds.h>
 #include <streams/stream_functions.h>
-#include "common.h"
+#include <rules/common.h>
 
-
-namespace {
-
-streams_t set_state(std::string state) {
-  return with({{"state", state}});
-}
-
-}
 
 streams_t critical_above(double value) {
   return

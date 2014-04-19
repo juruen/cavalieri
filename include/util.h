@@ -1,7 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include "proto.pb.h"
+#include <proto.pb.h>
 #include <ev++.h>
 #include <functional>
 #include <vector>
@@ -25,7 +25,14 @@ std::string event_to_json(const Event &e);
 bool tag_exists(const Event& e, const std::string& tag);
 
 bool attribute_exists(const Event& e, const std::string& attribute);
+
 std::string attribute_value(const Event& e, const std::string& attribute);
+
+std::string event_str_value(const Event & e, const std::string & key);
+
+bool match_regex(const std::string value, const std::string re);
+
+bool match_like(const std::string value, const std::string re);
 
 void set_event_value(
     Event & e,
