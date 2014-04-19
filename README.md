@@ -346,7 +346,7 @@ Note that if we just do what is below, we wouldn't get a per host rate,
 we would get a global rate.
 
 ```cpp
-auto rate_stream = with({"metric", 1}) >> rate(60) >> prn("exceptions per second:");
+auto rate_stream = set_metric(1) >> rate(60) >> prn("exceptions per second:");
 ```
 
 If we want to compute the rate per host, that's when *by()* comes in handy.
