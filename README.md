@@ -150,9 +150,9 @@ Let's have a look at the default rules again:
 
 [...]
 
-auto s =  where(service_pred("requests_rate"))
+auto s =  service("requests_rate")
            >> above(40)
-             >> with({{"state", "critical"}})
+             >> set_state("critical")
                >> changed_state("ok")
                  >>  mail_stream;
 
@@ -226,22 +226,22 @@ Streams API
 
 It prints events that pass through it.
 
-#### prn(const std::string  str)
+#### prn (const std::string  str)
 
 It prints events that pass through it and also the string that takes as an argument.
 
-#### service(const std::string service)
+#### service (const std::string service)
 
 It forwards events that contain the given service.
 
-#### service_any(const std::vector<std::string> services)
+#### service_any (const std::vector<std::string> services)
 
 It forwards events that contain any of the given services. This
 behaves just like *service* but it takes a list of services instead of
 a single one.
 
 
-#### service_like(const std::string pattern)
+#### service_like (const std::string pattern)
 
 It forards events which services match the given pattern.
 
@@ -249,18 +249,18 @@ It forards events which services match the given pattern.
 service_like("foo%") >> prn("service starting with foo");
 ```
 
-#### service_like_any(const std::vector<std::string> patterns)
+#### service_like_any (const std::vector<std::string> patterns)
 
 It forwards events which services match any of the given pattern. This
 behaves just like *service_like* but it takes a list of patterns instead of
 a single one.
 
-#### set_state(const std::string state)
+#### set_state (const std::string state)
 
 It sets the events state to *state* and forwards them.
 
 
-#### set_metric(const double value);
+#### set_metric (const double value);
 
 It sets the events metric to *value* and forwards them.
 
