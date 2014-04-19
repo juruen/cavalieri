@@ -8,6 +8,7 @@ using namespace std::placeholders;
 namespace {
 
 const size_t k_buffer_size = 2048;
+const size_t k_batch_size = 100;
 
 }
 
@@ -18,7 +19,8 @@ graphite_pool::graphite_pool(size_t thread_num, const std::string host,
     thread_num,
     host,
     port,
-    std::bind(&graphite_pool::output_event, this, _1)
+    k_batch_size,
+    std::bind(&graphite_pool::output_events, this, _1)
   )
 {
 }
@@ -27,16 +29,29 @@ void graphite_pool::push_event(const Event & event) {
   tcp_client_pool_.push_event(event);
 }
 
-std::vector<char> graphite_pool::output_event(const Event & event) {
+std::vector<char> graphite_pool::output_events(const std::vector<Event> events)
+{
 
-  char buffer[k_buffer_size];
+  // TODO Use a single buffer to reduce the number of copies
+  std::vector<char> output;
 
-  auto written = snprintf(buffer, k_buffer_size, "%s.%s %f %lld\n",
-                          event.host().c_str(),
-                          event.service().c_str(),
-                          metric_to_double(event),
-                          event.time());
+  for (const auto & event : events) {
 
-  return std::vector<char>(buffer, buffer + written);
+    std::vector<char> buffer;
+    buffer.reserve(k_buffer_size);
+
+    auto written = snprintf(&buffer[0], buffer.capacity(), "%s.%s %f %lld\n",
+                            event.host().c_str(),
+                            event.service().c_str(),
+                            metric_to_double(event),
+                            event.time());
+
+    buffer.resize(written);
+
+    output.reserve(output.capacity() + buffer.size());
+    output.insert(output.end(), buffer.begin(), buffer.end());
+  }
+
+  return output;
 
 }

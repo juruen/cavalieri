@@ -4,6 +4,12 @@
 #include <arpa/inet.h>
 #include <riemann_client/rieman_tcp_client_pool.h>
 
+namespace {
+
+size_t  k_default_batch_size = 100;
+
+}
+
 using namespace std::placeholders;
 
 riemann_tcp_client_pool::riemann_tcp_client_pool(size_t thread_num,
@@ -14,7 +20,8 @@ riemann_tcp_client_pool::riemann_tcp_client_pool(size_t thread_num,
     thread_num,
     host,
     port,
-    std::bind(&riemann_tcp_client_pool::output_event, this, _1)
+    k_default_batch_size,
+    std::bind(&riemann_tcp_client_pool::output_events, this, _1)
   )
 {
 }
@@ -23,13 +30,18 @@ void riemann_tcp_client_pool::push_event(const Event & event) {
   tcp_client_pool_.push_event(event);
 }
 
-std::vector<char> riemann_tcp_client_pool::output_event(const Event & event) {
+std::vector<char> riemann_tcp_client_pool::output_events(
+    const std::vector<Event> events)
+{
 
   std::vector<char> buffer;
 
   Msg msg;
   msg.set_ok(true);
-  *msg.add_events() = event;
+
+  for (const auto & event : events) {
+   *msg.add_events() = event;
+  }
 
   auto nsize = htonl(msg.ByteSize());
 

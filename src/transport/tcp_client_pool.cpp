@@ -12,7 +12,7 @@
 namespace {
 
 const size_t k_queue_capacity = 10000;
-const size_t k_reconnect_interval_secs = 5;
+const size_t k_reconnect_interval_secs = 2;
 
 int connect_client(const std::string host, const int port) {
 
@@ -92,6 +92,40 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
   thread_event_queues_(0),
   fd_event_queues_(thread_num),
   output_event_fn_(output_event_fn),
+  output_events_fn_(),
+  batched_(false),
+  batch_size_(0),
+  flush_batch_(thread_num, 0),
+  next_thread_(0)
+{
+
+  LOG(FATAL) << "Not supported yet";
+  // TODO
+
+}
+
+tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
+                                 const int port, size_t batch_size,
+                                 output_events_fn_t output_events_fn)
+:
+  tcp_pool_(
+    thread_num,
+    {},
+    std::bind(&tcp_client_pool::create_conn, this, _1, _2, _3),
+    std::bind(&tcp_client_pool::data_ready, this, _1, _2),
+    k_reconnect_interval_secs,
+    std::bind(&tcp_client_pool::timer, this, _1),
+    std::bind(&tcp_client_pool::async, this, _1)
+  ),
+  host_(host),
+  port_(port),
+  thread_event_queues_(0),
+  fd_event_queues_(thread_num),
+  output_event_fn_(),
+  output_events_fn_(output_events_fn),
+  batched_(true),
+  batch_size_(batch_size),
+  flush_batch_(thread_num, 0),
   next_thread_(0)
 {
 
@@ -108,9 +142,19 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
 
 }
 
+
 void tcp_client_pool::push_event(const Event & event) {
 
-  thread_event_queues_[next_thread_]->try_push(event);
+  auto & queue = thread_event_queues_[next_thread_];
+
+  if (!queue->try_push(event)) {
+    LOG(ERROR) << "queue of thread " << next_thread_ << " is full";
+    return;
+  }
+
+  if (batched_ && queue->size() < static_cast<int>(batch_size_)) {
+    return;
+  }
 
   tcp_pool_.signal_thread(next_thread_);
 
@@ -207,27 +251,64 @@ void tcp_client_pool::async(async_loop & loop) {
 
   auto event_queue = thread_event_queues_[loop_id];
 
-   while (!event_queue->empty()) {
+  if (batched_) {
 
-    Event event;
-    if (!event_queue->try_pop(event)) {
-      continue;
-    }
+    bool flush = flush_batch_[loop_id];
+    bool enough = event_queue->size() > static_cast<int>(batch_size_);
 
-    auto output_event = output_event_fn_(event);
+    if (flush || enough) {
 
-    for (auto & fd_conn : fd_event_queues_[loop_id]) {
+      std::vector<Event> events;
 
-      auto & out_queue = fd_conn.second.second;
+      while (!event_queue->empty()) {
 
-      if (out_queue.size() > k_queue_capacity) {
-        VLOG(1) << "Per connection event queue is full";
-      } else {
-        out_queue.push(output_event);
-        loop.set_fd_mode(fd_conn.first, async_fd::readwrite);
+        Event event;
+        if (!event_queue->try_pop(event)) {
+          continue;
+        }
+
+        events.emplace_back(std::move(event));
+
       }
 
+      if (events.empty()) {
+        return;
+      }
+
+      auto output = output_events_fn_(std::move(events));
+
+      if (flush) {
+        flush_batch_[loop_id] = 0;
+      }
+
+      // Add result to output queue
+      for (auto & fd_conn : fd_event_queues_[loop_id]) {
+
+        auto & out_queue = fd_conn.second.second;
+
+        if (out_queue.size() > k_queue_capacity) {
+          LOG(ERROR) << "Per connection event queue is full";
+        } else {
+          out_queue.push(std::move(output));
+          loop.set_fd_mode(fd_conn.first, async_fd::readwrite);
+        }
+
+      }
     }
+
+  } else {
+
+    while (!event_queue->empty()) {
+
+      Event event;
+      if (!event_queue->try_pop(event)) {
+        continue;
+      }
+
+      auto output = output_event_fn_(std::move(event));
+
+    }
+
   }
 
 }
@@ -235,6 +316,9 @@ void tcp_client_pool::async(async_loop & loop) {
 void tcp_client_pool::timer(async_loop & loop) {
 
   size_t loop_id =  loop.id();
+
+  flush_batch_[loop_id] = 1;
+  tcp_pool_.signal_thread(loop_id);
 
   if (!fd_event_queues_[loop_id].empty()) {
     return;

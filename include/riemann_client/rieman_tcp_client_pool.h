@@ -10,7 +10,7 @@ class riemann_tcp_client_pool {
     void push_event(const Event & event);
 
   private:
-    std::vector<char> output_event(const Event & event);
+    std::vector<char> output_events(const std::vector<Event> events);
 
   private:
     tcp_client_pool tcp_client_pool_;

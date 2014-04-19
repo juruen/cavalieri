@@ -12,12 +12,19 @@
 /* This callback is used to translate events into whatever needs to be
  * sent in the wire.
  */
-typedef std::function<std::vector<char>(const Event & event)> output_event_fn_t;
+typedef std::function<std::vector<char>(const Event & event)>
+        output_event_fn_t;
+
+typedef std::function<std::vector<char>(const std::vector<Event>)>
+        output_events_fn_t;
+
 
 class tcp_client_pool {
   public:
     tcp_client_pool(size_t thread_num, const std::string host, const int port,
                     output_event_fn_t output_event_fn );
+    tcp_client_pool(size_t thread_num, const std::string host, const int port,
+                    size_t batch_size, output_events_fn_t output_events_fn);
     void push_event(const Event & event);
 
   private:
@@ -37,7 +44,12 @@ class tcp_client_pool {
     std::vector<std::shared_ptr<event_queue_t>> thread_event_queues_;
     std::vector<std::unordered_map<int, fd_conn_data_t>> fd_event_queues_;
     output_event_fn_t output_event_fn_;
+    output_events_fn_t output_events_fn_;
+    bool batched_;
+    size_t batch_size_;
+    std::vector<int> flush_batch_;
     size_t next_thread_;
+
 };
 
 #endif
