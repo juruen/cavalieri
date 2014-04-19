@@ -4,6 +4,8 @@
 #include <async/async_loop.h>
 #include <ev++.h>
 #include <vector>
+#include <mutex>
+#include <queue>
 #include <map>
 
 class real_async_loop;
@@ -95,19 +97,37 @@ private:
   on_new_client_fn_t on_new_client_;
 };
 
+class timer_io {
+public:
+  timer_io(task_cb_fn_t task, float interval);
+
+private:
+  void timer(ev::timer & timer, int revents);
+
+private:
+  ev::timer timer_;
+  task_cb_fn_t task_fn_;
+};
+
 class real_main_async_loop : public main_async_loop_interface {
 public:
   real_main_async_loop();
   void start();
   void add_tcp_listen_fd(const int fd, on_new_client_fn_t on_new_client);
+  void add_periodic_task(task_cb_fn_t task, float interval);
 
 private:
   void signal_cb(ev::sig & signal, int revents);
+  void async_cb(ev::async &, int);
 
 private:
   ev::default_loop default_loop_;
   ev::sig sig_;
+  ev::async async_;
   std::vector<std::shared_ptr<listen_io>> listen_ios_;
+  std::vector<std::shared_ptr<timer_io>> timer_ios_;
+  std::queue<std::pair<task_cb_fn_t, float>> new_tasks_;
+  std::mutex mutex_;
 };
 
 #endif

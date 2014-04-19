@@ -14,14 +14,11 @@
 #include "riemann_tcp_connection_test_case.hpp"
 #include "pubsub_test_case.hpp"
 #include "index_test_case.hpp"
-#include <scheduler/scheduler.h>
 #include <scheduler/mock_scheduler.h>
+#include <core/mock_core.h>
 #include "os_functions.h"
 #include "mock_os_functions.h"
 #include "atom/atom.h"
-
-mock_scheduler mock_sched;
-scheduler g_scheduler{mock_sched};
 
 mock_os_functions mock_os;
 os_functions g_os_functions(mock_os);
@@ -38,6 +35,8 @@ int main(int argc, char **argv)
     google::InitGoogleLogging(argv[0]);
 
     ::testing::InitGoogleMock(&argc, argv);
+
+    g_core = std::make_shared<core>(new mock_core());
 
     ret = RUN_ALL_TESTS();
   }

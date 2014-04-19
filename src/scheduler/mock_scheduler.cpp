@@ -21,7 +21,7 @@ time_t mock_scheduler::unix_time() {
   return unix_time_;
 }
 
-void mock_scheduler::process_event_time(time_t event_time) {
+void mock_scheduler::set_time(const time_t event_time) {
   while (!tasks_.empty()) {
     auto lowest = std::get<0>(tasks_.top());
     if (lowest > event_time) {
@@ -51,3 +51,5 @@ void mock_scheduler::clear() {
   }
   unix_time_ = 0;
 }
+
+

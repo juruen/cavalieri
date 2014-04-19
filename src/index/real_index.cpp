@@ -3,8 +3,8 @@
 #include <glog/logging.h>
 #include <util.h>
 #include <atom/atom.h>
+#include <core/core.h>
 #include <index/real_index.h>
-#include <scheduler/scheduler.h>
 
 namespace {
 
@@ -18,19 +18,21 @@ std::string key(const Event& e) {
 
 real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
                        const int64_t expire_interval,
+                       std::shared_ptr<class scheduler>  sched,
                        spwan_thread_fn_t spwan_thread_fn)
 :
   pubsub_(pubsub),
   push_event_fn_(push_event),
   expiring_(false),
-  spwan_thread_fn_(spwan_thread_fn)
+  spwan_thread_fn_(spwan_thread_fn),
+  sched_(sched)
 {
 
   pubsub_.add_publisher(k_default_index,
                         std::bind(&real_index::all_events, this));
 
-  g_scheduler.add_periodic_task(std::bind(&real_index::timer_cb, this),
-                                expire_interval);
+  sched_->add_periodic_task(std::bind(&real_index::timer_cb, this),
+                            expire_interval);
 }
 
 std::vector<Event> real_index::all_events() {
@@ -81,7 +83,7 @@ void real_index::expire_events() {
   std::vector<std::string> keys_to_remove;
   std::vector<Event> expired_events;
 
-  int64_t now = static_cast<int64_t>(g_scheduler.unix_time());
+  int64_t now = static_cast<int64_t>(sched_->unix_time());
 
   for (const auto & pair : index_map_) {
 
@@ -118,11 +120,13 @@ real_index::~real_index() {
 
 
 class index create_index(pub_sub & pubsub, push_event_fn_t push_event,
+                         std::shared_ptr<class scheduler> sched,
                          const int64_t expire_interval,
                          spwan_thread_fn_t spwan_thread_fn)
 {
   auto real_idx = std::make_shared<real_index>(pubsub, push_event,
                                                expire_interval,
+                                               sched,
                                                spwan_thread_fn);
 
   auto idx_iface = std::dynamic_pointer_cast<index_interface>(real_idx);

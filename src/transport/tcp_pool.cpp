@@ -31,9 +31,9 @@ tcp_pool::tcp_pool(
   new_fds_(thread_num),
   conn_maps_(thread_num),
   tcp_create_conn_fn_(tcp_create_conn_fn),
-  tcp_ready_fn_(tcp_ready_fn)
+  tcp_ready_fn_(tcp_ready_fn),
+  async_fn_()
 {
-  VLOG(3) << "tcp_pool() size: " << thread_num;
   thread_pool_.set_async_hook(std::bind(&tcp_pool::async_hook, this, _1));
   thread_pool_.set_run_hook(run_fn);
 }
@@ -51,9 +51,30 @@ tcp_pool::tcp_pool(
   new_fds_(thread_num),
   conn_maps_(thread_num),
   tcp_create_conn_fn_(tcp_create_conn_fn),
-  tcp_ready_fn_(tcp_ready_fn)
+  tcp_ready_fn_(tcp_ready_fn),
+  async_fn_()
 {
-  VLOG(3) << "tcp_pool() size: " << thread_num;
+  thread_pool_.set_async_hook(std::bind(&tcp_pool::async_hook, this, _1));
+  thread_pool_.set_run_hook(run_fn);
+}
+
+tcp_pool::tcp_pool(
+    size_t thread_num,
+    hook_fn_t run_fn,
+    tcp_create_conn_fn_t tcp_create_conn_fn,
+    tcp_ready_fn_t tcp_ready_fn,
+    const float interval,
+    timer_cb_fn_t timer_cb_fn,
+    async_fn_t async_fn)
+:
+  thread_pool_(thread_num ,interval, timer_cb_fn),
+  mutexes_(thread_num),
+  new_fds_(thread_num),
+  conn_maps_(thread_num),
+  tcp_create_conn_fn_(tcp_create_conn_fn),
+  tcp_ready_fn_(tcp_ready_fn),
+  async_fn_(async_fn)
+{
   thread_pool_.set_async_hook(std::bind(&tcp_pool::async_hook, this, _1));
   thread_pool_.set_run_hook(run_fn);
 }
@@ -70,9 +91,52 @@ void tcp_pool::add_client(const int fd) {
   thread_pool_.signal_thread(tid);
 }
 
+void tcp_pool::add_client(const size_t loop_id, const int fd) {
+  VLOG(3) << "add_client() sfd: " << fd << " to loop_id: " << loop_id;
+
+  mutexes_[loop_id].lock();
+  new_fds_[loop_id].push(fd);
+  mutexes_[loop_id].unlock();
+
+  thread_pool_.signal_thread(loop_id);
+}
+
+void tcp_pool::signal_threads() {
+  VLOG(3) << "signaling all threads";
+
+  for (size_t i = 0; i < mutexes_.size(); i++) {
+    thread_pool_.signal_thread(i);
+  }
+
+}
+
+void tcp_pool::signal_thread(const size_t loop_id) {
+  VLOG(3) << "signaling thread: " << loop_id;
+
+  thread_pool_.signal_thread(loop_id);
+
+}
+
+
+
 void tcp_pool::async_hook(async_loop & loop) {
+
   size_t tid = loop.id();
   VLOG(3) << "async_hook() tid: " << tid;
+
+  if (!new_fds_.empty()) {
+    add_fds(loop);
+  }
+
+  if (async_fn_) {
+    async_fn_(loop);
+  }
+
+}
+
+void tcp_pool::add_fds(async_loop & loop) {
+
+  size_t tid = loop.id();
 
   mutexes_[tid].lock();
   std::queue<int> new_fds(std::move(new_fds_[tid]));
@@ -87,6 +151,7 @@ void tcp_pool::async_hook(async_loop & loop) {
     tcp_create_conn_fn_(fd, loop, insert.first->second);
     VLOG(3) << "async_hook() tid: " << tid << " adding fd: " << fd;
   }
+
 }
 
 void tcp_pool::socket_callback(async_fd & async) {

@@ -3,7 +3,8 @@
 
 #include <streams/stream_infra.h>
 #include <streams/stream_functions.h>
-#include <scheduler/mock_scheduler.h>
+#include <scheduler/scheduler.h>
+#include <core/core.h>
 #include <util.h>
 #include <iostream>
 
@@ -30,8 +31,6 @@ std::function<Event(const std::vector<Event>)> msink(std::vector<Event> & v) {
     return e;
   };
 }
-
-extern mock_scheduler mock_sched;
 
 TEST(streams_test_case, test)
 {
@@ -618,7 +617,7 @@ TEST(tag_streams_test_case, test)
 TEST(expired_streams_test_case, test)
 {
   std::vector<Event> v;
-  mock_sched.clear();
+  g_core->sched()->clear();
 
   auto expired_stream = expired() >> sink(v);
 
@@ -643,7 +642,7 @@ TEST(expired_streams_test_case, test)
   ASSERT_EQ(0, v.size());
   v.clear();
 
-  mock_sched.process_event_time(100);
+  g_core->sched()->set_time(100);
   push_event(expired_stream, e);
   ASSERT_EQ(1, v.size());
 }
@@ -651,7 +650,7 @@ TEST(expired_streams_test_case, test)
 TEST(rate_streams_test_case, test)
 {
   std::vector<Event> v;
-  mock_sched.clear();
+  g_core->sched()->clear();
 
   Event e1, e2, e3;
 
@@ -659,7 +658,7 @@ TEST(rate_streams_test_case, test)
 
   // Check that we send a 0-valued metric if no event is received
   push_event(rate_stream, e1);
-  mock_sched.process_event_time(5);
+  g_core->sched()->set_time(5);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ(0, v[0].metric_d());
 
@@ -672,7 +671,7 @@ TEST(rate_streams_test_case, test)
   push_event(rate_stream, e1);
   push_event(rate_stream, e2);
   push_event(rate_stream, e3);
-  mock_sched.process_event_time(10);
+  g_core->sched()->set_time(10);
   ASSERT_EQ(2, v.size());
   ASSERT_EQ(12, v[1].metric_d());
 
@@ -687,18 +686,18 @@ TEST(rate_streams_test_case, test)
   push_event(rate_stream, e1);
   push_event(rate_stream, e2);
   push_event(rate_stream, e3);
-  mock_sched.process_event_time(15);
+  g_core->sched()->set_time(15);
   ASSERT_EQ(3, v.size());
   ASSERT_EQ(12, v[1].metric_d());
 
-  mock_sched.clear();
+  g_core->sched()->clear();
 }
 
 TEST(coalesce_streams_test_case, test)
 {
   std::vector<Event> v;
 
-  mock_sched.clear();
+  g_core->sched()->clear();
 
   auto coalesce_stream = coalesce(msink(v));
 
@@ -740,7 +739,7 @@ TEST(coalesce_streams_test_case, test)
   ASSERT_TRUE(ok);
   v.clear();
 
-  mock_sched.process_event_time(100);
+  g_core->sched()->set_time(100);
   e.set_host("b");
   e.set_service("b");
   e.set_time(90);
@@ -759,7 +758,7 @@ TEST(project_streams_test_case, test)
 {
   std::vector<Event> v;
 
-  mock_sched.clear();
+  g_core->sched()->clear();
 
   auto m1 = PRED(e.host() == "a");
   auto m2 = PRED(e.host() == "b");
@@ -805,7 +804,7 @@ TEST(project_streams_test_case, test)
   ASSERT_TRUE(ok);
   v.clear();
 
-  mock_sched.process_event_time(100);
+  g_core->sched()->set_time(100);
   e.set_host("b");
   e.set_service("b");
   e.set_time(90);

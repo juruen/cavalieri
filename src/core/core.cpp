@@ -18,3 +18,17 @@ std::shared_ptr<class index> core::index() {
   return impl_->index();
 }
 
+std::shared_ptr<scheduler> core::sched() {
+  return impl_->sched();
+}
+
+void core::send_to_graphite(const std::string host, const int port,
+                            const Event & event)
+{
+  impl_->send_to_graphite(host, port, event);
+}
+
+void core::forward(const std::string host, const int port, const Event & event)
+{
+  impl_->forward(host, port, event);
+}

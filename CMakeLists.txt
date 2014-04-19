@@ -18,6 +18,10 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/graphite/graphite_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/graphite/graphite.cpp
+    ${CMAKE_SOURCE_DIR}/src/riemann_client/riemann_tcp_client_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/riemann_client/riemann_tcp_client.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/config/config.cpp
@@ -34,6 +38,7 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_connection.cpp
+    ${CMAKE_SOURCE_DIR}/src/transport/tcp_client_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/listen_tcp_socket.cpp

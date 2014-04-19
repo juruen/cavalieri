@@ -1,3 +1,9 @@
+cavalieri (0.0.3~ppa1~trusty1) trusty; urgency=low
+
+  * Release 0.0.3
+
+ -- Javier Uruen Val <javi.uruen@gmail.com>  Sat, 19 Apr 2014 16:48:33 +0200
+
 cavalieri (0.0.2~ppa1~trusty2) trusty; urgency=low
 
   * Release 0.0.2
