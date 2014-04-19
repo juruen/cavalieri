@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <glog/logging.h>
 #include <openssl/sha.h>
+#include <boost/algorithm/string/replace.hpp>
+#include <regex>
 #include <curl/curl.h>
 
 namespace {
@@ -121,11 +123,43 @@ std::string event_to_json(const Event &e) {
   }
 }
 
+bool match_regex(const std::string value, const std::string re) {
+  return regex_match(value, std::regex(re));
+}
+
+bool match_like(const std::string value, const std::string re) {
+    std::string regex_str(re);
+    boost::replace_all(regex_str, "%", ".*");
+
+    return match_regex(value, regex_str);
+}
+
+std::string event_str_value(const Event & e, const std::string & key)
+
+{
+  if (key == "host") {
+    return e.host();
+  } else if (key == "service") {
+    return e.service();
+  } else if (key == "description") {
+    return e.description();
+  } else if (key == "state") {
+    return e.state();
+  } else {
+    if (attribute_exists(e, key)) {
+      return attribute_value(e, key);
+    }
+  }
+
+  return std::string();
+}
+
+
 void set_event_value(
-    Event& e,
-    const std::string& key,
-    const std::string& value,
-    const bool& replace)
+    Event & e,
+    const std::string & key,
+    const std::string & value,
+    const bool & replace)
 {
   if (key == "host") {
     if (replace || (!e.has_host())) {
@@ -237,7 +271,6 @@ bool attribute_exists(const Event& e, const std::string& attribute) {
   return false;
 }
 
-#include <iostream>
 std::string attribute_value(const Event& e, const std::string& attribute) {
   if (attribute_exists(e, attribute)) {
     for (int i = 0; i < e.attributes_size(); i++) {
