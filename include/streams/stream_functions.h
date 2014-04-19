@@ -31,6 +31,20 @@ typedef std::vector<std::string> tags_t;
 
 streams_t prn();
 
+streams_t prn(const std::string prefix);
+
+streams_t service(const std::string service);
+
+streams_t service_any(const std::vector<std::string> services);
+
+streams_t service_like(const std::string pattern);
+
+streams_t service_like_any(const std::vector<std::string> patterns);
+
+streams_t set_state(const std::string state);
+
+streams_t set_metric(const double metric);
+
 streams_t with(const with_changes_t& changes);
 
 streams_t default_to(const with_changes_t& changes);
@@ -104,9 +118,24 @@ predicate_t under_eq_pred(const double value);
 
 predicate_t under_pred(const double value);
 
-predicate_t state_pred(std::string state);
+predicate_t state_pred(const std::string state);
 
-predicate_t service_pred(std::string state);
+predicate_t service_pred(const std::string state);
+
+predicate_t match_pred(const std::string key, const std::string value);
+
+predicate_t match_any_pred(const std::string key,
+                          const std::vector<std::string> values);
+
+predicate_t match_re_pred(const std::string key, const std::string value);
+
+predicate_t match_re_any_pred(const std::string key,
+                              const std::vector<std::string> values);
+
+predicate_t match_like_pred(const std::string key, const std::string value);
+
+predicate_t match_like_any_pred(const std::string key,
+                              const std::vector<std::string> values);
 
 predicate_t default_pred();
 
@@ -123,6 +152,13 @@ bool above_(e_t e, const double value);
 bool under_eq_(e_t e, const double value);
 
 bool under_(e_t e, const double value);
+
+bool match_(e_t e, const std::string key, const std::string value);
+
+bool match_re_(e_t e, const std::string key, const std::string value);
+
+bool match_like_(e_t e, const std::string key, const std::string value);
+
 
 class streams {
 public:

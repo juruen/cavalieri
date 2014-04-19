@@ -1,6 +1,4 @@
 #include <boost/variant/get.hpp>
-#include <boost/algorithm/string/replace.hpp>
-#include <regex>
 #include <glog/logging.h>
 #include <expression.h>
 #include <util.h>
@@ -89,18 +87,16 @@ bool  compare(const std::string & left,
               const std::string & right,
               const  std::string & op)
 {
+
   if (op == "=") {
+
     return left == right;
+
   }
 
   if (op == "=~") {
 
-    std::string regex_str(right);
-    boost::replace_all(regex_str, "%", ".*");
-
-    std::regex pattern(regex_str);
-
-    return regex_match(left, pattern);
+    return match_like(left, right);
 
   }
 

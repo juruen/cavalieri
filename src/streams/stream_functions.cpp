@@ -21,6 +21,38 @@ streams_t  prn() {
     });
 }
 
+streams_t  prn(const std::string prefix) {
+  return create_stream(
+    [=](forward_fn_t, e_t e)
+    {
+      LOG(INFO) << "prn() " << prefix <<  event_to_json(e);
+    });
+}
+
+streams_t service(const std::string service) {
+  return where(match_pred("service", service));
+}
+
+streams_t service_any(const std::vector<std::string> services) {
+  return where(match_any_pred("service", services));
+}
+
+streams_t service_like(const std::string pattern) {
+  return where(match_like_pred("service", pattern));
+}
+
+streams_t service_like_any(const std::vector<std::string> patterns) {
+  return where(match_like_any_pred("service", patterns));
+}
+
+streams_t set_state(const std::string state) {
+  return with({{"state", state}});
+}
+
+streams_t set_metric(const double metric) {
+  return with({{"metric", metric}});
+}
+
 streams_t with(const with_changes_t & changes, const bool & replace)
 {
   return create_stream(
@@ -859,6 +891,57 @@ predicate_t service_pred(const std::string service) {
   return PRED(e.service() == service);
 }
 
+predicate_t match_pred(const std::string key, const std::string value) {
+  return PRED(match_(e, key, value));
+}
+
+predicate_t match_any_pred(const std::string key,
+                           const std::vector<std::string> values)
+{
+  return PRED(
+      std::find(values.begin(), values.end(), event_str_value(e, key))
+      != values.end()
+  );
+}
+
+predicate_t match_re_pred(const std::string key, const std::string value) {
+  return PRED(match_re_(e, key, value));
+}
+
+predicate_t match_re_any_pred(const std::string key,
+                              const std::vector<std::string> values)
+{
+  return [=](e_t e) {
+
+    for (const auto & val : values) {
+      if (match_re_(e, key, val)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+}
+
+predicate_t match_like_pred(const std::string key, const std::string value) {
+  return PRED(match_like_(e, key, value));
+}
+
+predicate_t match_like_any_pred(const std::string key,
+                              const std::vector<std::string> values)
+{
+  return [=](e_t e) {
+
+    for (const auto & val : values) {
+      if (match_like_(e, key, val)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+}
+
 predicate_t default_pred() {
   return [](e_t){ return true; };
 }
@@ -909,6 +992,30 @@ bool under_eq_(e_t e, const double value) {
 
 bool under_(e_t e, const double value) {
   return (metric_to_double(e) < value);
+}
+
+bool match_(e_t e, const std::string key, const std::string value) {
+
+  const std::string ev_val(event_str_value(e, key));
+
+  return ev_val == value;
+
+}
+
+bool match_re_(e_t e, const std::string key, const std::string value) {
+
+  const std::string ev_val(event_str_value(e, key));
+
+  return match_regex(ev_val, value);
+
+}
+
+bool match_like_(e_t e, const std::string key, const std::string value) {
+
+  const std::string ev_val(event_str_value(e, key));
+
+  return match_like(ev_val, value);
+
 }
 
 void streams::add_stream(streams_t stream) {
