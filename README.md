@@ -234,7 +234,7 @@ It prints events that pass through it and also the string that takes as an argum
 
 It forwards events that contain the given service.
 
-#### service_any (const std::vector<std::string> services)
+#### service_any (const std::vector&lt;std::string> services)
 
 It forwards events that contain any of the given services. This
 behaves just like *service* but it takes a list of services instead of
@@ -249,7 +249,7 @@ It forards events which services match the given pattern.
 service_like("foo%") >> prn("service starting with foo");
 ```
 
-#### service_like_any (const std::vector<std::string> patterns)
+#### service_like_any (const std::vector&lt;std::string> patterns)
 
 It forwards events which services match any of the given pattern. This
 behaves just like *service_like* but it takes a list of patterns instead of
