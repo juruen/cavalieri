@@ -1,3 +1,8 @@
+0.0.4 TBD
+=========
+
+  * Add some convenient stream functions
+
 0.0.3 2014-04-19
 ================
 
