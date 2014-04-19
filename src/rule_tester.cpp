@@ -14,8 +14,6 @@
 DEFINE_string(input_events, "", "json string containing input events");
 DEFINE_string(rules_directory, ".", "directory containing the rules to test");
 
-mock_scheduler mock_sched;
-scheduler g_scheduler{mock_sched};
 external_mocks g_external_mocks{};
 
 int main(int argc, char **argv) {
@@ -60,7 +58,7 @@ int main(int argc, char **argv) {
     }
 
     for (const auto & event: events) {
-      mock_sched.process_event_time(event.time());
+      g_core->sched()->set_time(event.time());
       for (const auto & stream : rules) {
         push_event(*stream, event);
       }

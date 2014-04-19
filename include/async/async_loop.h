@@ -26,6 +26,7 @@ public:
 
 typedef std::function<void(async_fd&)> fd_cb_fn_t;
 typedef std::function<void(async_loop&)> timer_cb_fn_t;
+typedef std::function<void()> task_cb_fn_t;
 
 class async_loop {
 public:
@@ -72,6 +73,7 @@ class main_async_loop_interface {
 public:
   virtual void start() = 0;
   virtual void add_tcp_listen_fd(const int fd, on_new_client_fn_t fn) = 0;
+  virtual void add_periodic_task(task_cb_fn_t task, float interval) = 0;
 };
 
 class main_async_loop : public main_async_loop_interface {
@@ -79,6 +81,7 @@ public:
   main_async_loop(std::shared_ptr<main_async_loop_interface> impl);
   void start();
   void add_tcp_listen_fd(const int fd, on_new_client_fn_t fn);
+  void add_periodic_task(task_cb_fn_t task, float interval);
 
 private:
   std::shared_ptr<main_async_loop_interface> impl_;

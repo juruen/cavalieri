@@ -149,16 +149,16 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
 streams_t rate(const int interval) {
 
   auto rate = std::make_shared<std::atomic<double>>(0);
-  bool task_created = false;
+  auto task_created = std::make_shared<bool>(false);
 
   return create_stream(
 
     [=](forward_fn_t forward, e_t e) mutable
     {
 
-      if (!task_created) {
+      if (!*task_created) {
 
-        g_scheduler.add_periodic_task(
+        g_core->sched()->add_periodic_task(
           [=]() mutable
           {
             VLOG(3) << "rate-timer()";
@@ -166,7 +166,7 @@ streams_t rate(const int interval) {
             Event event;
 
             event.set_metric_d(rate->exchange(0) / interval);
-            event.set_time(g_scheduler.unix_time());
+            event.set_time(g_core->sched()->unix_time());
 
             forward(event);
           },
@@ -174,7 +174,7 @@ streams_t rate(const int interval) {
           interval
         );
 
-          task_created = true;
+          *task_created = true;
 
       }
 
@@ -812,6 +812,27 @@ streams_t send_index() {
 
     }
   );
+
+}
+
+streams_t send_graphite(const std::string host, const int port) {
+  return create_stream(
+    [=](forward_fn_t, e_t e) {
+
+      g_core->send_to_graphite(host, port, e);
+
+    }
+  );
+}
+
+streams_t forward(const std::string host, const int port) {
+  return create_stream(
+    [=](forward_fn_t, e_t e) {
+
+      g_core->forward(host, port, e);
+
+    }
+  );
 }
 
 predicate_t above_eq_pred(const double value) {
@@ -867,11 +888,11 @@ bool expired_(e_t e) {
     return true;
   }
 
-  if (g_scheduler.unix_time() < e.time()) {
+  if (g_core->sched()->unix_time() < e.time()) {
     return false;
   }
 
-  return (g_scheduler.unix_time() - e.time() > ttl);
+  return (g_core->sched()->unix_time() - e.time() > ttl);
 }
 
 bool above_eq_(e_t e, const double value) {
