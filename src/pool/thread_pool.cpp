@@ -143,6 +143,10 @@ size_t thread_pool::next_thread() {
   return next_thread_;
 }
 
+async_loop & thread_pool::loop(const size_t id) {
+  return async_events_.loop(id);
+}
+
 thread_pool::~thread_pool() {
   VLOG(3) << "~thread_pool()";
   stop_threads();

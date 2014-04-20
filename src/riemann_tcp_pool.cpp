@@ -4,6 +4,22 @@
 
 using namespace std::placeholders;
 
+namespace {
+
+  async_fd::mode conn_to_mode(const tcp_connection & conn) {
+    if (conn.pending_read() && conn.pending_write()) {
+      return async_fd::readwrite;
+    } else if (conn.pending_read()) {
+      return async_fd::read;
+    } else if (conn.pending_write()) {
+      return async_fd::write;
+    } else {
+      return async_fd::none;
+    }
+  }
+
+}
+
 riemann_tcp_pool::riemann_tcp_pool(size_t thread_num, raw_msg_fn_t raw_msg_fn)
 :
   tcp_pool_(thread_num,
@@ -39,6 +55,8 @@ void riemann_tcp_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
   auto riemann_conn = it->second;
 
   riemann_conn.callback(async);
+
+  async.set_mode(conn_to_mode(tcp_conn));
 
   if (tcp_conn.close_connection) {
     fd_conn.erase(it);

@@ -52,6 +52,7 @@ public:
               fd_cb_fn_t fd_cb_fn);
   void remove_fd(const int fd);
   void set_fd_mode(const int fd, const async_fd::mode mode);
+  void set_timer_interval(const float t);
   ev::dynamic_loop & loop();
 
 private:

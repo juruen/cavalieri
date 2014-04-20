@@ -1,5 +1,6 @@
 #include <glog/logging.h>
 #include <transport/listen_tcp_socket.h>
+#include <transport/curl_pool.h>
 #include <rules_loader.h>
 #include <core/real_core.h>
 #include <stdlib.h>
