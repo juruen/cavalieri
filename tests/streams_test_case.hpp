@@ -324,6 +324,10 @@ TEST(changed_state_streams_test_case, test)
   auto changed_stream = changed_state("a") >>  sink(v);
 
   Event e;
+
+  e.set_host("foo");
+  e.set_service("bar");
+
   for (auto s : {"a", "a", "b", "b", "a", "b", "b"}) {
     e.set_state(s);
     push_event(changed_stream, e);
@@ -333,6 +337,14 @@ TEST(changed_state_streams_test_case, test)
   ASSERT_EQ("b", v[0].state());
   ASSERT_EQ("a", v[1].state());
   ASSERT_EQ("b", v[2].state());
+  v.clear();
+
+  e.set_service("baz");
+  push_event(changed_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("b", v[0].state());
+
 }
 
 TEST(tagged_any_test_case, test)
