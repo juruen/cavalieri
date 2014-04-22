@@ -348,18 +348,34 @@ streams_t project(const predicates_t predicates, fold_fn_t fold) {
   );
 }
 
+typedef std::unordered_map<std::string, std::string> change_state_t;
 
 streams_t changed_state(std::string initial) {
-  auto prev = make_shared_atom<std::string>(initial);
+  auto states = make_shared_atom<change_state_t>();
 
   return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
-      prev->update(
-        e.state(),
-        [&](const std::string & prev, const std::string &)
+      auto key = e.host() + " " + e.service();
+
+      states->update(
+        [&](const change_state_t & curr)
         {
-          if (prev != e.state()) {
+            auto c(curr);
+            c[key] = e.state();
+            return std::move(c);
+        },
+        [&](const change_state_t & prev, const change_state_t &)
+        {
+          std::string prev_state(initial);
+
+          auto it = prev.find(key);
+
+          if (it != prev.end()) {
+            prev_state = it->second;
+          }
+
+          if (prev_state != e.state()) {
             forward(e);
           }
         }
