@@ -407,6 +407,10 @@ streams_t tagged_all(const tags_t& tags) {
     });
 }
 
+streams_t tagged(const std::string tag) {
+  return tagged_all({tag});
+}
+
 streams_t smap(smap_fn_t f) {
   return create_stream(
     [=](forward_fn_t forward, e_t e)

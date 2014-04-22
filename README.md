@@ -428,6 +428,14 @@ It forwards events only if they contain all the given *tags*.
 tagged_any({"production", "london"}) >> above(5) >> email();
 ```
 
+#### tagged (const std::string tag)
+
+It forwards events only if they contain the given *tag*.
+
+```cpp
+tagged("production") >> above(5) >> email();
+```
+
 #### smap (const smap_fn_t fn)
 
 Events are recevied and passed to *fn* which returns a new event.

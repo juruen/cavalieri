@@ -396,6 +396,28 @@ TEST(tagged_all_streams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
+TEST(tagged_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto tag_stream = tagged("foo") >>  sink(v);
+
+  Event e;
+
+  push_event(tag_stream, e);
+  ASSERT_EQ(0, v.size());
+
+  *(e.add_tags()) = "baz";
+  push_event(tag_stream, e);
+  ASSERT_EQ(0, v.size());
+
+ *(e.add_tags()) = "foo";
+  push_event(tag_stream, e);
+  ASSERT_EQ(1, v.size());
+}
+
+
+
 TEST(smap_streams_test_case, test)
 {
   std::vector<Event> v;

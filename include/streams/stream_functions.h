@@ -72,6 +72,8 @@ streams_t tagged_any(const tags_t& tags);
 
 streams_t tagged_all(const tags_t& tags);
 
+streams_t tagged(const std::string tag);
+
 streams_t smap(smap_fn_t f);
 
 streams_t moving_event_window(size_t window, fold_fn_t);
