@@ -406,8 +406,8 @@ project({service_pred("foo"), service_pred("bar"), sum) >> prn("foo + bar");
 
 #### changed_state (const std::string & initial)
 
-It only forwards events if there is a state change. It assummes *initial* as
-the first state.
+It only forwards events if there is a state change for every host and service.
+It assummes *initial* as the first state.
 
 If you are sending emails, this is useful to not spam yourself and only send
 emails when something goes from *ok* to *critical* and viceversa.
