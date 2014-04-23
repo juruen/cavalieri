@@ -15,7 +15,7 @@ typedef std::vector<Event> events_t;
 
 #define PRED(EXP) [=](e_t e) { return (EXP); }
 #define TR(EXP) [](Event & e) {(EXP); }
-#define BY(EXP) []() { return (EXP); }
+#define BY(EXP) [=]() { return (EXP); }
 
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::function<void(Event &)> smap_fn_t;
@@ -55,8 +55,7 @@ streams_t split(const split_clauses_t clauses);
 
 streams_t split(const split_clauses_t clauses, const streams_t default_stream);
 
-streams_t where(const predicate_t& predicate,
-                    const streams_t else_stream);
+streams_t where(const predicate_t& predicate, const streams_t else_stream);
 
 streams_t where(const predicate_t& predicate);
 

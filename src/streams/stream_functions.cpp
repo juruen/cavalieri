@@ -161,7 +161,7 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
 
   return create_stream(
 
-    [=](forward_fn_t, e_t e) mutable {
+    [=](forward_fn_t forward, e_t e) mutable {
 
       if (keys.empty()) {
         return;
@@ -172,10 +172,17 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
         key += string_to_value(e, k) + " ";
       }
 
+      auto fw_stream = create_stream(
+        [=](forward_fn_t, e_t e)
+        {
+          forward(e);
+        }
+      );
+
       map_on_sync_insert<std::string, streams_t>(
           atom_streams,
           key,
-          [&]() { return stream();},
+          [&]() { return stream() >> fw_stream;},
           [&](streams_t  c) { push_event(c, e); }
       );
 
@@ -352,40 +359,29 @@ streams_t project(const predicates_t predicates, fold_fn_t fold) {
   );
 }
 
-typedef std::unordered_map<std::string, std::string> change_state_t;
-
-streams_t changed_state(std::string initial) {
-  auto states = make_shared_atom<change_state_t>();
+streams_t changed_state_(std::string initial) {
+  auto prev = make_shared_atom<std::string>(initial);
 
   return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
-      auto key = e.host() + " " + e.service();
-
-      states->update(
-        [&](const change_state_t & curr)
+      prev->update(
+        e.state(),
+        [&](const std::string & prev, const std::string &)
         {
-            auto c(curr);
-            c[key] = e.state();
-            return std::move(c);
-        },
-        [&](const change_state_t & prev, const change_state_t &)
-        {
-          std::string prev_state(initial);
-
-          auto it = prev.find(key);
-
-          if (it != prev.end()) {
-            prev_state = it->second;
-          }
-
-          if (prev_state != e.state()) {
+          if (prev != e.state()) {
             forward(e);
           }
         }
       );
 
     });
+}
+
+streams_t changed_state(std::string initial) {
+
+  return by({"host", "service"}, BY(changed_state_(initial)));
+
 }
 
 streams_t tagged_any(const tags_t& tags) {
