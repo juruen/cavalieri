@@ -69,17 +69,17 @@ TEST(streams_test_case, test)
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (sink(v) + f + g), e);
+  push_event(a >>  b >> c >> d >> (sink(v), f, g), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (f + sink(v) + g), e);
+  push_event(a >>  b >> c >> d >> (f, sink(v),  g), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (f + g + sink(v)), e);
+  push_event(a >>  b >> c >> d >> (f, g, sink(v)), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
@@ -1175,5 +1175,25 @@ TEST(set_metric_streams_test_case, test)
   ASSERT_EQ(1, v.size());
   ASSERT_EQ(1, metric_to_double(v[0]));
 }
+
+TEST(state_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto state_stream = state("foo")  >>  sink(v);
+
+  Event e;
+
+  push_event(state_stream, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_state("foo");
+  push_event(state_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("foo", v[0].state());
+}
+
 
 #endif

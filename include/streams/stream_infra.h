@@ -28,7 +28,7 @@ void push_event(stream_node_t, const Event &);
 
 void push_event(streams_t, const Event &);
 
-streams_t operator+ (streams_t left, streams_t right);
+streams_t operator, (streams_t left, streams_t right);
 
 streams_t operator>>(stream_node_t left, stream_node_t right);
 

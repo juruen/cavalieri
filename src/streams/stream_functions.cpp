@@ -45,6 +45,10 @@ streams_t service_like_any(const std::vector<std::string> patterns) {
   return where(match_like_any_pred("service", patterns));
 }
 
+streams_t state(const std::string state) {
+  return where(match_pred("state", state));
+}
+
 streams_t set_state(const std::string state) {
   return with({{"state", state}});
 }

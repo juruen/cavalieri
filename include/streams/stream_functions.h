@@ -41,6 +41,8 @@ streams_t service_like(const std::string pattern);
 
 streams_t service_like_any(const std::vector<std::string> patterns);
 
+streams_t state(const std::string state);
+
 streams_t set_state(const std::string state);
 
 streams_t set_metric(const double metric);
