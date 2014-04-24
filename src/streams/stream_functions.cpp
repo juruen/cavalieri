@@ -157,7 +157,9 @@ typedef std::unordered_map<std::string, streams_t> by_stream_map_t;
 
 streams_t by(const by_keys_t & keys, const by_stream_t stream) {
 
-  auto atom_streams = make_shared_atom<by_stream_map_t>();
+  auto pre_delete = [](by_stream_map_t & m) { m.clear(); };
+
+  auto atom_streams = make_shared_atom<by_stream_map_t>(pre_delete);
 
   return create_stream(
 
@@ -183,7 +185,7 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
           atom_streams,
           key,
           [&]() { return stream() >> fw_stream;},
-          [&](streams_t  c) { push_event(c, e); }
+          [&](streams_t & c) { push_event(c, e); }
       );
 
   });
@@ -360,12 +362,12 @@ streams_t project(const predicates_t predicates, fold_fn_t fold) {
 }
 
 streams_t changed_state_(std::string initial) {
-  auto prev = make_shared_atom<std::string>(initial);
+  auto state = make_shared_atom<std::string>(initial);
 
   return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
-      prev->update(
+      state->update(
         e.state(),
         [&](const std::string & prev, const std::string &)
         {

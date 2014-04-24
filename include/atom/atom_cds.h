@@ -146,6 +146,7 @@ void map_on_sync_insert_cds(
   assert(it != nptr->end());
   fn_inserted(it->second);
 
+  optr->clear();
   cds::gc::HP::retire(optr, atom_cds<std::unordered_map<K,V>>::retire);
 }
 

@@ -17,6 +17,10 @@ class atom {
 public:
 
   atom(T* ptr) : atom_(ptr) {};
+
+  atom(T* ptr, std::function<void(T&)> pre_delete)
+    : atom_(ptr),pre_delete_(pre_delete) {};
+
   atom() : atom_(new T()) {};
 
   void update(std::function<T(const T&)> update_fn) {
@@ -39,6 +43,7 @@ public:
     atom_.safe_read(fn);
   }
 
+
 #ifdef USE_LIBCDS
   atom_cds<T> & atom_impl() {
     return atom_;
@@ -46,6 +51,14 @@ public:
 #else
   atom_mutex<T> & atom_impl() {
     return atom_;
+  }
+#endif
+
+#ifdef USE_LIBCDS
+  ~atom() {
+    if (pre_delete_) {
+      pre_delete_(*atom_.atomic_ptr().load());
+    }
   }
 #endif
 private:
@@ -56,6 +69,7 @@ private:
   atom_mutex<T> atom_;
 #endif
 
+  std::function<void(T&)> pre_delete_;
 };
 
 inline void atom_attach_thread() {
@@ -106,6 +120,19 @@ std::shared_ptr<atom<T>> make_shared_atom() {
 template <class T>
 std::shared_ptr<atom<T>> make_shared_atom(const T t) {
   std::shared_ptr<atom<T>> s(new atom<T>(new T(t)));
+  return s;
+}
+
+template <class T>
+std::shared_ptr<atom<T>> make_shared_atom(const T t,
+                                         std::function<void(T&)> pre_delete) {
+  std::shared_ptr<atom<T>> s(new atom<T>(new T(t)), pre_delete);
+  return s;
+}
+
+template <class T>
+std::shared_ptr<atom<T>> make_shared_atom(std::function<void(T&)> pre_delete) {
+  std::shared_ptr<atom<T>> s(new atom<T>(new T(), pre_delete));
   return s;
 }
 
