@@ -22,6 +22,7 @@ class thread_pool {
      void stop_threads();
      void signal_thread(size_t tid);
      size_t next_thread();
+     async_loop & loop(const size_t id);
      virtual ~thread_pool();
 
   private:

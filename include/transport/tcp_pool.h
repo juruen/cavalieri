@@ -65,6 +65,7 @@ class tcp_pool {
     void signal_threads();
     void start_threads();
     void stop_threads();
+    async_loop & loop(const size_t loop_id);
     virtual ~tcp_pool();
 
   private:

@@ -38,6 +38,7 @@ public:
                       fd_cb_fn_t fd_cb_fn) = 0;
   virtual void remove_fd(const int fd) = 0;
   virtual void set_fd_mode(const int fd, const async_fd::mode mode) = 0;
+  virtual void set_timer_interval(const float t) = 0;
 };
 
 typedef std::function<void(async_loop&)> async_cb_fn_t;
@@ -56,7 +57,7 @@ public:
   void start_loop(size_t loop_id);
   void signal_loop(size_t loop_id);
   void stop_all_loops();
-  async_loop & loop(size_t loop_id);
+  async_loop & loop(const size_t loop_id);
 
 private:
   std::shared_ptr<async_events_interface> impl_;

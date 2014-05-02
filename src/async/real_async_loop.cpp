@@ -143,6 +143,10 @@ void real_async_loop::set_fd_mode(const int fd, const async_fd::mode mode) {
   it->second->set_mode(mode);
 }
 
+void real_async_loop::set_timer_interval(const float t) {
+  timer_.start(t, 0);
+}
+
 ev::dynamic_loop & real_async_loop::loop() {
   return loop_;
 }

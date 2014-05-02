@@ -6,20 +6,6 @@
 
 using namespace std::placeholders;
 
-namespace {
-  async_fd::mode conn_to_mode(const tcp_connection & conn) {
-    if (conn.pending_read() && conn.pending_write()) {
-      return async_fd::readwrite;
-    } else if (conn.pending_read()) {
-      return async_fd::read;
-    } else if (conn.pending_write()) {
-      return async_fd::write;
-    } else {
-      return async_fd::none;
-    }
-  }
-}
-
 tcp_pool::tcp_pool(
     size_t thread_num,
     hook_fn_t run_fn,
@@ -176,7 +162,7 @@ void tcp_pool::socket_callback(async_fd & async) {
     return;
   }
 
-  async.set_mode(conn_to_mode(conn));
+
 
   VLOG(3) << "--socket_callback() tid: " << tid;
 }
@@ -188,6 +174,12 @@ void tcp_pool::start_threads() {
 void tcp_pool::stop_threads() {
   thread_pool_.stop_threads();
 }
+
+async_loop & tcp_pool::loop(const size_t id) {
+  return thread_pool_.loop(id);
+}
+
+
 
 tcp_pool::~tcp_pool() {
   thread_pool_.stop_threads();

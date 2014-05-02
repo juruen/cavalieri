@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <memory>
 
-#define USE_LIBCDS
+#define USE_LIBCDS0
 
 #ifdef USE_LIBCDS
 #include <atom/atom_cds.h>

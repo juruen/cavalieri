@@ -2,37 +2,29 @@
 #include <thread>
 #include <pagerduty.h>
 #include <util.h>
-#include <python_interpreter.h>
+#include <external/pagerduty_pool.h>
 
-static streams_t call_pg( const std::string& pg_key, const std::string& action)
+auto pd_pool = std::make_shared<pagerduty_pool>(1);
+
+static streams_t call_pg(const std::string pg_key,
+                         const pagerduty_pool::pd_action action)
 {
   return create_stream(
     [=](forward_fn_t, const Event & event) {
 
-      Event me(event);
-
-      Attribute* attr = me.add_attributes();
-      attr->set_key("pg_key");
-      attr->set_value(pg_key);
-
-      const std::string jsonstr = event_to_json(me);
-
-      VLOG(3) << "call_pg() pg_key: " << pg_key << " action: " << action
-        << " event: " << jsonstr;
-
-      g_python_runner.run_function("pagerduty", action, event_to_json(me));
+      pd_pool->push_event(action, pg_key, event);
 
   });
 }
 
-streams_t pd_trigger(const std::string& pg_key) {
-  return call_pg(pg_key, "trigger");
+streams_t pd_trigger(const std::string & pg_key) {
+  return call_pg(pg_key, pagerduty_pool::pd_action::trigger);
 }
 
-streams_t pd_resolve(const std::string& pg_key) {
-  return call_pg(pg_key, "resolve");
+streams_t pd_resolve(const std::string & pg_key) {
+  return call_pg(pg_key, pagerduty_pool::pd_action::resolve);
 }
 
-streams_t pd_acknowledge(const std::string& pg_key) {
-  return call_pg(pg_key, "acknowledge");
+streams_t pd_acknowledge(const std::string & pg_key) {
+  return call_pg(pg_key, pagerduty_pool::pd_action::acknowledge);
 }

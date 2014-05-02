@@ -37,6 +37,7 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/async/async_loop.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/udp_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/transport/curl_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_client_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
@@ -48,8 +49,9 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/query/expression.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
-    ${CMAKE_SOURCE_DIR}/src/python_interpreter.cpp
     ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/mailer_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/pagerduty_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/external/email.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/real_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
