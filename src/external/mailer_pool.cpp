@@ -115,6 +115,9 @@ void mailer_pool::curl_event(const queued_event_t queued_event,
     UNUSED_VAR(server);
     UNUSED_VAR(from);
     UNUSED_VAR(payload);
+    if (recipients) {
+      curl_slist_free_all(recipients);
+    }
   };
 
 }
