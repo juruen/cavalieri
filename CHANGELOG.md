@@ -1,3 +1,9 @@
+0.0.5 TBA
+=========
+
+  * Add multi-threaded libcurl pool to implement HTTP(S) and emails clients.
+  * Get rid of python interpreter
+
 0.0.4 2014-04-19
 ================
 
