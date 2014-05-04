@@ -1,9 +1,7 @@
 #include <glog/logging.h>
 #include <util.h>
 #include <streams/stream_infra.h>
-#include <external/mailer_pool.h>
-
-auto mail_pool = std::make_shared<mailer_pool>(1);
+#include <core/core.h>
 
 streams_t email(const std::string & server, const std::string & from,
                 const std::string & to)
@@ -13,7 +11,8 @@ streams_t email(const std::string & server, const std::string & from,
 
     [=](forward_fn_t, const Event & event)
     {
-      mail_pool->push_event(server, from, {from}, event);
 
-  });
+      g_core->externals()->email(server, from, {to}, event);
+
+    });
 }

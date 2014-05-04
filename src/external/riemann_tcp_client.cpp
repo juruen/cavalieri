@@ -1,4 +1,4 @@
-#include <riemann_client/rieman_tcp_client.h>
+#include <external/rieman_tcp_client.h>
 
 namespace {
 

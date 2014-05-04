@@ -22,6 +22,10 @@ std::shared_ptr<scheduler> core::sched() {
   return impl_->sched();
 }
 
+std::shared_ptr<external> core::externals() {
+  return impl_->externals();
+}
+
 void core::send_to_graphite(const std::string host, const int port,
                             const Event & event)
 {

@@ -1,7 +1,7 @@
 #include <glog/logging.h>
 #include <util.h>
 #include <stdio.h>
-#include <graphite/graphite_pool.h>
+#include <external/graphite_pool.h>
 
 using namespace std::placeholders;
 

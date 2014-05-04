@@ -873,7 +873,7 @@ streams_t send_graphite(const std::string host, const int port) {
   return create_stream(
     [=](forward_fn_t, e_t e) {
 
-      g_core->send_to_graphite(host, port, e);
+      g_core->externals()->graphite(host, port, e);
 
     }
   );
@@ -883,7 +883,7 @@ streams_t forward(const std::string host, const int port) {
   return create_stream(
     [=](forward_fn_t, e_t e) {
 
-      g_core->forward(host, port, e);
+      g_core->externals()->forward(host, port, e);
 
     }
   );

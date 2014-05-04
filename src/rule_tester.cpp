@@ -3,18 +3,16 @@
 #include <iostream>
 #include <scheduler/scheduler.h>
 #include <scheduler/mock_scheduler.h>
-#include <external_mocks.h>
 #include <rule_tester_util.h>
 #include <util.h>
 #include <rules_loader.h>
 #include <core/mock_core.h>
 #include <index/mock_index.h>
+#include <external/mock_external.h>
 #include "atom/atom.h"
 
 DEFINE_string(input_events, "", "json string containing input events");
 DEFINE_string(rules_directory, ".", "directory containing the rules to test");
-
-external_mocks g_external_mocks{};
 
 int main(int argc, char **argv) {
 
@@ -65,7 +63,8 @@ int main(int argc, char **argv) {
     }
 
     auto idx = m_core->mock_index_impl();
-    std::cout << results(idx->events(), g_external_mocks.calls()) << "\n";
+    std::cout << results(idx->events(), m_core->mock_external()->calls())
+              << "\n";
 
   }
   atom_terminate();

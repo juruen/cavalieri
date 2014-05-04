@@ -2,6 +2,7 @@
 #include <transport/listen_tcp_socket.h>
 #include <transport/curl_pool.h>
 #include <rules_loader.h>
+#include <external/real_external.h>
 #include <core/real_core.h>
 #include <stdlib.h>
 #include <string.h>
@@ -117,7 +118,9 @@ real_core::real_core(const config & conf)
 
     graphite_(new graphite()),
 
-    riemann_client_(new riemann_tcp_client())
+    riemann_client_(new riemann_tcp_client()),
+
+    externals_(new external(new real_external()))
 {
 
 }
@@ -153,6 +156,10 @@ std::shared_ptr<class index> real_core::index() {
 
 std::shared_ptr<class scheduler> real_core::sched() {
   return scheduler_;
+}
+
+std::shared_ptr<class external> real_core::externals() {
+  return externals_;
 }
 
 void real_core::send_to_graphite(const std::string host, const int port,

@@ -2,7 +2,7 @@
 #include <util.h>
 #include <stdio.h>
 #include <arpa/inet.h>
-#include <riemann_client/rieman_tcp_client_pool.h>
+#include <external/rieman_tcp_client_pool.h>
 
 namespace {
 

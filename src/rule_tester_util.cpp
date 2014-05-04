@@ -108,7 +108,8 @@ std::vector<Event> json_to_events(const std::string json, bool & ok) {
 }
 
 std::string results(std::vector<mock_index_events_t> index_events,
-                    std::vector<external_event_t> external_events) {
+                    std::vector<external_event_t> external_events)
+{
   Json::Value result;
   Json::Value reports(Json::arrayValue);
   Json::Value index(Json::arrayValue);

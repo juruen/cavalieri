@@ -18,10 +18,6 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
-    ${CMAKE_SOURCE_DIR}/src/graphite/graphite_pool.cpp
-    ${CMAKE_SOURCE_DIR}/src/graphite/graphite.cpp
-    ${CMAKE_SOURCE_DIR}/src/riemann_client/riemann_tcp_client_pool.cpp
-    ${CMAKE_SOURCE_DIR}/src/riemann_client/riemann_tcp_client.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/config/config.cpp
@@ -49,10 +45,17 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/query/expression.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/external.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/real_external.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
     ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mailer_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/external/pagerduty_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/external/email.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/graphite_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/graphite.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/riemann_tcp_client_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/riemann_tcp_client.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/real_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/scheduler.cpp
@@ -87,7 +90,10 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/index/mock_index.cpp
     ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/external_mocks.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/external.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/email.cpp
+    ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
   )
 
 ADD_DEFINITIONS( -Wall -std=c++11 -g )

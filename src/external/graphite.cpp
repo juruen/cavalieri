@@ -1,4 +1,4 @@
-#include <graphite/graphite.h>
+#include <external/graphite.h>
 
 namespace {
 

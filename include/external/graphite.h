@@ -1,9 +1,9 @@
-#ifndef GRAPHITE_GRAPHITE_H
-#define GRAPHITE_GRAPHITE_H
+#ifndef EXTERNAL_GRAPHITE_H
+#define EXTERNAL_GRAPHITE_H
 
 #include <proto.pb.h>
 #include <mutex>
-#include <graphite/graphite_pool.h>
+#include <external/graphite_pool.h>
 
 class graphite {
 public:

@@ -9,8 +9,8 @@
 #include <riemann_tcp_pool.h>
 #include <riemann_udp_pool.h>
 #include <websocket_pool.h>
-#include <graphite/graphite.h>
-#include <riemann_client/rieman_tcp_client.h>
+#include <external/graphite.h>
+#include <external/rieman_tcp_client.h>
 #include <scheduler/scheduler.h>
 #include <config/config.h>
 
@@ -25,6 +25,7 @@ public:
   void forward(const std::string, const int port, const Event & event);
   std::shared_ptr<class index> index();
   std::shared_ptr<class scheduler> sched();
+  std::shared_ptr<external> externals();
 
 private:
   config config_;
@@ -39,6 +40,7 @@ private:
   std::shared_ptr<class websocket_pool> ws_server_;
   std::shared_ptr<class graphite> graphite_;
   std::shared_ptr<class riemann_tcp_client> riemann_client_;
+  std::shared_ptr<class external> externals_;
 
   std::vector<std::shared_ptr<streams_t>> sh_streams_;
 
