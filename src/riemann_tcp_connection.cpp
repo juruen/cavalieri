@@ -119,6 +119,7 @@ void riemann_tcp_connection::read_message() {
   reading_header_ = true;
   tcp_connection_.bytes_read = 0;
   tcp_connection_.bytes_to_write = ok_response.size();
+  tcp_connection_.bytes_written = 0;
 
   if (tcp_connection_.bytes_to_write > tcp_connection_.buffer_size) {
     VLOG(2) << "write buffer is full: " << tcp_connection_.bytes_to_write;
