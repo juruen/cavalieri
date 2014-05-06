@@ -28,5 +28,4 @@ c = BatchClient(host='localhost')
 
 for i in range(0, 1000):
     event = create_event(i)
-    print event
     c.send([event])
