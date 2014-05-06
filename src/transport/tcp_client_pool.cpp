@@ -46,6 +46,8 @@ int connect_client(const std::string host, const int port) {
     return -1;
   }
 
+  freeaddrinfo(server);
+
   fcntl(sock_fd, F_SETFL, fcntl(sock_fd, F_GETFL, 0) | O_NONBLOCK);
 
   VLOG(1) << "graphite socket connected";
