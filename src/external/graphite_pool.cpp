@@ -27,9 +27,9 @@ graphite_pool::graphite_pool(size_t thread_num, const std::string host,
 }
 
 void graphite_pool::push_event(const Event & event) {
-  VLOG(1) << "push_event()";
 
   tcp_client_pool_.push_event(event);
+
 }
 
 std::vector<char> graphite_pool::output_events(const std::vector<Event> events)
