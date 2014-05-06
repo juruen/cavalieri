@@ -18,7 +18,7 @@ void real_external::forward(const std::string server, const int port,
 void real_external::graphite(const std::string server, const int port,
                              const Event event)
 {
-  riemann_tcp_client_->push_event(server, port, event);
+  graphite_->push_event(server, port, event);
 }
 
 void real_external::pager_duty_trigger(const std::string pg_key,
