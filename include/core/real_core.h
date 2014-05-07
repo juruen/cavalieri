@@ -20,9 +20,6 @@ public:
   real_core(const config &);
   void start();
   void add_stream(std::shared_ptr<streams_t> stream);
-  void send_to_graphite(const std::string host, const int port,
-                        const Event & event);
-  void forward(const std::string, const int port, const Event & event);
   std::shared_ptr<class index> index();
   std::shared_ptr<class scheduler> sched();
   std::shared_ptr<external> externals();
@@ -38,8 +35,6 @@ private:
   std::shared_ptr<class riemann_tcp_pool> tcp_server_;
   std::shared_ptr<class riemann_udp_pool> udp_server_;
   std::shared_ptr<class websocket_pool> ws_server_;
-  std::shared_ptr<class graphite> graphite_;
-  std::shared_ptr<class riemann_tcp_client> riemann_client_;
   std::shared_ptr<class external> externals_;
 
   std::vector<std::shared_ptr<streams_t>> sh_streams_;

@@ -116,10 +116,6 @@ real_core::real_core(const config & conf)
 
     ws_server_(init_ws_server(conf, main_loop_, pubsub_)),
 
-    graphite_(new graphite()),
-
-    riemann_client_(new riemann_tcp_client()),
-
     externals_(new external(new real_external(conf)))
 {
 
@@ -160,18 +156,6 @@ std::shared_ptr<class scheduler> real_core::sched() {
 
 std::shared_ptr<class external> real_core::externals() {
   return externals_;
-}
-
-void real_core::send_to_graphite(const std::string host, const int port,
-                                 const Event & event)
-{
-  graphite_->push_event(host, port, event);
-}
-
-void real_core::forward(const std::string host, const int port,
-                        const Event & event)
-{
-  riemann_client_->push_event(host, port, event);
 }
 
 void start_core(int argc, char **argv) {

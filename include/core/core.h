@@ -18,9 +18,6 @@ public:
   virtual void add_stream(std::shared_ptr<streams_t> stream) = 0;
   virtual std::shared_ptr<class index> index() = 0;
   virtual std::shared_ptr<scheduler> sched() = 0;
-  virtual void send_to_graphite(const std::string, const int port,
-                                const Event &) = 0;
-  virtual void forward(const std::string, const int port, const Event &) = 0;
   virtual std::shared_ptr<external> externals() = 0;
   virtual ~core_interface() {};
 };
@@ -31,12 +28,11 @@ public:
   core(core_interface *impl);
   void start();
   void add_stream(std::shared_ptr<streams_t> stream);
-  void send_to_graphite(const std::string host, const int port, const Event &);
-  void forward(const std::string, const int port, const Event & event);
-  void process_event_time(const time_t t);
   std::shared_ptr<class index> index();
   std::shared_ptr<scheduler> sched();
   std::shared_ptr<external> externals();
+
+  void process_event_time(const time_t t);
 
 private:
   std::unique_ptr<core_interface> impl_;
