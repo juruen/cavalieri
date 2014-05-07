@@ -19,10 +19,10 @@ public:
   void email(const std::string server, const std::string from,
              const std::string to, const Event event);
 private:
-  std::unique_ptr<riemann_tcp_client> riemann_tcp_client_;
-  std::unique_ptr<class graphite> graphite_;
-  std::unique_ptr<pagerduty_pool> pagerduty_;
-  std::unique_ptr<mailer_pool> email_;
+  riemann_tcp_client riemann_tcp_client_;
+  class graphite graphite_;
+  pagerduty_pool pagerduty_;
+  mailer_pool email_;
 };
 
 #endif
