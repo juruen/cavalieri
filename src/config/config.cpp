@@ -1,12 +1,15 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
+#include <thread>
 #include <config/config.h>
 
 //FIXME conf validation
 
+const auto k_cores = std::thread::hardware_concurrency();
+
 DEFINE_int32(events_port, 5555, "listening port for incoming riemann events");
 
-DEFINE_int32(riemann_tcp_pool_size, 1, "number of threads for tcp pool");
+DEFINE_int32(riemann_tcp_pool_size, k_cores, "number of threads for tcp pool");
 
 DEFINE_int32(ws_port, 5556, "websocket listening port to query index");
 
