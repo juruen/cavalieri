@@ -18,7 +18,7 @@ std::string key(const Event& e) {
 
 real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
                        const int64_t expire_interval,
-                       std::shared_ptr<class scheduler>  sched,
+                       scheduler_interface &  sched,
                        spwan_thread_fn_t spwan_thread_fn)
 :
   pubsub_(pubsub),
@@ -31,7 +31,7 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
   pubsub_.add_publisher(k_default_index,
                         std::bind(&real_index::all_events, this));
 
-  sched_->add_periodic_task(std::bind(&real_index::timer_cb, this),
+  sched_.add_periodic_task(std::bind(&real_index::timer_cb, this),
                             expire_interval);
 }
 
@@ -83,7 +83,7 @@ void real_index::expire_events() {
   std::vector<std::string> keys_to_remove;
   std::vector<Event> expired_events;
 
-  int64_t now = static_cast<int64_t>(sched_->unix_time());
+  int64_t now = static_cast<int64_t>(sched_.unix_time());
 
   for (const auto & pair : index_map_) {
 
@@ -117,23 +117,3 @@ void real_index::expire_events() {
 real_index::~real_index() {
   // TODO: Make sure the periodic task is stopped
 }
-
-
-class index create_index(pub_sub & pubsub, push_event_fn_t push_event,
-                         std::shared_ptr<class scheduler> sched,
-                         const int64_t expire_interval,
-                         spwan_thread_fn_t spwan_thread_fn)
-{
-  auto real_idx = std::make_shared<real_index>(pubsub, push_event,
-                                               expire_interval,
-                                               sched,
-                                               spwan_thread_fn);
-
-  auto idx_iface = std::dynamic_pointer_cast<index_interface>(real_idx);
-
-  class index idx(idx_iface);
-
-  return idx;
-}
-
-

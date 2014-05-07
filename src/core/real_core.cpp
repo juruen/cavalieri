@@ -3,120 +3,36 @@
 #include <transport/curl_pool.h>
 #include <rules_loader.h>
 #include <external/real_external.h>
+#include <core/real_core_helper.h>
 #include <core/real_core.h>
 #include <stdlib.h>
 #include <string.h>
 #include <util.h>
 #include <unistd.h>
 
-namespace {
-
-void detach_thread(std::function<void()> fn) {
-  std::thread t(fn);
-  t.detach();
-}
-
-std::shared_ptr<class index> init_index(const config & conf,
-                                        std::shared_ptr<pub_sub> pubsub,
-                                        std::shared_ptr<streams> streams,
-                                        std::shared_ptr<class scheduler> sched)
-{
-  auto push_event = [=](e_t e) { streams->push_event(e); };
-
-  return std::make_shared<class index>(create_index(*pubsub, push_event,
-                                                    sched,
-                                                    conf.index_expire_interval,
-                                                    detach_thread));
-}
-
-inline void incoming_event(const std::vector<unsigned char> raw_msg,
-                           std::shared_ptr<streams> streams)
-{
-    Msg msg;
-
-    if (!msg.ParseFromArray(&raw_msg[0], raw_msg.size())) {
-      VLOG(2) << "error parsing protobuf payload";
-      return;
-    }
-
-    streams->process_message(msg);
-}
-
-std::shared_ptr<riemann_tcp_pool> init_tcp_server(
-    const config & conf,
-    std::shared_ptr<main_async_loop> loop,
-    std::shared_ptr<streams> streams)
-{
-
-  auto income_tcp_event = [=](const std::vector<unsigned char> raw_msg)
-  {
-    incoming_event(raw_msg, streams);
-  };
-
-  auto tcp_server = std::make_shared<riemann_tcp_pool>(
-      conf.riemann_tcp_pool_size,
-      income_tcp_event
-  );
-
-  loop->add_tcp_listen_fd(create_tcp_listen_socket(conf.events_port),
-                         [=](int fd) {tcp_server->add_client(fd); });
-
-  return tcp_server;
-}
-
-std::shared_ptr<riemann_udp_pool> init_udp_server(
-    const config & conf,
-    std::shared_ptr<streams> streams)
-{
-
-  auto income_udp_event = [=](const std::vector<unsigned char> raw_msg)
-  {
-    incoming_event(raw_msg, streams);
-  };
-
-  auto udp_server = std::make_shared<riemann_udp_pool>(conf.events_port,
-                                                       income_udp_event);
-
-  return udp_server;
-}
-
-std::shared_ptr<websocket_pool> init_ws_server(
-    const config & conf,
-    std::shared_ptr<main_async_loop> loop,
-    std::shared_ptr<pub_sub> pubsub)
-{
-
-  auto ws_server = std::make_shared<websocket_pool>(conf.ws_pool_size, *pubsub);
-
-  loop->add_tcp_listen_fd(create_tcp_listen_socket(conf.ws_port),
-                         [=](int fd) {ws_server->add_client(fd); });
-
-  return ws_server;
-}
-
-}
-
 real_core::real_core(const config & conf)
   :
     config_(conf),
 
-    main_loop_(new main_async_loop(create_main_async_loop())),
+    main_loop_(make_main_async_loop()),
 
-    scheduler_(new class scheduler(create_scheduler(*main_loop_))),
+    scheduler_(new real_scheduler(*main_loop_)),
 
     streams_(new streams()),
 
     pubsub_(new pub_sub()),
 
-    index_(init_index(conf, pubsub_, streams_, scheduler_)),
+    index_(new real_index(*pubsub_, [=](e_t e) { streams_->push_event(e); },
+                          conf.index_expire_interval, *scheduler_,
+                          detach_thread)),
 
-    tcp_server_(init_tcp_server(conf, main_loop_, streams_)),
+    tcp_server_(init_tcp_server(conf, *main_loop_, streams_)),
 
     udp_server_(init_udp_server(conf, streams_)),
 
-    ws_server_(init_ws_server(conf, main_loop_, pubsub_)),
+    ws_server_(init_ws_server(conf, *main_loop_, *pubsub_)),
 
-    externals_(new external(new real_external(conf)))
+    externals_(new real_external(conf))
 {
 
 }
@@ -146,16 +62,16 @@ void real_core::add_stream(std::shared_ptr<streams_t> stream) {
 
 }
 
-std::shared_ptr<class index> real_core::index() {
-  return index_;
+index_interface & real_core::idx() {
+  return *index_;
 }
 
-std::shared_ptr<class scheduler> real_core::sched() {
-  return scheduler_;
+scheduler_interface & real_core::sched() {
+  return *scheduler_;
 }
 
-std::shared_ptr<class external> real_core::externals() {
-  return externals_;
+external_interface & real_core::externals() {
+  return *externals_;
 }
 
 void start_core(int argc, char **argv) {
@@ -178,7 +94,7 @@ void start_core(int argc, char **argv) {
 
   log_config(conf);
 
-  g_core = std::make_shared<core>(new real_core(conf));
+  g_core = make_real_core(conf);
 
   g_core->start();
 

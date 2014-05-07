@@ -13,6 +13,7 @@ ADD_SUBDIRECTORY(thirdparty)
 SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/cavalieri.cpp
     ${CMAKE_SOURCE_DIR}/src/core/core.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/real_core_helper.cpp
     ${CMAKE_SOURCE_DIR}/src/core/real_core.cpp
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
@@ -28,9 +29,7 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/async/real_async_loop.cpp
-    ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/index/real_index.cpp
-    ${CMAKE_SOURCE_DIR}/src/async/async_loop.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/curl_pool.cpp
@@ -45,7 +44,6 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/query/expression.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/external.cpp
     ${CMAKE_SOURCE_DIR}/src/external/real_external.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
     ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
@@ -58,7 +56,6 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/external/riemann_tcp_client.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/real_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
-    ${CMAKE_SOURCE_DIR}/src/scheduler/scheduler.cpp
   )
 
 SET(CAVALIERI_HDRS
@@ -83,15 +80,11 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
-    ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
-    ${CMAKE_SOURCE_DIR}/src/scheduler/scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/index/mock_index.cpp
-    ${CMAKE_SOURCE_DIR}/src/index/index.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/external.cpp
     ${CMAKE_SOURCE_DIR}/src/external/email.cpp
     ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
   )

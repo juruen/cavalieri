@@ -30,24 +30,5 @@ public:
   virtual ~external_interface() {};
 };
 
-
-class external {
-public:
-  external(external_interface *impl);
-  external(std::shared_ptr<external_interface> impl);
-
-  void forward(const std::string server, const int port, const Event event);
-  void graphite(const std::string server, const int port, const Event event);
-  void pager_duty_trigger(const std::string pg_key, const Event event);
-  void pager_duty_resolve(const std::string pg_key, const Event event);
-  void pager_duty_acknowledge(const std::string pg_key, const Event event);
-  void email(const std::string server, const std::string from,
-             const std::string to, const Event event);
-
-private:
-  std::shared_ptr<external_interface> impl_;
-};
-
-
 #endif
 

@@ -15,21 +15,7 @@ public:
   virtual time_t unix_time() = 0;
   virtual void set_time(const time_t t) = 0;
   virtual void clear() = 0;
+  virtual ~scheduler_interface() {};
 };
-
-class scheduler {
-public:
-  scheduler(std::shared_ptr<scheduler_interface>  impl);
-  void add_periodic_task(std::function<void()> task, float interval);
-  void add_once_task(std::function<void()> task, float dt);
-  time_t unix_time();
-  void set_time(const time_t t);
-  void clear();
-
-private:
-  std::shared_ptr<scheduler_interface>  impl_;
-};
-
-scheduler create_scheduler(main_async_loop &);
 
 #endif
