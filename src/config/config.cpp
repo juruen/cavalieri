@@ -17,6 +17,15 @@ DEFINE_int32(index_expire_interval, 60,
 
 DEFINE_string(rules_directory, ".", "directory to load rules");
 
+DEFINE_int32(pagerduty_pool_size, 1, "number of threads for pagerduty pool");
+
+DEFINE_int32(mail_pool_size, 1, "number of threads for mail pool");
+
+DEFINE_int32(graphite_pool_size, 1, "number of threads for graphite pool");
+
+DEFINE_int32(forward_pool_size, 1, "number of threads for forward pool");
+
+
 config create_config() {
 
   struct config conf;
@@ -27,6 +36,10 @@ config create_config() {
   conf.ws_pool_size = FLAGS_ws_pool_size;
   conf.index_expire_interval = FLAGS_index_expire_interval;
   conf.rules_directory = FLAGS_rules_directory;
+  conf.pagerduty_pool_size = FLAGS_pagerduty_pool_size;
+  conf.mail_pool_size = FLAGS_pagerduty_pool_size;
+  conf.graphite_pool_size = FLAGS_pagerduty_pool_size;
+  conf.forward_pool_size = FLAGS_pagerduty_pool_size;
 
   return conf;
 }
@@ -40,6 +53,10 @@ void log_config(config conf) {
   VLOG(1) << "\tws_pool_size: " << conf.ws_pool_size;
   VLOG(1) << "\tindex_expire_interval: " << conf.index_expire_interval;
   VLOG(1) << "\trules_directory: " << conf.rules_directory;
+  VLOG(1) << "\tpagerduty_pool_size: " << conf.pagerduty_pool_size;
+  VLOG(1) << "\tmail_pool_size: " << conf.pagerduty_pool_size;
+  VLOG(1) << "\tgraphite_pool_size: " << conf.pagerduty_pool_size;
+  VLOG(1) << "\tforward_pool_size: " << conf.pagerduty_pool_size;
   VLOG(1) << "--";
 
 }

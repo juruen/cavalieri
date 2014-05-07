@@ -1,11 +1,11 @@
 #include <external/real_external.h>
 
-real_external::real_external()
+real_external::real_external(const config conf)
 : external_interface(),
-  riemann_tcp_client_(new riemann_tcp_client()),
-  graphite_(new class graphite()),
-  pagerduty_(new pagerduty_pool(1)),
-  email_(new mailer_pool(1))
+  riemann_tcp_client_(new riemann_tcp_client(conf)),
+  graphite_(new class graphite(conf)),
+  pagerduty_(new pagerduty_pool(conf.pagerduty_pool_size)),
+  email_(new mailer_pool(conf.mail_pool_size))
 {
 }
 

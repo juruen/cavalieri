@@ -120,7 +120,7 @@ real_core::real_core(const config & conf)
 
     riemann_client_(new riemann_tcp_client()),
 
-    externals_(new external(new real_external()))
+    externals_(new external(new real_external(conf)))
 {
 
 }
