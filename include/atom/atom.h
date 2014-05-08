@@ -4,12 +4,14 @@
 #include <unordered_map>
 #include <memory>
 
-#define USE_LIBCDS0
+#define USE_LIBCDS
 
 #ifdef USE_LIBCDS
 #include <atom/atom_cds.h>
-#else
+#elif defined(USE_MUTEX)
 #include <atom/atom_mutex.h>
+#elif defined(USE_BOOST)
+#include <atom/atom_boost.h>
 #endif
 
 template <class T>
@@ -48,10 +50,15 @@ public:
   atom_cds<T> & atom_impl() {
     return atom_;
   }
-#else
+#elif defined(USE_MUTEX)
   atom_mutex<T> & atom_impl() {
     return atom_;
   }
+#elif defined(USE_BOOST)
+  atom_boost<T> & atom_impl() {
+    return atom_;
+  }
+
 #endif
 
 #ifdef USE_LIBCDS
@@ -65,8 +72,10 @@ private:
 
 #ifdef USE_LIBCDS
   atom_cds<T> atom_;
-#else
+#elif defined(USE_MUTEX)
   atom_mutex<T> atom_;
+#elif defined(USE_BOOST)
+  atom_boost<T> atom_;
 #endif
 
   std::function<void(T&)> pre_delete_;
@@ -75,39 +84,49 @@ private:
 inline void atom_attach_thread() {
 #ifdef USE_LIBCDS
     atom_attach_thread_cds();
-#else
+#elif defined(USE_MUTEX)
     atom_attach_thread_mutex();
+#elif defined(USE_BOOST)
+    atom_attach_thread_boost();
 #endif
 }
 
 inline void atom_detach_thread() {
 #ifdef USE_LIBCDS
     atom_detach_thread_cds();
-#else
+#elif defined(USE_MUTEX)
     atom_detach_thread_mutex();
+#elif defined(USE_BOOST)
+    atom_detach_thread_boost();
 #endif
 }
 
 inline void atom_initialize() {
 #ifdef USE_LIBCDS
     atom_initialize_cds();
-#else
+#elif defined(USE_MUTEX)
     atom_initialize_mutex();
+#elif defined(USE_BOOST)
+    atom_initialize_boost();
 #endif
 }
 
 inline void atom_terminate() {
 #ifdef USE_LIBCDS
     atom_terminate_cds();
-#else
+#elif defined(USE_MUTEX)
     atom_terminate_mutex();
+#elif defined(USE_BOOST)
+    atom_terminate_boost();
 #endif
 }
 
 #ifdef USE_LIBCDS
 #define ATOM_GC ATOM_GC_CDS
-#else
+#elif defined(USE_MUTEX)
 #define ATOM_GC ATOM_GC_MUTEX
+#elif defined(USE_BOOST)
+#define ATOM_GC ATOM_GC_BOOST
 #endif
 
 
@@ -146,8 +165,10 @@ void map_on_sync_insert(
 {
 #ifdef USE_LIBCDS
   map_on_sync_insert_cds<K,V>(m->atom_impl(), k, fn_value, fn_inserted);
-#else
+#elif defined(USE_MUTEX)
   map_on_sync_insert_mutex<K,V>(m->atom_impl(), k, fn_value, fn_inserted);
+#elif defined(USE_BOOST)
+  map_on_sync_insert_boost<K,V>(m->atom_impl(), k, fn_value, fn_inserted);
 #endif
 }
 
