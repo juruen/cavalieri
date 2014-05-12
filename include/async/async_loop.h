@@ -49,23 +49,16 @@ public:
   virtual void signal_loop(size_t loop_id) = 0;
   virtual void stop_all_loops() = 0;
   virtual async_loop & loop(size_t loop_id) = 0;
+  virtual ~async_events_interface() {};
 };
 
-class async_events : public async_events_interface {
-public:
-  async_events(std::shared_ptr<async_events_interface>);
-  void start_loop(size_t loop_id);
-  void signal_loop(size_t loop_id);
-  void stop_all_loops();
-  async_loop & loop(const size_t loop_id);
+std::unique_ptr<async_events_interface> make_async_events(size_t,
+                                                          async_cb_fn_t);
 
-private:
-  std::shared_ptr<async_events_interface> impl_;
-};
-
-async_events create_async_events(size_t, async_cb_fn_t);
-async_events create_async_events(size_t, async_cb_fn_t,
-                                 const float, timer_cb_fn_t);
+std::unique_ptr<async_events_interface> make_async_events(size_t,
+                                                          async_cb_fn_t,
+                                                          const float,
+                                                          timer_cb_fn_t);
 
 typedef std::function<void(const int fd)> on_new_client_fn_t;
 typedef std::function<void(const int signal)> on_signal_fn_t;
@@ -75,19 +68,9 @@ public:
   virtual void start() = 0;
   virtual void add_tcp_listen_fd(const int fd, on_new_client_fn_t fn) = 0;
   virtual void add_periodic_task(task_cb_fn_t task, float interval) = 0;
+  virtual ~main_async_loop_interface() {};
 };
 
-class main_async_loop : public main_async_loop_interface {
-public:
-  main_async_loop(std::shared_ptr<main_async_loop_interface> impl);
-  void start();
-  void add_tcp_listen_fd(const int fd, on_new_client_fn_t fn);
-  void add_periodic_task(task_cb_fn_t task, float interval);
-
-private:
-  std::shared_ptr<main_async_loop_interface> impl_;
-};
-
-main_async_loop create_main_async_loop();
+std::unique_ptr<main_async_loop_interface> make_main_async_loop();
 
 #endif

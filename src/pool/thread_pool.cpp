@@ -16,9 +16,9 @@ thread_pool::thread_pool(size_t thread_num) :
   thread_num_(thread_num),
   next_thread_(0),
   finished_threads_(thread_num, false),
-  async_events_(create_async_events(thread_num,
-                                    std::bind(&thread_pool::async_callback,
-                                              this, _1)))
+  async_events_(make_async_events(thread_num,
+                                  std::bind(&thread_pool::async_callback,
+                                            this, _1)))
 {
   if (thread_num < 1) {
     LOG(FATAL) << "Thread number must be greater than 0";
@@ -34,11 +34,11 @@ thread_pool::thread_pool(
   thread_num_(thread_num),
   next_thread_(0),
   finished_threads_(thread_num, false),
-  async_events_(create_async_events(thread_num,
-                                    std::bind(&thread_pool::async_callback,
-                                              this, _1),
-                                    interval,
-                                    timer_cb_fn))
+  async_events_(make_async_events(thread_num,
+                                  std::bind(&thread_pool::async_callback,
+                                            this, _1),
+                                  interval,
+                                  timer_cb_fn))
 {
   if (thread_num < 1) {
     LOG(FATAL) << "Thread number must be greater than 0";
@@ -80,10 +80,10 @@ void thread_pool::run(const size_t loop_id) {
   VLOG(3) << "run() thread id: " << loop_id;
 
   if (run_hook_fn_) {
-    run_hook_fn_(async_events_.loop(loop_id));
+    run_hook_fn_(async_events_->loop(loop_id));
   }
 
-  async_events_.start_loop(loop_id);
+  async_events_->start_loop(loop_id);
 
   mutex_.lock();
   finished_threads_[loop_id] = true;
@@ -99,7 +99,7 @@ void thread_pool::stop_threads() {
   }
 
   stop_ = true;
-  async_events_.stop_all_loops();
+  async_events_->stop_all_loops();
 
   for (size_t attempts = stop_attempts; attempts > 0; attempts--) {
 
@@ -135,7 +135,7 @@ void thread_pool::signal_thread(size_t loop_id) {
     return;
   }
 
-  async_events_.signal_loop(loop_id);
+  async_events_->signal_loop(loop_id);
 }
 
 size_t thread_pool::next_thread() {
@@ -144,7 +144,7 @@ size_t thread_pool::next_thread() {
 }
 
 async_loop & thread_pool::loop(const size_t id) {
-  return async_events_.loop(id);
+  return async_events_->loop(id);
 }
 
 thread_pool::~thread_pool() {

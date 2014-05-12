@@ -9,7 +9,7 @@ void add_call(std::vector<external_event_t> & calls,
               const std::string  extra,
               const Event e)
 {
-  calls.push_back({external, message, extra, g_core->sched()->unix_time(), e});
+  calls.push_back({external, message, extra, g_core->sched().unix_time(), e});
 }
 
 }

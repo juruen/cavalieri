@@ -203,7 +203,7 @@ streams_t rate(const int interval) {
 
       if (!*task_created) {
 
-        g_core->sched()->add_periodic_task(
+        g_core->sched().add_periodic_task(
           [=]() mutable
           {
             VLOG(3) << "rate-timer()";
@@ -211,7 +211,7 @@ streams_t rate(const int interval) {
             Event event;
 
             event.set_metric_d(rate->exchange(0) / interval);
-            event.set_time(g_core->sched()->unix_time());
+            event.set_time(g_core->sched().unix_time());
 
             forward(event);
           },
@@ -860,7 +860,7 @@ streams_t send_index() {
 
       if (!expired_(e)) {
 
-        g_core->index()->add_event(e);
+        g_core->idx().add_event(e);
 
       }
 
@@ -873,7 +873,7 @@ streams_t send_graphite(const std::string host, const int port) {
   return create_stream(
     [=](forward_fn_t, e_t e) {
 
-      g_core->externals()->graphite(host, port, e);
+      g_core->externals().graphite(host, port, e);
 
     }
   );
@@ -883,7 +883,7 @@ streams_t forward(const std::string host, const int port) {
   return create_stream(
     [=](forward_fn_t, e_t e) {
 
-      g_core->externals()->forward(host, port, e);
+      g_core->externals().forward(host, port, e);
 
     }
   );
@@ -993,11 +993,11 @@ bool expired_(e_t e) {
     return true;
   }
 
-  if (g_core->sched()->unix_time() < e.time()) {
+  if (g_core->sched().unix_time() < e.time()) {
     return false;
   }
 
-  return (g_core->sched()->unix_time() - e.time() > ttl);
+  return (g_core->sched().unix_time() - e.time() > ttl);
 }
 
 bool above_eq_(e_t e, const double value) {

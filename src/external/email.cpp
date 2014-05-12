@@ -12,7 +12,7 @@ streams_t email(const std::string & server, const std::string & from,
     [=](forward_fn_t, const Event & event)
     {
 
-      g_core->externals()->email(server, from, {to}, event);
+      g_core->externals().email(server, from, {to}, event);
 
     });
 }

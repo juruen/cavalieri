@@ -38,8 +38,8 @@ int main(int argc, char **argv) {
     bool ok;
     std::vector<Event> events = json_to_events(FLAGS_input_events, ok);
 
-    auto m_core = new mock_core(); // FIXME: don't use raw pointers
-    g_core = std::make_shared<core>(m_core);
+    auto m_core = std::make_shared<mock_core>();
+    g_core = std::dynamic_pointer_cast<mock_core>(m_core);
 
     if (!ok) {
       LOG(ERROR) << "couldn't parse input events";
@@ -56,14 +56,14 @@ int main(int argc, char **argv) {
     }
 
     for (const auto & event: events) {
-      g_core->sched()->set_time(event.time());
+      g_core->sched().set_time(event.time());
       for (const auto & stream : rules) {
         push_event(*stream, event);
       }
     }
 
-    auto idx = m_core->mock_index_impl();
-    std::cout << results(idx->events(), m_core->mock_external()->calls())
+    auto & idx = m_core->mock_index_impl();
+    std::cout << results(idx.events(), m_core->mock_external_impl().calls())
               << "\n";
 
   }

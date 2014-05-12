@@ -3,24 +3,26 @@
 
 #include <core/core.h>
 #include <index/mock_index.h>
+#include <scheduler/mock_scheduler.h>
+#include <external/mock_external.h>
 
 class mock_core : public core_interface {
 public:
   mock_core();
+
   void start();
   void add_stream(std::shared_ptr<streams_t> stream);
-  std::shared_ptr<class index> index();
-  std::shared_ptr<mock_index> mock_index_impl();
-  std::shared_ptr<class scheduler> sched();
-  std::shared_ptr<class external> externals();
-  std::shared_ptr<class mock_external> mock_external();
+  index_interface & idx();
+  scheduler_interface & sched();
+  external_interface & externals();
+
+  mock_external & mock_external_impl();
+  mock_index & mock_index_impl();
 
 private:
-  std::shared_ptr<class scheduler> sched_;
-  std::shared_ptr<mock_index> mock_index_;
-  std::shared_ptr<class index> index_;
-  std::shared_ptr<class mock_external> mock_external_;
-  std::shared_ptr<class external> externals_;
+  std::unique_ptr<scheduler_interface> sched_;
+  std::unique_ptr<mock_index> mock_index_;
+  std::unique_ptr<mock_external> externals_;
 };
 
 #endif
