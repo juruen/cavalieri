@@ -32,6 +32,19 @@ namespace {
       return true_query;
     }
   }
+
+  async_fd::mode conn_to_mode(const tcp_connection & conn) {
+    if (conn.pending_read() && conn.pending_write()) {
+      return async_fd::readwrite;
+    } else if (conn.pending_read()) {
+      return async_fd::read;
+    } else if (conn.pending_write()) {
+      return async_fd::write;
+    } else {
+      return async_fd::none;
+    }
+  }
+
 }
 
 using namespace std::placeholders;
@@ -91,6 +104,8 @@ void websocket_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
 
   auto & ws_conn = std::get<0>(it->second);
   ws_conn.callback(async);
+
+  async.set_mode(conn_to_mode(tcp_conn));
 
   if (tcp_conn.close_connection) {
     VLOG(1) << "Closing websocket connection";
