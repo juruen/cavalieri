@@ -38,6 +38,11 @@ tcp_connection::tcp_connection(int sfd, size_t buff_size):
 
 bool tcp_connection::read(const uint32_t & to_read) {
 
+  if (k_default_buffer_size - bytes_read < to_read) {
+    LOG(ERROR) << "asked to read too many bytes!!!";
+    return false;
+  }
+
   ssize_t nread = g_os_functions.recv(sfd, &r_buffer[0] + bytes_read,
                                       to_read, 0);
 

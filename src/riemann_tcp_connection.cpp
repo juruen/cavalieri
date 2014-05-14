@@ -95,7 +95,7 @@ void riemann_tcp_connection::read_header() {
   protobuf_size_ = ntohl(header);
 
   if (protobuf_size_ + 4 > tcp_connection_.buffer_size) {
-    VLOG(2) << "protobuf_size_ too big: " << protobuf_size_;
+    LOG(ERROR) << "protobuf_size_ too big: " << protobuf_size_;
     tcp_connection_.close_connection = true;
     return;
   }
@@ -106,14 +106,18 @@ void riemann_tcp_connection::read_header() {
 
 void riemann_tcp_connection::read_message() {
 
-  if (tcp_connection_.bytes_read < protobuf_size_ + 4) {
-    if (!tcp_connection_.read(protobuf_size_ + 4)) {
+  auto bytes_read = tcp_connection_.bytes_read;
+
+  if (bytes_read < protobuf_size_ + 4) {
+
+    if (!tcp_connection_.read(protobuf_size_ + 4 - bytes_read)) {
       return;
     }
 
-    if ((tcp_connection_.bytes_read - 4) != protobuf_size_) {
+    if ((bytes_read - 4) != protobuf_size_) {
       return;
     }
+
   }
 
   reading_header_ = true;
