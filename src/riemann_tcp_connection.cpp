@@ -129,7 +129,7 @@ void riemann_tcp_connection::read_message() {
       return;
     }
 
-    if ((bytes_read - 4) != protobuf_size_) {
+    if ((tcp_connection_.bytes_read - 4) != protobuf_size_) {
       return;
     }
 
