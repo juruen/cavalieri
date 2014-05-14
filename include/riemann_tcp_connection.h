@@ -28,6 +28,7 @@ class riemann_tcp_connection {
     raw_msg_fn_t raw_msg_fn_;
     bool reading_header_;
     size_t protobuf_size_;
+    size_t read_iterations_;
 };
 
 #endif
