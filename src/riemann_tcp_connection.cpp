@@ -94,7 +94,7 @@ void riemann_tcp_connection::read_header() {
     return;
   }
 
-  if (!tcp_connection_.read(tcp_connection_.buffer_size) &&
+  if (!tcp_connection_.read(4 - tcp_connection_.buffer_size) &&
       tcp_connection_.bytes_read == 0)
   {
     return;
@@ -155,7 +155,7 @@ void riemann_tcp_connection::read_message() {
   /* State transtion */
   reading_header_ = true;
 
-  if (bytes_read > frame_size) {
+  if (tcp_connection_.bytes_read > frame_size) {
 
     /* We already have  some bits of the next message */
     tcp_connection_.bytes_read -= frame_size;

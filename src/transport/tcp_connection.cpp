@@ -5,7 +5,7 @@
 #include <os_functions.h>
 
 namespace {
-  const size_t k_default_buffer_size = 1024 * 128;
+  const size_t k_default_buffer_size = 1024 * 1024;
 }
 
 tcp_connection::tcp_connection(int sfd) :

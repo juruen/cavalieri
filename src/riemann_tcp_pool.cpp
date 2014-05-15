@@ -52,7 +52,7 @@ void riemann_tcp_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
   auto it = fd_conn.find(async.fd());
   CHECK(it != fd_conn.end()) << "fd not found";
 
-  auto riemann_conn = it->second;
+  auto & riemann_conn = it->second;
 
   riemann_conn.callback(async);
 
