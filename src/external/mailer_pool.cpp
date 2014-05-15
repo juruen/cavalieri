@@ -12,8 +12,6 @@ struct mailer_extra {
   const std::vector<std::string> to;
 };
 
-const std::string k_smtp_url = "smtp://localhost";
-
 typedef std::pair<std::vector<char>, size_t> payload_t;
 
 size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp)
@@ -92,8 +90,10 @@ void mailer_pool::curl_event(const queued_event_t queued_event,
   const auto extra = boost::any_cast<mailer_extra>(queued_event.extra);
   const auto & e = queued_event.event;
 
-	std::shared_ptr<std::string> server(new std::string(extra.server));
-	std::shared_ptr<std::string> from(new std::string(extra.from));
+  std::shared_ptr<std::string> server(
+      new std::string("smtp://" + extra.server));
+
+  std::shared_ptr<std::string> from(new std::string(extra.from));
 
   struct curl_slist *recipients = NULL;
   for (const auto & to : extra.to) {
@@ -103,10 +103,11 @@ void mailer_pool::curl_event(const queued_event_t queued_event,
   auto payload = std::make_shared<payload_t>(
                                       payload_t({payload_text(extra, e), 0}));
 
-  curl_easy_setopt(easy.get(), CURLOPT_URL, k_smtp_url.c_str());
+  curl_easy_setopt(easy.get(), CURLOPT_URL, server->c_str());
   curl_easy_setopt(easy.get(), CURLOPT_MAIL_FROM, from->c_str());
   curl_easy_setopt(easy.get(), CURLOPT_MAIL_RCPT, recipients);
   curl_easy_setopt(easy.get(), CURLOPT_UPLOAD, 1L);
+  curl_easy_setopt(easy.get(), CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
   curl_easy_setopt(easy.get(), CURLOPT_READFUNCTION, payload_source);
   curl_easy_setopt(easy.get(), CURLOPT_READDATA, payload.get());
 
