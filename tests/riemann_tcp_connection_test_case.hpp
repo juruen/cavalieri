@@ -81,7 +81,7 @@ TEST(riemann_tcp_connection_broken_size_test_case, test)
 
   mock_os.buffer.clear();
 
-  auto nsize = htonl(1024*129);
+  auto nsize = htonl(1024*1025);
 
   mock_os.buffer.resize(sizeof(nsize) + msg.ByteSize());
 

@@ -94,7 +94,7 @@ void riemann_tcp_connection::read_header() {
     return;
   }
 
-  if (!tcp_connection_.read(4 - tcp_connection_.buffer_size) &&
+  if (!tcp_connection_.read(4 - tcp_connection_.bytes_read) &&
       tcp_connection_.bytes_read == 0)
   {
     return;
