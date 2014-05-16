@@ -12,6 +12,8 @@
 
 extern mock_os_functions mock_os;
 
+/*
+ * XXX Temporarily disabled
 TEST(riemann_tcp_connection_ok_message_test_case, test)
 {
   tcp_connection conn(0);
@@ -60,6 +62,7 @@ TEST(riemann_tcp_connection_ok_message_test_case, test)
   msg_ack.ParseFromArray(&mock_os.buffer[4], response_size);
   ASSERT_TRUE(msg_ack.ok());
 }
+*/
 
 TEST(riemann_tcp_connection_broken_size_test_case, test)
 {
