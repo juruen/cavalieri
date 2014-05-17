@@ -34,13 +34,11 @@ class curl_pool {
                                const bool)>            multi_socket_cb_t;
 
   private:
-    void on_create(int fd, async_loop & loop, tcp_connection & conn);
     void on_ready(async_fd & async, tcp_connection & conn);
     void async(async_loop & loop);
     void timer(async_loop & loop);
 
     void set_fd(const size_t loop_id, const int fd, async_fd::mode mode);
-    void remove_fd(const size_t loop_id, const int fd);
 
     void check_multi_info(const size_t loop_id);
     void multi_timer(const size_t loop_id, const long ms);
@@ -48,29 +46,30 @@ class curl_pool {
     void multi_socket(const size_t loop_id, const int fd,
                       const int mode, const bool initialized);
 
+    void add_fd(size_t loop_id, CURL* curl_conn, int fd);
+    void remove_fds(size_t loop_id, CURL* curl_conn);
+
+    void cleanup_conns(const size_t loop_id);
+
   private:
     typedef tbb::concurrent_bounded_queue<queued_event_t> event_queue_t;
-    typedef std::queue<std::vector<char>> fd_event_queue_t;
-    typedef std::pair<size_t, curl_pool &> sock_cb_info_t;
-    typedef std::shared_ptr<create_socket_cb_t> c_sock_t;
-    typedef std::function<void()> clean_up_fn_t;
-    typedef std::pair<std::shared_ptr<CURL>,
-                      std::pair<c_sock_t, clean_up_fn_t>>    curl_conn_pair_t;
+
+    typedef struct {
+      std::shared_ptr<create_socket_cb_t> create_socket_fn;
+      std::shared_ptr<create_socket_cb_t> close_socket_fn;
+      std::function<void()> cleanup_fn;
+      std::unordered_set<int> fds;
+    } curl_conn_data_t;
 
 
     tcp_pool tcp_pool_;
     curl_event_fn_t curl_event_fn_;
 
     std::vector<std::shared_ptr<event_queue_t>> thread_event_queues_;
-
-    std::vector<std::vector<curl_conn_pair_t>> curl_conns_;
-    std::vector<std::unordered_map<int, std::shared_ptr<CURL>>> fd_curl_conns_;
-    std::vector<std::unordered_map<int, c_sock_t>> fd_create_socket_cbs_;
-    std::vector<std::unordered_set<int>> finished_fds_;
-    std::vector<std::unordered_map<int, int>> fd_initial_modes_;
+    std::vector<std::unordered_map<CURL*, curl_conn_data_t>> curl_conns_;
+    std::vector<std::vector<CURL*>> finished_conns_;
 
     size_t next_thread_;
-    std::shared_ptr<bool> sock_inited_;
 
     std::vector<std::shared_ptr<CURLM>> curl_multis_;
 

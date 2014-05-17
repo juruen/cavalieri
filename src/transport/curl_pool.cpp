@@ -19,6 +19,7 @@ char error_[10 * 1024];
 
 
 async_fd::mode curl_to_async_mode(const int mode) {
+  VLOG(3) << "setting fd to mode " << mode;
 
   async_fd::mode a_mode;
 
@@ -45,6 +46,9 @@ async_fd::mode curl_to_async_mode(const int mode) {
 
 
 void multi_delete(CURLM *curlm) {
+
+  VLOG(3) << "multi_delete++";
+
   if (curlm) {
     curl_multi_cleanup(curlm);
   } else {
@@ -52,12 +56,7 @@ void multi_delete(CURLM *curlm) {
   }
 }
 
-void easy_delete(CURL *curl) {
-  if (curl) {
-    curl_easy_cleanup(curl);
-  } else {
-    LOG(ERROR) << "curl is 0";
-  }
+void easy_delete(CURL* curl) {
 }
 
 size_t write_cb(void *ptr, size_t size, size_t nmemb, void *) {
@@ -103,6 +102,16 @@ int multi_sock_cb(CURL *, curl_socket_t socket, int mode, void *fn, void *in) {
   return 0;
 }
 
+int close_sock_cb (void* fn, curl_socket_t fd) {
+
+  VLOG(3) << "libcurl asked to close socket: " << fd;
+
+  (*static_cast<curl_pool::create_socket_cb_t*>(fn))(fd);
+
+  return 0;
+}
+
+
 }
 
 using namespace std::placeholders;
@@ -113,7 +122,7 @@ curl_pool::curl_pool(const size_t thread_num,
   tcp_pool_(
     thread_num,
     {},
-    std::bind(&curl_pool::on_create, this, _1, _2, _3),
+    {},
     std::bind(&curl_pool::on_ready, this, _1, _2),
     k_initial_interval_secs,
     std::bind(&curl_pool::timer, this, _1),
@@ -122,12 +131,8 @@ curl_pool::curl_pool(const size_t thread_num,
   curl_event_fn_(curl_event_fn),
   thread_event_queues_(0),
   curl_conns_(thread_num),
-  fd_curl_conns_(thread_num),
-  fd_create_socket_cbs_(thread_num),
-  finished_fds_(thread_num),
-  fd_initial_modes_(thread_num),
-  next_thread_(0),
-  sock_inited_(new bool(true))
+  finished_conns_(thread_num),
+  next_thread_(0)
 {
 
   VLOG(3) << "curl_pool()";
@@ -202,92 +207,137 @@ void curl_pool::set_fd(const size_t loop_id, const int fd,
   tcp_pool_.loop(loop_id).set_fd_mode(fd, mode);
 }
 
-void curl_pool::remove_fd(const size_t loop_id, const int fd) {
-
-  finished_fds_[loop_id].insert(fd);
-
-}
-
-void curl_pool::on_create(int fd, async_loop & loop, tcp_connection & tcp_conn)
-{
-  curl_multi_assign(curl_multis_[loop.id()].get(), fd, sock_inited_.get());
-
-  auto it = fd_initial_modes_[loop.id()].find(fd);
-
-  CHECK(it != fd_initial_modes_[loop.id()].end()) << "failed to find fd";
-
-  set_fd(loop.id(), fd, curl_to_async_mode(it->second));
-
-  fd_initial_modes_[loop.id()].erase(it);
-}
-
 void curl_pool::on_ready(async_fd & async, tcp_connection & tcp_conn) {
+
+  VLOG(3) << "on_ready()++";
+
   auto loop_id = async.loop().id();
 
-  int action = async.ready_read() ? CURL_POLL_IN : 0 |
+  int action;
+
+  if (async.error()) {
+
+    VLOG(3) << "error in socket detected";
+
+    action = CURL_POLL_REMOVE;
+
+  } else {
+
+    action = async.ready_read() ? CURL_POLL_IN : 0 |
                async.ready_write() ? CURL_POLL_OUT : 0;
 
-  auto multi = curl_multis_[loop_id].get();
+    auto multi = curl_multis_[loop_id].get();
 
-  int still_running;
+    int still_running;
 
-  auto rc = curl_multi_socket_action(multi, async.fd(), action, &still_running);
+    auto rc = curl_multi_socket_action(multi, async.fd(), action,
+                                       &still_running);
 
-  if (rc != CURLM_OK) {
+    if (rc != CURLM_OK) {
 
-    LOG(ERROR) << "loop " << loop_id << " reports a curl error: " << rc;
+      LOG(ERROR) << "loop " << loop_id << " reports a curl error: " << rc;
 
-  }
-
-
-  check_multi_info(loop_id);
-
-  auto it = finished_fds_[loop_id].find(async.fd());
-
-  if (it == finished_fds_[loop_id].end()) {
-    return;
-  }
-
-  // Remove fd and clean up
-  tcp_conn.close_connection = true;
-
-  finished_fds_[loop_id].erase(it);
-
-  fd_create_socket_cbs_[loop_id].erase(async.fd());
-
-  auto curl_conn_it = fd_curl_conns_[loop_id].find(async.fd());
-  CHECK(curl_conn_it != fd_curl_conns_[loop_id].end()) << "fd not found";
-
-  curl_multi_remove_handle(curl_multis_[loop_id].get(),
-                           curl_conn_it->second.get());
-
-  for (auto p_it = curl_conns_[loop_id].begin();
-       p_it != curl_conns_[loop_id].end();
-       p_it++)
-  {
-
-    if (p_it->first == curl_conn_it->second) {
-
-      auto & clean_up_fn = p_it->second.second;
-
-      if (clean_up_fn) {
-        clean_up_fn();
-      } else {
-        VLOG(1) << "clean_fn is not defined!";
-      }
-
-      curl_conns_[loop_id].erase(p_it);
-
-      break;
     }
 
+    check_multi_info(loop_id);
+
   }
 
-  fd_curl_conns_[loop_id].erase(curl_conn_it);
+  VLOG(3) << "on_ready()--";
+
+}
+
+void curl_pool::cleanup_conns(const size_t loop_id) {
+
+  VLOG(3) << "cleanup_conns()++ ";
+
+  for (auto curl_conn : finished_conns_[loop_id]) {
+
+    VLOG(3) << "cleanup_cons() conn: " << curl_conn;
+
+    auto curl_conn_it = curl_conns_[loop_id].find(curl_conn);
+
+    CHECK(curl_conn_it != curl_conns_[loop_id].end()) << "curl_conn not found";
+
+    VLOG(3) << "curl_multi_remove_handle";
+
+    auto rc = curl_multi_remove_handle(curl_multis_[loop_id].get(), curl_conn);
+
+    if (rc != CURLM_OK) {
+
+      LOG(ERROR) << "curl_multi_remove_handle" << loop_id
+                  << " reports a curl error: " << rc;
+
+    }
+
+    VLOG(3) << "cleaning up stuff for this handle";
+    auto cleanup_fn = curl_conn_it->second.cleanup_fn;
+
+    if (cleanup_fn) {
+      VLOG(3) << "before clean_up";
+      cleanup_fn();
+      VLOG(3) << "after clean_up";
+    } else {
+      VLOG(1) << "clean_fn is not defined!";
+    }
+
+    remove_fds(loop_id, curl_conn);
+
+    VLOG(3) << "removing curl_conn from curl_conns_";
+    curl_conns_[loop_id].erase(curl_conn_it);
+
+    VLOG(3) << "curl_easy_cleanup: " << curl_conn;
+    curl_easy_cleanup(curl_conn);
+
+  }
+
+  finished_conns_[loop_id].clear();
+
+  VLOG(3) << "cleanup_conns()-- ";
+
+}
+
+void curl_pool::add_fd(size_t loop_id, CURL* curl_conn, int fd) {
+
+  VLOG(3) << "add_fd fd: " << fd << " curl_conn " << curl_conn;
+
+  // Add fd to curl_conn_data
+  auto it = curl_conns_[loop_id].find(curl_conn);
+
+  CHECK(it != curl_conns_[loop_id].end());
+
+  auto & conn_data = it->second;
+  conn_data.fds.insert(fd);
+
+  // Add fd to tcp_pool loop
+  tcp_pool_.add_client_sync(loop_id, fd);
+
+}
+
+void curl_pool::remove_fds(size_t loop_id, CURL* curl_conn) {
+
+  VLOG(3) << "remove_fds() " <<  curl_conn << curl_conn;
+
+  // Find curl_conn
+  auto conn_it = curl_conns_[loop_id].find(curl_conn);
+
+  CHECK(conn_it != curl_conns_[loop_id].end());
+
+  auto & conn_data = conn_it->second;
+
+  VLOG(3) << "removing fds in set";
+  for (auto fd : conn_data.fds) {
+    VLOG(3) << "remove fd: " << fd;
+    // Remove fd from  tcp_pool loop
+    tcp_pool_.remove_client_sync(loop_id, fd);
+  }
+
 
 }
 
 void curl_pool::async(async_loop & loop) {
+
+  VLOG(3) << "async()";
 
   size_t loop_id =  loop.id();
 
@@ -300,17 +350,38 @@ void curl_pool::async(async_loop & loop) {
       continue;
     }
 
-    auto curl_conn = std::shared_ptr<CURL>(curl_easy_init(), easy_delete);
-    auto easy = curl_conn.get();
+    auto easy = curl_easy_init();
+
+    VLOG(3) << "async()  creating easy: " << easy;
 
     std::shared_ptr<create_socket_cb_t> create_socket_fn(
         new create_socket_cb_t(
           [=](const int fd) {
+
+            VLOG(3) << "crete_socket_cb()";
             if (fd > 0) {
-              fd_curl_conns_[loop_id].insert({fd, curl_conn});
-              tcp_pool_.add_client(loop_id, fd);
+              add_fd(loop_id, easy, fd);
+            } else {
+              LOG(FATAL) << "we need to take care of failed socket";
             }
+
           }));
+
+    std::shared_ptr<create_socket_cb_t> close_socket_fn(
+        new create_socket_cb_t(
+          [=](const int fd) {
+
+            VLOG(3) << "close_socket_cb()";
+            if (fd > 0) {
+              set_fd(loop_id, fd, async_fd::mode::none);
+              //remove_fd(loop_id, easy, fd);
+            } else {
+              LOG(FATAL) << "we need to take care of failed socket";
+            }
+
+          }));
+
+
 
     curl_easy_setopt(easy, CURLOPT_WRITEFUNCTION,  write_cb);
     curl_easy_setopt(easy, CURLOPT_VERBOSE, 1L);
@@ -319,27 +390,32 @@ void curl_pool::async(async_loop & loop) {
     curl_easy_setopt(easy, CURLOPT_LOW_SPEED_LIMIT, 10L);
     curl_easy_setopt(easy, CURLOPT_OPENSOCKETDATA, create_socket_fn.get());
     curl_easy_setopt(easy, CURLOPT_OPENSOCKETFUNCTION, sock_cb);
+    curl_easy_setopt(easy, CURLOPT_CLOSESOCKETFUNCTION, close_sock_cb);
+    curl_easy_setopt(easy, CURLOPT_CLOSESOCKETDATA, close_socket_fn.get());
+    curl_easy_setopt(easy, CURLOPT_FORBID_REUSE, 1L);
 
-    clean_up_fn_t clean_fn;
+    std::function<void()> clean_fn;
 
-    curl_event_fn_(event, curl_conn, clean_fn);
+    curl_event_fn_(event, std::shared_ptr<CURL>(easy, easy_delete), clean_fn);
 
-    curl_conns_[loop_id].push_back({curl_conn, {create_socket_fn, clean_fn}});
+    curl_conns_[loop_id].insert({easy,
+                                {create_socket_fn, close_socket_fn,
+                                 clean_fn, {}}});
+
 
     auto rc = curl_multi_add_handle(curl_multis_[loop_id].get(), easy);
 
     if (rc != CURLM_OK) {
       LOG(ERROR) << "error adding handle to curl_multi";
 
-      auto & clean_up_fn = curl_conns_[loop_id].back().second.second;
-
-      if (clean_up_fn) {
-        clean_up_fn();
+      if (clean_fn) {
+        clean_fn();
       } else {
         VLOG(1) << "clean_fn is not defined!";
       }
 
-      curl_conns_[loop_id].pop_back();
+      curl_conns_[loop_id].erase(easy);
+
     }
 
 
@@ -349,12 +425,16 @@ void curl_pool::async(async_loop & loop) {
 
 void curl_pool::timer(async_loop & loop) {
 
+  cleanup_conns(loop.id());
+
   tcp_pool_.loop(loop.id()).set_timer_interval(k_initial_interval_secs);
 
   multi_socket_action(loop.id());
 }
 
 void curl_pool::check_multi_info(const size_t loop_id) {
+
+  VLOG(3) << "check_multi_info()++";
 
   int msg_left;
 
@@ -374,7 +454,11 @@ void curl_pool::check_multi_info(const size_t loop_id) {
 
       VLOG(3) << "url: " << eff_url << " done with result: "
               << msg->data.result;
+
+      finished_conns_[loop_id].push_back(easy);
   }
+
+  VLOG(3) << "check_multi_info()--";
 
 }
 
@@ -394,6 +478,14 @@ void curl_pool::multi_timer(const size_t loop_id, const long ms) {
 }
 
 void curl_pool::multi_socket_action(const size_t loop_id) {
+
+  VLOG(3) << "multi_socket_action() ++";
+
+  if (curl_conns_[loop_id].empty()) {
+    VLOG(3) << "no curl_conns_: doing nothing";
+    return;
+  }
+
 
   int still_running;
 
@@ -415,13 +507,11 @@ void curl_pool::multi_socket(const size_t loop_id, const int fd,
                              const int mode, const bool initialized)
 {
 
-  if (mode == CURL_POLL_REMOVE) {
-    remove_fd(loop_id, fd);
-    return;
-  }
+  VLOG(3) << "multi_socket() " << fd;
 
-  if (!initialized) {
-    fd_initial_modes_[loop_id].insert({fd, mode});
+  if (mode == CURL_POLL_REMOVE) {
+    VLOG(3) << "multi_socket() CURL_POLL_REMOVE";
+    //set_fd(loop_id, fd, async_fd::mode::none);
     return;
   }
 

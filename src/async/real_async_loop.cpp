@@ -47,12 +47,11 @@ bool real_async_fd::error() const {
 }
 
 void real_async_fd::stop() {
-  io_->stop();
-  close(fd_);
   async_loop_.remove_fd(fd_);
 }
 
 void real_async_fd::async_cb(ev::io &, int revents) {
+  VLOG(3) << "async_cb() events: " << revents;
   error_ = EV_ERROR & revents;
   read_ = EV_READ & revents;
   write_ = EV_WRITE & revents;
@@ -69,6 +68,12 @@ bool real_async_fd::ready_write() const {
 
 void real_async_fd::set_mode(const async_fd::mode& mode) {
   io_->set(ev_mode(mode));
+}
+
+real_async_fd::~real_async_fd() {
+  VLOG(3) << "~real_async_fd() " << fd_;
+  io_->stop();
+  close(fd_);
 }
 
 async_loop& real_async_fd::loop() {

@@ -59,8 +59,15 @@ class tcp_pool {
         timer_cb_fn_t timer_cb_fn,
         async_fn_t async_fn
     );
+
+    /* Async. Can be used from any thread */
     void add_client(const int fd);
     void add_client(const size_t loop_id, int fd);
+
+    /* Sync. Must be used for the thread that owns loop_id */
+    void add_client_sync(const size_t loop_id, int fd);
+    void remove_client_sync(const size_t loop_id, int fd);
+
     void signal_thread(const size_t loop_id);
     void signal_threads();
     void start_threads();

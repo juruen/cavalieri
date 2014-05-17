@@ -18,6 +18,7 @@ public:
       real_async_loop & loop,
       fd_cb_fn_t fd_cb_fn
   );
+  ~real_async_fd();
   int fd() const;
   bool error() const;
   void stop();
