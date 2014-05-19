@@ -29,6 +29,7 @@ class curl_pool {
 
   public:
     typedef std::function<void(const int)> create_socket_cb_t;
+    typedef std::function<void(const int)> close_socket_cb_t;
     typedef std::function<void(const long)> set_timer_cb_t;
     typedef std::function<void(const int, const int,
                                const bool)>            multi_socket_cb_t;
@@ -56,16 +57,16 @@ class curl_pool {
 
     typedef struct {
       std::shared_ptr<create_socket_cb_t> create_socket_fn;
-      std::shared_ptr<create_socket_cb_t> close_socket_fn;
+      std::shared_ptr<close_socket_cb_t> close_socket_fn;
       std::function<void()> cleanup_fn;
       std::unordered_set<int> fds;
     } curl_conn_data_t;
-
 
     tcp_pool tcp_pool_;
     curl_event_fn_t curl_event_fn_;
 
     std::vector<std::shared_ptr<event_queue_t>> thread_event_queues_;
+
     std::vector<std::unordered_map<CURL*, curl_conn_data_t>> curl_conns_;
     std::vector<std::vector<CURL*>> finished_conns_;
 

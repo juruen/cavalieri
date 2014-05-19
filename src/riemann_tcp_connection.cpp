@@ -60,6 +60,8 @@ void riemann_tcp_connection::callback(async_fd & async) {
 
 void riemann_tcp_connection::read_cb() {
 
+  read_iterations_ = 0;
+
   if (reading_header_) {
     read_header();
   } else {

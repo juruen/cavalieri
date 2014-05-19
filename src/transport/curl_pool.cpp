@@ -15,10 +15,11 @@ namespace {
 const size_t k_queue_capacity = 10000;
 const float k_initial_interval_secs = 2;
 
-char error_[10 * 1024];
+char error_[CURL_ERROR_SIZE];
 
 
 async_fd::mode curl_to_async_mode(const int mode) {
+
   VLOG(3) << "setting fd to mode " << mode;
 
   async_fd::mode a_mode;
@@ -47,7 +48,7 @@ async_fd::mode curl_to_async_mode(const int mode) {
 
 void multi_delete(CURLM *curlm) {
 
-  VLOG(3) << "multi_delete++";
+  VLOG(3) << "multi_delete()";
 
   if (curlm) {
     curl_multi_cleanup(curlm);
@@ -56,8 +57,7 @@ void multi_delete(CURLM *curlm) {
   }
 }
 
-void easy_delete(CURL* curl) {
-}
+void easy_delete(CURL* curl) { }
 
 size_t write_cb(void *ptr, size_t size, size_t nmemb, void *) {
   std::string buffer((char*)ptr, (char*)ptr + (size * nmemb));
@@ -66,6 +66,7 @@ size_t write_cb(void *ptr, size_t size, size_t nmemb, void *) {
 }
 
 curl_socket_t sock_cb (void* fn, curlsocktype, struct curl_sockaddr *addr) {
+
   int fd = socket(addr->family, addr->socktype, addr->protocol);
 
   if (fd > -1) {
@@ -104,7 +105,7 @@ int multi_sock_cb(CURL *, curl_socket_t socket, int mode, void *fn, void *in) {
 
 int close_sock_cb (void* fn, curl_socket_t fd) {
 
-  VLOG(3) << "libcurl asked to close socket: " << fd;
+  VLOG(3) << "libcurl requests to close fd: " << fd;
 
   (*static_cast<curl_pool::create_socket_cb_t*>(fn))(fd);
 
@@ -191,8 +192,10 @@ void curl_pool::push_event(const Event & event, boost::any extra) {
   auto & queue = thread_event_queues_[next_thread_];
 
   if (!queue->try_push({event, extra})) {
+
     LOG(ERROR) << "queue of thread " << next_thread_ << " is full";
     return;
+
   }
 
   tcp_pool_.signal_thread(next_thread_);
@@ -259,8 +262,6 @@ void curl_pool::cleanup_conns(const size_t loop_id) {
 
     CHECK(curl_conn_it != curl_conns_[loop_id].end()) << "curl_conn not found";
 
-    VLOG(3) << "curl_multi_remove_handle";
-
     auto rc = curl_multi_remove_handle(curl_multis_[loop_id].get(), curl_conn);
 
     if (rc != CURLM_OK) {
@@ -270,23 +271,18 @@ void curl_pool::cleanup_conns(const size_t loop_id) {
 
     }
 
-    VLOG(3) << "cleaning up stuff for this handle";
     auto cleanup_fn = curl_conn_it->second.cleanup_fn;
 
     if (cleanup_fn) {
-      VLOG(3) << "before clean_up";
       cleanup_fn();
-      VLOG(3) << "after clean_up";
     } else {
       VLOG(1) << "clean_fn is not defined!";
     }
 
     remove_fds(loop_id, curl_conn);
 
-    VLOG(3) << "removing curl_conn from curl_conns_";
     curl_conns_[loop_id].erase(curl_conn_it);
 
-    VLOG(3) << "curl_easy_cleanup: " << curl_conn;
     curl_easy_cleanup(curl_conn);
 
   }
@@ -325,10 +321,11 @@ void curl_pool::remove_fds(size_t loop_id, CURL* curl_conn) {
 
   auto & conn_data = conn_it->second;
 
-  VLOG(3) << "removing fds in set";
   for (auto fd : conn_data.fds) {
-    VLOG(3) << "remove fd: " << fd;
+
     // Remove fd from  tcp_pool loop
+    VLOG(3) << "remove fd: " << fd;
+
     tcp_pool_.remove_client_sync(loop_id, fd);
   }
 
@@ -359,24 +356,25 @@ void curl_pool::async(async_loop & loop) {
           [=](const int fd) {
 
             VLOG(3) << "crete_socket_cb()";
+
             if (fd > 0) {
               add_fd(loop_id, easy, fd);
             } else {
-              LOG(FATAL) << "we need to take care of failed socket";
+              LOG(ERROR) << "run out of file descriptors!!!???";
             }
 
           }));
 
-    std::shared_ptr<create_socket_cb_t> close_socket_fn(
+    std::shared_ptr<close_socket_cb_t> close_socket_fn(
         new create_socket_cb_t(
           [=](const int fd) {
 
             VLOG(3) << "close_socket_cb()";
+
             if (fd > 0) {
               set_fd(loop_id, fd, async_fd::mode::none);
-              //remove_fd(loop_id, easy, fd);
             } else {
-              LOG(FATAL) << "we need to take care of failed socket";
+              LOG(ERROR) << "asked to close an invalid file descriptor";
             }
 
           }));
@@ -479,13 +477,7 @@ void curl_pool::multi_timer(const size_t loop_id, const long ms) {
 
 void curl_pool::multi_socket_action(const size_t loop_id) {
 
-  VLOG(3) << "multi_socket_action() ++";
-
-  if (curl_conns_[loop_id].empty()) {
-    VLOG(3) << "no curl_conns_: doing nothing";
-    return;
-  }
-
+  VLOG(3) << "multi_socket_action()++";
 
   int still_running;
 
@@ -510,8 +502,7 @@ void curl_pool::multi_socket(const size_t loop_id, const int fd,
   VLOG(3) << "multi_socket() " << fd;
 
   if (mode == CURL_POLL_REMOVE) {
-    VLOG(3) << "multi_socket() CURL_POLL_REMOVE";
-    //set_fd(loop_id, fd, async_fd::mode::none);
+    VLOG(3) << "multi_socket() got CURL_POLL_REMOVE";
     return;
   }
 
