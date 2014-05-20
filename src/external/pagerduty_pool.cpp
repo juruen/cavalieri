@@ -61,7 +61,7 @@ void pagerduty_pool::curl_event(const queued_event_t queued_event,
   Json::Value event;
 
   std::string desc = e.host() + " " + e.service() + " is " + e.state()
-                     + metric_to_string(e);
+                     + "(" + metric_to_string(e) + ")";
 
   event ["incident_key"] = Json::Value(e.host() + "/" + e.service());
   event["service_key"] = Json::Value(extra.pg_key);
