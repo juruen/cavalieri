@@ -9,6 +9,9 @@
 namespace {
 
 const std::string k_default_index = "index";
+const size_t k_stop_attempts = 120;
+const size_t k_stop_interval_check_ms = 500;
+
 
 std::string key(const Event& e) {
   return e.host() + "-" + e.service();
@@ -61,16 +64,16 @@ void real_index::add_event(const Event& e) {
 
 void real_index::timer_cb() {
 
-  if (expiring_ == true) {
+
+  if (expiring_.exchange(true)) {
 
     VLOG(1) << "previous expire_events thread hasn't finished yet";
     return;
 
   }
 
-  expiring_ = true;
-
   spwan_thread_fn_(std::bind(&real_index::expire_events, this));
+
 }
 
 void real_index::expire_events() {
@@ -109,11 +112,34 @@ void real_index::expire_events() {
 
   VLOG(3) << "expire_fn()--";
 
-  expiring_ = false;
+  expiring_.store(false);
 
   atom_detach_thread();
 }
 
 real_index::~real_index() {
-  // TODO: Make sure the periodic task is stopped
+
+  VLOG(3) << "~real_index()++";
+
+  if (expiring_.exchange(true)) {
+
+    VLOG(3) << "expire_events thread is running";
+
+    index_map_.clear();
+
+    for (size_t attempts = k_stop_attempts; attempts > 0; attempts--) {
+
+      if (!expiring_.exchange(true)) {
+        break;
+      }
+
+      VLOG(3) << "Waiting for expiring event to finish";
+
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(k_stop_interval_check_ms));
+    }
+
+  }
+
+  VLOG(3) << "~real_index()--";
 }
