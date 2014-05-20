@@ -22,19 +22,20 @@ public:
   index_interface & idx();
   scheduler_interface & sched();
   external_interface & externals();
+  ~real_core();
 
 private:
   config config_;
 
   std::unique_ptr<main_async_loop_interface> main_loop_;
   std::unique_ptr<real_scheduler> scheduler_;
+  std::unique_ptr<real_external> externals_;
   std::shared_ptr<streams> streams_;
   std::unique_ptr<pub_sub> pubsub_;
   std::unique_ptr<real_index> index_;
   std::unique_ptr<riemann_tcp_pool> tcp_server_;
   std::unique_ptr<riemann_udp_pool> udp_server_;
   std::unique_ptr<websocket_pool> ws_server_;
-  std::unique_ptr<real_external> externals_;
 
   std::vector<std::shared_ptr<streams_t>> sh_streams_;
 

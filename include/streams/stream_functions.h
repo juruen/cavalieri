@@ -165,12 +165,15 @@ bool match_like_(e_t e, const std::string key, const std::string value);
 
 class streams {
 public:
+  streams();
   void add_stream(streams_t stream);
   void process_message(const Msg& message);
   void push_event(const Event& e);
+  void stop();
 
 private:
   std::vector<streams_t> streams_;
+  bool stop_;
 };
 
 

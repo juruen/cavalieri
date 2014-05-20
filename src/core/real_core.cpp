@@ -18,6 +18,8 @@ real_core::real_core(const config & conf)
 
     scheduler_(new real_scheduler(*main_loop_)),
 
+    externals_(new real_external(conf)),
+
     streams_(new streams()),
 
     pubsub_(new pub_sub()),
@@ -30,9 +32,7 @@ real_core::real_core(const config & conf)
 
     udp_server_(init_udp_server(conf, streams_)),
 
-    ws_server_(init_ws_server(conf, *main_loop_, *pubsub_)),
-
-    externals_(new real_external(conf))
+    ws_server_(init_ws_server(conf, *main_loop_, *pubsub_))
 {
 
 }
@@ -47,6 +47,8 @@ void real_core::start() {
 
   main_loop_->start();
 
+  streams_->stop();
+
   LOG(INFO) << "Screw you guys, I'm going home.";
 }
 
@@ -60,6 +62,10 @@ void real_core::add_stream(std::shared_ptr<streams_t> stream) {
 
   }
 
+}
+
+real_core::~real_core() {
+  VLOG(3) << "~real_core";
 }
 
 index_interface & real_core::idx() {

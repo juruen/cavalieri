@@ -1040,11 +1040,17 @@ bool match_like_(e_t e, const std::string key, const std::string value) {
 
 }
 
+streams::streams() : stop_(false) {}
+
 void streams::add_stream(streams_t stream) {
   streams_.push_back(stream);
 }
 
 void streams::process_message(const Msg& message) {
+
+  if (stop_) {
+    return;
+  }
 
   VLOG(3) << "process message. num of streams " << streams_.size();
   VLOG(3) << "process message. num of events " << message.events_size();
@@ -1070,6 +1076,11 @@ void streams::process_message(const Msg& message) {
 }
 
 void streams::push_event(const Event& e) {
+
+  if (stop_) {
+    return;
+  }
+
   for (auto& s: streams_) {
 
     if (e.has_time()) {
@@ -1080,6 +1091,13 @@ void streams::push_event(const Event& e) {
     }
 
   }
+
+
 }
 
+void streams::stop() {
 
+  VLOG(3) << "stop stream processing";
+
+  stop_ = true;
+}
