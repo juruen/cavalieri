@@ -1071,7 +1071,14 @@ void streams::process_message(const Msg& message) {
 
 void streams::push_event(const Event& e) {
   for (auto& s: streams_) {
-    ::push_event(s, e);
+
+    if (e.has_time()) {
+      ::push_event(s, e);
+    } else {
+      Event ne(e);
+      ne.set_time(g_core->sched().unix_time());
+    }
+
   }
 }
 
