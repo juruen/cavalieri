@@ -82,6 +82,7 @@ void real_index::expire_events() {
 
   VLOG(3) << "expire_fn()++";
 
+  VLOG(3) << "index size: " << index_map_.size();
 
   std::vector<std::string> keys_to_remove;
   std::vector<Event> expired_events;
@@ -109,6 +110,9 @@ void real_index::expire_events() {
     pubsub_.publish(k_default_index, event);
     push_event_fn_(event);
   }
+
+  VLOG(3) << "expire process took "
+          << static_cast<int64_t>(sched_.unix_time()) - now << " seconds";
 
   VLOG(3) << "expire_fn()--";
 
