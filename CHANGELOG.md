@@ -1,8 +1,10 @@
-0.0.5 TBA
-=========
+0.0.5 2014-05-21
+================
 
   * Add multi-threaded libcurl pool to implement HTTP(S) and emails clients.
   * Get rid of python interpreter
+  * Stability fixes
+  * Set SO_REUSEADDR on listening sockets
 
 0.0.4 2014-04-19
 ================
