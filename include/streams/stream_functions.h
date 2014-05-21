@@ -15,7 +15,9 @@ typedef std::vector<Event> events_t;
 
 #define PRED(EXP) [=](e_t e) { return (EXP); }
 #define TR(EXP) [](Event & e) {(EXP); }
-#define BY(EXP) []() { return (EXP); }
+#define BY(EXP) [=]() { return (EXP); }
+#define NE(EXP) [=](const Event & event) { Event e(event); (EXP); return e;  }
+
 
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::function<void(Event &)> smap_fn_t;
@@ -41,6 +43,8 @@ streams_t service_like(const std::string pattern);
 
 streams_t service_like_any(const std::vector<std::string> patterns);
 
+streams_t state(const std::string state);
+
 streams_t set_state(const std::string state);
 
 streams_t set_metric(const double metric);
@@ -53,8 +57,7 @@ streams_t split(const split_clauses_t clauses);
 
 streams_t split(const split_clauses_t clauses, const streams_t default_stream);
 
-streams_t where(const predicate_t& predicate,
-                    const streams_t else_stream);
+streams_t where(const predicate_t& predicate, const streams_t else_stream);
 
 streams_t where(const predicate_t& predicate);
 
@@ -71,6 +74,8 @@ streams_t changed_state(std::string initial);
 streams_t tagged_any(const tags_t& tags);
 
 streams_t tagged_all(const tags_t& tags);
+
+streams_t tagged(const std::string tag);
 
 streams_t smap(smap_fn_t f);
 
@@ -162,12 +167,15 @@ bool match_like_(e_t e, const std::string key, const std::string value);
 
 class streams {
 public:
+  streams();
   void add_stream(streams_t stream);
   void process_message(const Msg& message);
   void push_event(const Event& e);
+  void stop();
 
 private:
   std::vector<streams_t> streams_;
+  bool stop_;
 };
 
 

@@ -45,6 +45,10 @@ streams_t service_like_any(const std::vector<std::string> patterns) {
   return where(match_like_any_pred("service", patterns));
 }
 
+streams_t state(const std::string state) {
+  return where(match_pred("state", state));
+}
+
 streams_t set_state(const std::string state) {
   return with({{"state", state}});
 }
@@ -153,11 +157,13 @@ typedef std::unordered_map<std::string, streams_t> by_stream_map_t;
 
 streams_t by(const by_keys_t & keys, const by_stream_t stream) {
 
-  auto atom_streams = make_shared_atom<by_stream_map_t>();
+  auto pre_delete = [](by_stream_map_t & m) { m.clear(); };
+
+  auto atom_streams = make_shared_atom<by_stream_map_t>(pre_delete);
 
   return create_stream(
 
-    [=](forward_fn_t, e_t e) mutable {
+    [=](forward_fn_t forward, e_t e) mutable {
 
       if (keys.empty()) {
         return;
@@ -168,11 +174,18 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
         key += string_to_value(e, k) + " ";
       }
 
+      auto fw_stream = create_stream(
+        [=](forward_fn_t, e_t e)
+        {
+          forward(e);
+        }
+      );
+
       map_on_sync_insert<std::string, streams_t>(
           atom_streams,
           key,
-          [&]() { return stream();},
-          [&](streams_t  c) { push_event(c, e); }
+          [&]() { return stream() >> fw_stream;},
+          [&](streams_t & c) { push_event(c, e); }
       );
 
   });
@@ -190,7 +203,7 @@ streams_t rate(const int interval) {
 
       if (!*task_created) {
 
-        g_core->sched()->add_periodic_task(
+        g_core->sched().add_periodic_task(
           [=]() mutable
           {
             VLOG(3) << "rate-timer()";
@@ -198,7 +211,7 @@ streams_t rate(const int interval) {
             Event event;
 
             event.set_metric_d(rate->exchange(0) / interval);
-            event.set_time(g_core->sched()->unix_time());
+            event.set_time(g_core->sched().unix_time());
 
             forward(event);
           },
@@ -348,14 +361,13 @@ streams_t project(const predicates_t predicates, fold_fn_t fold) {
   );
 }
 
-
-streams_t changed_state(std::string initial) {
-  auto prev = make_shared_atom<std::string>(initial);
+streams_t changed_state_(std::string initial) {
+  auto state = make_shared_atom<std::string>(initial);
 
   return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
-      prev->update(
+      state->update(
         e.state(),
         [&](const std::string & prev, const std::string &)
         {
@@ -366,6 +378,12 @@ streams_t changed_state(std::string initial) {
       );
 
     });
+}
+
+streams_t changed_state(std::string initial) {
+
+  return by({"host", "service"}, BY(changed_state_(initial)));
+
 }
 
 streams_t tagged_any(const tags_t& tags) {
@@ -389,6 +407,10 @@ streams_t tagged_all(const tags_t& tags) {
       }
 
     });
+}
+
+streams_t tagged(const std::string tag) {
+  return tagged_all({tag});
 }
 
 streams_t smap(smap_fn_t f) {
@@ -770,14 +792,7 @@ streams_t scale(double s) {
   return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
-      Event ne(e);
-
-      double t = s * metric_to_double(e);
-
-      clear_metrics(ne);
-      ne.set_metric_d(t);
-
-      forward(ne);
+      forward(set_metric_c(e, s * metric_to_double(e)));
   });
 }
 
@@ -838,7 +853,7 @@ streams_t send_index() {
 
       if (!expired_(e)) {
 
-        g_core->index()->add_event(e);
+        g_core->idx().add_event(e);
 
       }
 
@@ -851,7 +866,7 @@ streams_t send_graphite(const std::string host, const int port) {
   return create_stream(
     [=](forward_fn_t, e_t e) {
 
-      g_core->send_to_graphite(host, port, e);
+      g_core->externals().graphite(host, port, e);
 
     }
   );
@@ -861,7 +876,7 @@ streams_t forward(const std::string host, const int port) {
   return create_stream(
     [=](forward_fn_t, e_t e) {
 
-      g_core->forward(host, port, e);
+      g_core->externals().forward(host, port, e);
 
     }
   );
@@ -971,11 +986,11 @@ bool expired_(e_t e) {
     return true;
   }
 
-  if (g_core->sched()->unix_time() < e.time()) {
+  if (g_core->sched().unix_time() < e.time()) {
     return false;
   }
 
-  return (g_core->sched()->unix_time() - e.time() > ttl);
+  return (g_core->sched().unix_time() - e.time() > ttl);
 }
 
 bool above_eq_(e_t e, const double value) {
@@ -1018,11 +1033,17 @@ bool match_like_(e_t e, const std::string key, const std::string value) {
 
 }
 
+streams::streams() : stop_(false) {}
+
 void streams::add_stream(streams_t stream) {
   streams_.push_back(stream);
 }
 
 void streams::process_message(const Msg& message) {
+
+  if (stop_) {
+    return;
+  }
 
   VLOG(3) << "process message. num of streams " << streams_.size();
   VLOG(3) << "process message. num of events " << message.events_size();
@@ -1048,9 +1069,28 @@ void streams::process_message(const Msg& message) {
 }
 
 void streams::push_event(const Event& e) {
-  for (auto& s: streams_) {
-    ::push_event(s, e);
+
+  if (stop_) {
+    return;
   }
+
+  for (auto& s: streams_) {
+
+    if (e.has_time()) {
+      ::push_event(s, e);
+    } else {
+      Event ne(e);
+      ne.set_time(g_core->sched().unix_time());
+    }
+
+  }
+
+
 }
 
+void streams::stop() {
 
+  VLOG(3) << "stop stream processing";
+
+  stop_ = true;
+}

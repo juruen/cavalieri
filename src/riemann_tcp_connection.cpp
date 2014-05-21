@@ -1,6 +1,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <glog/logging.h>
+#include <algorithm>
 #include <proto.pb.h>
 #include <riemann_tcp_connection.h>
 
@@ -22,7 +23,9 @@ static std::vector<char>  generate_msg_ok()
   return response;
 }
 
-std::vector<char> ok_response = generate_msg_ok();
+const std::vector<char> ok_response = generate_msg_ok();
+
+const size_t k_max_read_iterations = 5;
 
 }
 
@@ -33,7 +36,8 @@ riemann_tcp_connection::riemann_tcp_connection(
   tcp_connection_(tcp_connection),
   raw_msg_fn_(raw_msg_fn),
   reading_header_(true),
-  protobuf_size_(0)
+  protobuf_size_(0),
+  read_iterations_(0)
 {
   memcpy(static_cast<void*>(&tcp_connection_.w_buffer[0]),
          &ok_response[0], ok_response.size());
@@ -55,6 +59,8 @@ void riemann_tcp_connection::callback(async_fd & async) {
 }
 
 void riemann_tcp_connection::read_cb() {
+
+  read_iterations_ = 0;
 
   if (reading_header_) {
     read_header();
@@ -82,7 +88,17 @@ void riemann_tcp_connection::write_cb() {
 
 void riemann_tcp_connection::read_header() {
 
-  if (!tcp_connection_.read(tcp_connection_.buffer_size)) {
+  if (read_iterations_++ > k_max_read_iterations) {
+
+    LOG(ERROR) << "we need to yield cpu time to other connections.";
+    read_iterations_ = 0;
+
+    return;
+  }
+
+  if (!tcp_connection_.read(4 - tcp_connection_.bytes_read) &&
+      tcp_connection_.bytes_read == 0)
+  {
     return;
   }
 
@@ -95,7 +111,7 @@ void riemann_tcp_connection::read_header() {
   protobuf_size_ = ntohl(header);
 
   if (protobuf_size_ + 4 > tcp_connection_.buffer_size) {
-    VLOG(2) << "protobuf_size_ too big: " << protobuf_size_;
+    LOG(ERROR) << "protobuf_size_ too big: " << protobuf_size_;
     tcp_connection_.close_connection = true;
     return;
   }
@@ -106,19 +122,25 @@ void riemann_tcp_connection::read_header() {
 
 void riemann_tcp_connection::read_message() {
 
-  if (tcp_connection_.bytes_read < protobuf_size_ + 4) {
-    if (!tcp_connection_.read(protobuf_size_ + 4)) {
+  const auto bytes_read = tcp_connection_.bytes_read;
+  const auto frame_size = protobuf_size_ + 4;
+
+  if (bytes_read < frame_size) {
+
+    if (!tcp_connection_.read(frame_size - bytes_read)) {
       return;
     }
 
     if ((tcp_connection_.bytes_read - 4) != protobuf_size_) {
       return;
     }
+
   }
 
-  reading_header_ = true;
-  tcp_connection_.bytes_read = 0;
+  /* We have a complete message */
+
   tcp_connection_.bytes_to_write = ok_response.size();
+  tcp_connection_.bytes_written = 0;
 
   if (tcp_connection_.bytes_to_write > tcp_connection_.buffer_size) {
     VLOG(2) << "write buffer is full: " << tcp_connection_.bytes_to_write;
@@ -129,5 +151,27 @@ void riemann_tcp_connection::read_message() {
   std::vector<unsigned char> msg(protobuf_size_);
   memcpy(&msg[0], &tcp_connection_.r_buffer[4], protobuf_size_);
 
+  /* Process message */
   raw_msg_fn_(std::move(msg));
-}
+
+  /* State transtion */
+  reading_header_ = true;
+
+  if (tcp_connection_.bytes_read > frame_size) {
+
+    /* We already have  some bits of the next message */
+    tcp_connection_.bytes_read -= frame_size;
+
+    std::rotate(begin(tcp_connection_.r_buffer),
+                begin(tcp_connection_.r_buffer) + tcp_connection_.bytes_read,
+                end(tcp_connection_.r_buffer));
+
+    read_header();
+
+  } else {
+
+    tcp_connection_.bytes_read = 0;
+
+  }
+
+ }

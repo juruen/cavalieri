@@ -47,12 +47,11 @@ bool real_async_fd::error() const {
 }
 
 void real_async_fd::stop() {
-  io_->stop();
-  close(fd_);
   async_loop_.remove_fd(fd_);
 }
 
 void real_async_fd::async_cb(ev::io &, int revents) {
+  VLOG(3) << "async_cb() events: " << revents;
   error_ = EV_ERROR & revents;
   read_ = EV_READ & revents;
   write_ = EV_WRITE & revents;
@@ -69,6 +68,12 @@ bool real_async_fd::ready_write() const {
 
 void real_async_fd::set_mode(const async_fd::mode& mode) {
   io_->set(ev_mode(mode));
+}
+
+real_async_fd::~real_async_fd() {
+  VLOG(3) << "~real_async_fd() " << fd_;
+  io_->stop();
+  close(fd_);
 }
 
 async_loop& real_async_fd::loop() {
@@ -143,6 +148,10 @@ void real_async_loop::set_fd_mode(const int fd, const async_fd::mode mode) {
   it->second->set_mode(mode);
 }
 
+void real_async_loop::set_timer_interval(const float t) {
+  timer_.start(t, 0);
+}
+
 ev::dynamic_loop & real_async_loop::loop() {
   return loop_;
 }
@@ -197,21 +206,21 @@ async_loop & real_async_events::loop(const size_t loop_id) {
   return loops_[loop_id];
 }
 
-async_events create_async_events(size_t threads, async_cb_fn_t async_cb) {
-
-  auto p = std::make_shared<real_async_events>(threads, async_cb);
-
-  return async_events(
-      std::dynamic_pointer_cast<async_events_interface>(p));
+std::unique_ptr<async_events_interface> make_async_events(size_t threads,
+                                                          async_cb_fn_t cb)
+{
+  return std::move(std::unique_ptr<real_async_events>(
+                    new real_async_events(threads, cb)));
 }
 
-async_events create_async_events(size_t threads, async_cb_fn_t async_cb,
-                                 const float interval, timer_cb_fn_t timer_cb) {
+std::unique_ptr<async_events_interface> make_async_events(size_t threads,
+                                                          async_cb_fn_t a_cb,
+                                                          const float interval,
+                                                          timer_cb_fn_t t_cb)
+{
 
-  auto p = std::make_shared<real_async_events>(threads, async_cb,
-                                               interval, timer_cb);
-  return async_events(
-      std::dynamic_pointer_cast<async_events_interface>(p));
+  return std::move(std::unique_ptr<real_async_events>(
+                    new real_async_events(threads,a_cb, interval, t_cb)));
 }
 
 listen_io::listen_io(const int fd, on_new_client_fn_t on_new_client)
@@ -311,13 +320,10 @@ void real_main_async_loop::async_cb(ev::async &, int) {
 
 }
 
-main_async_loop create_main_async_loop() {
 
-  auto p = std::make_shared<real_main_async_loop>();
+std::unique_ptr<main_async_loop_interface> make_main_async_loop() {
 
-  return main_async_loop(
-      std::dynamic_pointer_cast<main_async_loop_interface>(p));
+  std::unique_ptr<real_main_async_loop> real_main(new real_main_async_loop());
+  return std::move(real_main);
+
 }
-
-
-

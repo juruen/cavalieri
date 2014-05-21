@@ -12,7 +12,7 @@ It implements the original [riemann.io](http://riemann.io) protocol. That means
 you can leverage the existing *riemann* clients and tools. It also tries to
 mimic its stream API where possible.
 
-Cavalieri's current version *0.0.4* is considered to be  in **alpha** state.
+Cavalieri's current version *0.0.5* is considered to be  in **alpha** state.
 We expect to release a beta version in the following weeks.
 
 Current benchmarks show that it can process more than one million events per
@@ -346,7 +346,7 @@ Note that if we just do what is below, we wouldn't get a per host rate,
 we would get a global rate.
 
 ```cpp
-auto rate_stream = with({"metric", 1}) >> rate(60) >> prn("exceptions per second:");
+auto rate_stream = set_metric(1) >> rate(60) >> prn("exceptions per second:");
 ```
 
 If we want to compute the rate per host, that's when *by()* comes in handy.
@@ -406,8 +406,8 @@ project({service_pred("foo"), service_pred("bar"), sum) >> prn("foo + bar");
 
 #### changed_state (const std::string & initial)
 
-It only forwards events if there is a state change. It assummes *initial* as
-the first state.
+It only forwards events if there is a state change for every host and service.
+It assummes *initial* as the first state.
 
 If you are sending emails, this is useful to not spam yourself and only send
 emails when something goes from *ok* to *critical* and viceversa.
@@ -426,6 +426,14 @@ It forwards events only if they contain all the given *tags*.
 
 ```cpp
 tagged_any({"production", "london"}) >> above(5) >> email();
+```
+
+#### tagged (const std::string tag)
+
+It forwards events only if they contain the given *tag*.
+
+```cpp
+tagged("production") >> above(5) >> email();
 ```
 
 #### smap (const smap_fn_t fn)

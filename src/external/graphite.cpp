@@ -1,10 +1,6 @@
-#include <graphite/graphite.h>
+#include <external/graphite.h>
 
-namespace {
-
-const size_t k_default_pool_size = 3;
-
-}
+graphite::graphite(const config conf) : config_(conf) {}
 
 void graphite::push_event(const std::string host, const int port,
                           const Event & event)
@@ -28,7 +24,8 @@ std::shared_ptr<graphite_pool> graphite::pool(const std::string host,
     auto it1 = pool_map_.find(host);
     if (it1 == pool_map_.end()) {
 
-      pool = std::make_shared<graphite_pool>(k_default_pool_size, host, port);
+      pool = std::make_shared<graphite_pool>(config_.graphite_pool_size,
+                                             host, port);
       pool_map_.insert({host, pool});
 
     } else {

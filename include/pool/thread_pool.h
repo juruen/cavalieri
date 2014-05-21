@@ -22,6 +22,7 @@ class thread_pool {
      void stop_threads();
      void signal_thread(size_t tid);
      size_t next_thread();
+     async_loop & loop(const size_t id);
      virtual ~thread_pool();
 
   private:
@@ -34,7 +35,7 @@ class thread_pool {
     size_t next_thread_;
     std::vector<std::thread> threads_;
     std::vector<bool> finished_threads_;
-    async_events async_events_;
+    std::unique_ptr<async_events_interface> async_events_;
     hook_fn_t run_hook_fn_;
     hook_fn_t async_hook_fn_;
     std::mutex mutex_;

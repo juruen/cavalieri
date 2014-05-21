@@ -1,5 +1,5 @@
-#ifndef GRAPHITE_GRAPHITE_POOL_H
-#define GRPAHITE_GRAPHITE_POOL_H
+#ifndef EXTERNAL_GRAPHITE_POOL_H
+#define EXTERNAL_GRAPHITE_POOL_H
 
 #include <transport/tcp_client_pool.h>
 

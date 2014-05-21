@@ -5,7 +5,7 @@ import datetime
 import sys
 import random
 
-batch_size = 1
+batch_size = 100
 services = ["test1," "test2", "test3", "foo", "bar", "baz", "xyzzy", "attack", "cat", "treat"]
 
 class BatchClient(bernhard.Client):
@@ -27,5 +27,5 @@ def create_event(i):
 
 c = BatchClient(host='localhost')
 
-#while True:
-c.send([create_event(i) for i in range(batch_size)])
+while True:
+    c.send([create_event(i) for i in range(batch_size)])

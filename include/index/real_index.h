@@ -14,7 +14,7 @@ class real_index : public index_interface {
 public:
   real_index(pub_sub & pubsub, push_event_fn_t push_event,
              const int64_t expire_interval,
-             std::shared_ptr<class scheduler>  sched,
+             scheduler_interface &  sched,
              spwan_thread_fn_t spwan_thread_fn);
   ~real_index();
   void add_event(const Event& e);
@@ -29,7 +29,7 @@ private:
   push_event_fn_t push_event_fn_;
   std::atomic<bool> expiring_;
   spwan_thread_fn_t spwan_thread_fn_;
-  std::shared_ptr<class scheduler> sched_;
+  scheduler_interface & sched_;
   real_index_t index_map_;
 
 };

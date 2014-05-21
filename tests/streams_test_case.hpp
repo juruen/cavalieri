@@ -69,17 +69,17 @@ TEST(streams_test_case, test)
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (sink(v) + f + g), e);
+  push_event(a >>  b >> c >> d >> (sink(v), f, g), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (f + sink(v) + g), e);
+  push_event(a >>  b >> c >> d >> (f, sink(v),  g), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (f + g + sink(v)), e);
+  push_event(a >>  b >> c >> d >> (f, g, sink(v)), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
@@ -324,6 +324,10 @@ TEST(changed_state_streams_test_case, test)
   auto changed_stream = changed_state("a") >>  sink(v);
 
   Event e;
+
+  e.set_host("foo");
+  e.set_service("bar");
+
   for (auto s : {"a", "a", "b", "b", "a", "b", "b"}) {
     e.set_state(s);
     push_event(changed_stream, e);
@@ -333,6 +337,14 @@ TEST(changed_state_streams_test_case, test)
   ASSERT_EQ("b", v[0].state());
   ASSERT_EQ("a", v[1].state());
   ASSERT_EQ("b", v[2].state());
+  v.clear();
+
+  e.set_service("baz");
+  push_event(changed_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("b", v[0].state());
+
 }
 
 TEST(tagged_any_test_case, test)
@@ -383,6 +395,28 @@ TEST(tagged_all_streams_test_case, test)
   push_event(tag_stream, e);
   ASSERT_EQ(1, v.size());
 }
+
+TEST(tagged_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto tag_stream = tagged("foo") >>  sink(v);
+
+  Event e;
+
+  push_event(tag_stream, e);
+  ASSERT_EQ(0, v.size());
+
+  *(e.add_tags()) = "baz";
+  push_event(tag_stream, e);
+  ASSERT_EQ(0, v.size());
+
+ *(e.add_tags()) = "foo";
+  push_event(tag_stream, e);
+  ASSERT_EQ(1, v.size());
+}
+
+
 
 TEST(smap_streams_test_case, test)
 {
@@ -617,7 +651,7 @@ TEST(tag_streams_test_case, test)
 TEST(expired_streams_test_case, test)
 {
   std::vector<Event> v;
-  g_core->sched()->clear();
+  g_core->sched().clear();
 
   auto expired_stream = expired() >> sink(v);
 
@@ -642,7 +676,7 @@ TEST(expired_streams_test_case, test)
   ASSERT_EQ(0, v.size());
   v.clear();
 
-  g_core->sched()->set_time(100);
+  g_core->sched().set_time(100);
   push_event(expired_stream, e);
   ASSERT_EQ(1, v.size());
 }
@@ -650,7 +684,7 @@ TEST(expired_streams_test_case, test)
 TEST(rate_streams_test_case, test)
 {
   std::vector<Event> v;
-  g_core->sched()->clear();
+  g_core->sched().clear();
 
   Event e1, e2, e3;
 
@@ -658,7 +692,7 @@ TEST(rate_streams_test_case, test)
 
   // Check that we send a 0-valued metric if no event is received
   push_event(rate_stream, e1);
-  g_core->sched()->set_time(5);
+  g_core->sched().set_time(5);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ(0, v[0].metric_d());
 
@@ -671,7 +705,7 @@ TEST(rate_streams_test_case, test)
   push_event(rate_stream, e1);
   push_event(rate_stream, e2);
   push_event(rate_stream, e3);
-  g_core->sched()->set_time(10);
+  g_core->sched().set_time(10);
   ASSERT_EQ(2, v.size());
   ASSERT_EQ(12, v[1].metric_d());
 
@@ -686,18 +720,18 @@ TEST(rate_streams_test_case, test)
   push_event(rate_stream, e1);
   push_event(rate_stream, e2);
   push_event(rate_stream, e3);
-  g_core->sched()->set_time(15);
+  g_core->sched().set_time(15);
   ASSERT_EQ(3, v.size());
   ASSERT_EQ(12, v[1].metric_d());
 
-  g_core->sched()->clear();
+  g_core->sched().clear();
 }
 
 TEST(coalesce_streams_test_case, test)
 {
   std::vector<Event> v;
 
-  g_core->sched()->clear();
+  g_core->sched().clear();
 
   auto coalesce_stream = coalesce(msink(v));
 
@@ -739,7 +773,7 @@ TEST(coalesce_streams_test_case, test)
   ASSERT_TRUE(ok);
   v.clear();
 
-  g_core->sched()->set_time(100);
+  g_core->sched().set_time(100);
   e.set_host("b");
   e.set_service("b");
   e.set_time(90);
@@ -758,7 +792,7 @@ TEST(project_streams_test_case, test)
 {
   std::vector<Event> v;
 
-  g_core->sched()->clear();
+  g_core->sched().clear();
 
   auto m1 = PRED(e.host() == "a");
   auto m2 = PRED(e.host() == "b");
@@ -804,7 +838,7 @@ TEST(project_streams_test_case, test)
   ASSERT_TRUE(ok);
   v.clear();
 
-  g_core->sched()->set_time(100);
+  g_core->sched().set_time(100);
   e.set_host("b");
   e.set_service("b");
   e.set_time(90);
@@ -1141,5 +1175,25 @@ TEST(set_metric_streams_test_case, test)
   ASSERT_EQ(1, v.size());
   ASSERT_EQ(1, metric_to_double(v[0]));
 }
+
+TEST(state_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto state_stream = state("foo")  >>  sink(v);
+
+  Event e;
+
+  push_event(state_stream, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_state("foo");
+  push_event(state_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("foo", v[0].state());
+}
+
 
 #endif

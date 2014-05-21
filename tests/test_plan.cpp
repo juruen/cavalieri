@@ -36,7 +36,8 @@ int main(int argc, char **argv)
 
     ::testing::InitGoogleMock(&argc, argv);
 
-    g_core = std::make_shared<core>(new mock_core());
+    auto m_core = std::make_shared<mock_core>();
+    g_core = std::dynamic_pointer_cast<mock_core>(m_core);
 
     ret = RUN_ALL_TESTS();
   }

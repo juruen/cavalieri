@@ -13,6 +13,14 @@ int create_tcp_listen_socket(int port) {
 
   int socket_fd  = socket(PF_INET, SOCK_STREAM, 0);
 
+  int reuse_addr = 1;
+
+  if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr,
+                 sizeof(reuse_addr)) != 0)
+  {
+    LOG(ERROR) << "failed to set SO_REUSEADDR in socket";
+  }
+
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = INADDR_ANY;

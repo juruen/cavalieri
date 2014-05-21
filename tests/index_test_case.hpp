@@ -8,7 +8,7 @@
 
 TEST(index_test_case, test)
 {
-  g_core->sched()->clear();
+  g_core->sched().clear();
 
   std::vector<Event> s;
 
@@ -44,7 +44,7 @@ TEST(index_test_case, test)
   ASSERT_EQ("baz", c.host());
   ASSERT_EQ("bar", c.service());
 
-  g_core->sched()->set_time(180);
+  g_core->sched().set_time(180);
   ASSERT_EQ(1, s.size());
   ASSERT_EQ("foo", s[0].host());
   ASSERT_EQ("bar", s[0].service());

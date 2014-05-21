@@ -8,6 +8,7 @@ class riemann_tcp_pool {
   public:
     riemann_tcp_pool(size_t thread_num, raw_msg_fn_t raw_msg_fn);
     void add_client (int fd);
+    void stop();
     ~riemann_tcp_pool();
 
   private:
