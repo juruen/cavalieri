@@ -16,6 +16,8 @@ typedef std::vector<Event> events_t;
 #define PRED(EXP) [=](e_t e) { return (EXP); }
 #define TR(EXP) [](Event & e) {(EXP); }
 #define BY(EXP) [=]() { return (EXP); }
+#define NE(EXP) [=](const Event & event) { Event e(event); (EXP); return e;  }
+
 
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::function<void(Event &)> smap_fn_t;

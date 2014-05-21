@@ -792,14 +792,7 @@ streams_t scale(double s) {
   return create_stream(
     [=](forward_fn_t forward, e_t e) {
 
-      Event ne(e);
-
-      double t = s * metric_to_double(e);
-
-      clear_metrics(ne);
-      ne.set_metric_d(t);
-
-      forward(ne);
+      forward(set_metric_c(e, s * metric_to_double(e)));
   });
 }
 
