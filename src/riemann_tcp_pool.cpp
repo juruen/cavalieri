@@ -36,6 +36,12 @@ void riemann_tcp_pool::add_client(int fd) {
   tcp_pool_.add_client(fd);
 }
 
+void riemann_tcp_pool::stop() {
+  VLOG(3) << "stop()";
+
+  tcp_pool_.stop_threads();
+}
+
 void riemann_tcp_pool::create_conn(int fd, async_loop & loop,
                                    tcp_connection & conn)
 {

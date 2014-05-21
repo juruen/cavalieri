@@ -47,7 +47,12 @@ void real_core::start() {
 
   main_loop_->start();
 
+  VLOG(3) << "Stopping services";
+
   streams_->stop();
+  tcp_server_->stop();
+  udp_server_->stop();
+  ws_server_->stop();
 
   LOG(INFO) << "Screw you guys, I'm going home.";
 }

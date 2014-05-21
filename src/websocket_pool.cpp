@@ -85,6 +85,12 @@ void websocket_pool::notify_event(const Event & event) {
   }
 }
 
+void websocket_pool::stop() {
+  VLOG(3) << "stop()";
+
+  tcp_pool_.stop_threads();
+}
+
 void websocket_pool::create_conn(int fd, async_loop & loop,
                                  tcp_connection & conn)
 {
