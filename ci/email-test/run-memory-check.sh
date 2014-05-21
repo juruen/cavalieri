@@ -42,7 +42,7 @@ for i in $(seq 0 300); do
 
     kill -INT $valgrind_pid
 
-    if !  wait $valgrind_pid then
+    if !  wait $valgrind_pid; then
       echo "valgrind reported an error"
       cat valgrind.out
       exit 1
