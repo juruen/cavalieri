@@ -14,6 +14,7 @@ class websocket_pool {
     websocket_pool(size_t thread_num, pub_sub & pubsub);
     void add_client (int fd);
     void notify_event(const Event& event);
+    void stop();
 
   private:
     void create_conn(int fd, async_loop & loop, tcp_connection & conn);

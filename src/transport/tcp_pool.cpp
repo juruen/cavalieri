@@ -6,20 +6,6 @@
 
 using namespace std::placeholders;
 
-namespace {
-  async_fd::mode conn_to_mode(const tcp_connection & conn) {
-    if (conn.pending_read() && conn.pending_write()) {
-      return async_fd::readwrite;
-    } else if (conn.pending_read()) {
-      return async_fd::read;
-    } else if (conn.pending_write()) {
-      return async_fd::write;
-    } else {
-      return async_fd::none;
-    }
-  }
-}
-
 tcp_pool::tcp_pool(
     size_t thread_num,
     hook_fn_t run_fn,
@@ -101,6 +87,33 @@ void tcp_pool::add_client(const size_t loop_id, const int fd) {
   thread_pool_.signal_thread(loop_id);
 }
 
+void tcp_pool::add_client_sync(const size_t loop_id, const int fd) {
+
+  VLOG(3) << "add_client_sync() sfd: " << fd << " to loop_id: " << loop_id;
+
+  loop(loop_id).add_fd(fd, async_fd::none,
+                       std::bind(&tcp_pool::socket_callback, this, _1));
+
+   conn_maps_[loop_id].insert({fd, tcp_connection(fd)});
+
+}
+
+void tcp_pool::remove_client_sync(const size_t loop_id, int fd) {
+
+  VLOG(3) << "remove_client_sync() sfd: " << fd << " to loop_id: " << loop_id;
+
+  VLOG(3) << "removing tcp_client date for fd";
+  auto it  = conn_maps_[loop_id].find(fd);
+  CHECK(it != conn_maps_[loop_id].end()) << "fd not found";
+
+  conn_maps_[loop_id].erase(it);
+
+  VLOG(3) << "removing fd from loop";
+  thread_pool_.loop(loop_id).remove_fd(fd);
+
+}
+
+
 void tcp_pool::signal_threads() {
   VLOG(3) << "signaling all threads";
 
@@ -148,11 +161,16 @@ void tcp_pool::add_fds(async_loop & loop) {
     auto socket_cb = std::bind(&tcp_pool::socket_callback, this, _1);
     loop.add_fd(fd, async_fd::read, socket_cb);
     auto insert = conn_maps_[tid].insert({fd, tcp_connection(fd)});
-    tcp_create_conn_fn_(fd, loop, insert.first->second);
+
+    if (tcp_create_conn_fn_) {
+     tcp_create_conn_fn_(fd, loop, insert.first->second);
+    }
+
     VLOG(3) << "async_hook() tid: " << tid << " adding fd: " << fd;
   }
 
 }
+
 
 void tcp_pool::socket_callback(async_fd & async) {
   auto tid = async.loop().id();
@@ -160,7 +178,6 @@ void tcp_pool::socket_callback(async_fd & async) {
 
   if (async.error()) {
     VLOG(3) << "got invalid event: " << strerror(errno);
-    return;
   }
 
   auto it  = conn_maps_[tid].find(async.fd());
@@ -176,7 +193,7 @@ void tcp_pool::socket_callback(async_fd & async) {
     return;
   }
 
-  async.set_mode(conn_to_mode(conn));
+
 
   VLOG(3) << "--socket_callback() tid: " << tid;
 }
@@ -188,6 +205,12 @@ void tcp_pool::start_threads() {
 void tcp_pool::stop_threads() {
   thread_pool_.stop_threads();
 }
+
+async_loop & tcp_pool::loop(const size_t id) {
+  return thread_pool_.loop(id);
+}
+
+
 
 tcp_pool::~tcp_pool() {
   thread_pool_.stop_threads();

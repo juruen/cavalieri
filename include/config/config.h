@@ -10,6 +10,12 @@ struct config {
   size_t ws_pool_size;
   uint64_t index_expire_interval;
   std::string rules_directory;
+  size_t pagerduty_pool_size;
+  size_t mail_pool_size;
+  size_t graphite_pool_size;
+  size_t forward_pool_size;
+  bool enable_mail_debug;
+  bool enable_pagerduty_debug;
 };
 
 config create_config();

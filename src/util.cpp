@@ -58,6 +58,19 @@ bool metric_set(const Event & e) {
   return (e.has_metric_f() || e.has_metric_d() || e.has_metric_sint64());
 }
 
+Event & set_metric(Event & e, const double m) {
+  clear_metrics(e);
+  e.set_metric_d(m);
+
+  return e;
+}
+
+Event set_metric_c(const Event e, const double m) {
+  Event ne(e);
+
+  return set_metric(ne, m);
+}
+
 std::string string_to_value(const Event& e, const std::string& key) {
   if (key == "host") {
     return e.host();

@@ -10,7 +10,7 @@
 
 class real_scheduler : public scheduler_interface {
 public:
-  real_scheduler(main_async_loop & main_loop);
+  real_scheduler(main_async_loop_interface & main_loop);
   void add_periodic_task(task_fn_t task, float interval);
   void add_once_task(task_fn_t task, float dt);
   time_t unix_time();
@@ -23,7 +23,7 @@ private:
 private:
   typedef std::pair<task_fn_t, bool> sched_task_t;
 
-  main_async_loop & main_loop_;
+  main_async_loop_interface & main_loop_;
 
 
 };

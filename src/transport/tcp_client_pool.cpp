@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <util.h>
 #include <transport/tcp_connection.h>
 #include <transport/tcp_client_pool.h>
 
@@ -19,7 +20,7 @@ int connect_client(const std::string host, const int port) {
   auto sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 
   if (sock_fd < 0) {
-    LOG(ERROR) << "failed to create socket for graphite";
+    LOG(ERROR) << "failed to create socket to " << host << " and " << port;
     return -1;
   }
 
@@ -38,7 +39,8 @@ int connect_client(const std::string host, const int port) {
   }
 
   if (connect(sock_fd, server->ai_addr, server->ai_addrlen) < 0) {
-    LOG(ERROR) << "failed to connect() graphite";
+
+    LOG(ERROR) << "failed to connect() to " << host << " and " << port;
 
     freeaddrinfo(server);
     close(sock_fd);
@@ -46,9 +48,12 @@ int connect_client(const std::string host, const int port) {
     return -1;
   }
 
+  freeaddrinfo(server);
+
   fcntl(sock_fd, F_SETFL, fcntl(sock_fd, F_GETFL, 0) | O_NONBLOCK);
 
-  VLOG(1) << "graphite socket connected";
+  VLOG(1) << "tcp client connected to  create socket to "
+          << host << " and " << port;
 
   return sock_fd;
 
@@ -144,6 +149,8 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
 
 
 void tcp_client_pool::push_event(const Event & event) {
+
+  VLOG(3) << "push_event() " << event_to_json(event);
 
   auto & queue = thread_event_queues_[next_thread_];
 

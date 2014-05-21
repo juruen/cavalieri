@@ -8,7 +8,7 @@ import sys
 
 def ws_url(host):
     ws_host = "ws://%s/index?" % host
-    q = {'subscribed' : 'true', 'query' : '(metric>0.5)'}
+    q = {'subscribe' : 'true', 'query' : '(metric>0.5)'}
     return ws_host + urllib.urlencode(q)
 
 def main():

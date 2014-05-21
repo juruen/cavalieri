@@ -9,6 +9,9 @@
 namespace {
 
 const std::string k_default_index = "index";
+const size_t k_stop_attempts = 120;
+const size_t k_stop_interval_check_ms = 500;
+
 
 std::string key(const Event& e) {
   return e.host() + "-" + e.service();
@@ -18,7 +21,7 @@ std::string key(const Event& e) {
 
 real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
                        const int64_t expire_interval,
-                       std::shared_ptr<class scheduler>  sched,
+                       scheduler_interface &  sched,
                        spwan_thread_fn_t spwan_thread_fn)
 :
   pubsub_(pubsub),
@@ -31,7 +34,7 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
   pubsub_.add_publisher(k_default_index,
                         std::bind(&real_index::all_events, this));
 
-  sched_->add_periodic_task(std::bind(&real_index::timer_cb, this),
+  sched_.add_periodic_task(std::bind(&real_index::timer_cb, this),
                             expire_interval);
 }
 
@@ -61,16 +64,16 @@ void real_index::add_event(const Event& e) {
 
 void real_index::timer_cb() {
 
-  if (expiring_ == true) {
+
+  if (expiring_.exchange(true)) {
 
     VLOG(1) << "previous expire_events thread hasn't finished yet";
     return;
 
   }
 
-  expiring_ = true;
-
   spwan_thread_fn_(std::bind(&real_index::expire_events, this));
+
 }
 
 void real_index::expire_events() {
@@ -79,11 +82,12 @@ void real_index::expire_events() {
 
   VLOG(3) << "expire_fn()++";
 
+  VLOG(3) << "index size: " << index_map_.size();
 
   std::vector<std::string> keys_to_remove;
   std::vector<Event> expired_events;
 
-  int64_t now = static_cast<int64_t>(sched_->unix_time());
+  int64_t now = static_cast<int64_t>(sched_.unix_time());
 
   for (const auto & pair : index_map_) {
 
@@ -107,33 +111,39 @@ void real_index::expire_events() {
     push_event_fn_(event);
   }
 
+  VLOG(3) << "expire process took "
+          << static_cast<int64_t>(sched_.unix_time()) - now << " seconds";
+
   VLOG(3) << "expire_fn()--";
 
-  expiring_ = false;
+  expiring_.store(false);
 
   atom_detach_thread();
 }
 
 real_index::~real_index() {
-  // TODO: Make sure the periodic task is stopped
+
+  VLOG(3) << "~real_index()++";
+
+  if (expiring_.exchange(true)) {
+
+    VLOG(3) << "expire_events thread is running";
+
+    index_map_.clear();
+
+    for (size_t attempts = k_stop_attempts; attempts > 0; attempts--) {
+
+      if (!expiring_.exchange(true)) {
+        break;
+      }
+
+      VLOG(3) << "Waiting for expiring event to finish";
+
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(k_stop_interval_check_ms));
+    }
+
+  }
+
+  VLOG(3) << "~real_index()--";
 }
-
-
-class index create_index(pub_sub & pubsub, push_event_fn_t push_event,
-                         std::shared_ptr<class scheduler> sched,
-                         const int64_t expire_interval,
-                         spwan_thread_fn_t spwan_thread_fn)
-{
-  auto real_idx = std::make_shared<real_index>(pubsub, push_event,
-                                               expire_interval,
-                                               sched,
-                                               spwan_thread_fn);
-
-  auto idx_iface = std::dynamic_pointer_cast<index_interface>(real_idx);
-
-  class index idx(idx_iface);
-
-  return idx;
-}
-
-

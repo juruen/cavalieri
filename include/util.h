@@ -16,6 +16,10 @@ double metric_to_double(const Event &e);
 
 bool metric_set(const Event & e);
 
+Event & set_metric(Event & e, const double m);
+
+Event set_metric_c(const Event  e, const double m);
+
 void clear_metrics(Event & e);
 
 std::string string_to_value(const Event& e, const std::string& key);

@@ -78,7 +78,7 @@ public:
   }
 
  ~atom_cds() {
-   cds::gc::HP::retire(atomic_ptr_.load(), retire);
+   delete atomic_ptr_.load();
   }
 
  private:
@@ -115,16 +115,18 @@ void map_on_sync_insert_cds(
   std::unordered_map<K,V>* nptr = nullptr;
   std::unordered_map<K,V>* optr = nullptr;
 
+  cds::gc::HP::Guard new_guard;
+
   do {
 
-    cds::gc::HP::Guard guard;
-    guard.assign(m.atomic_ptr().load());
+    cds::gc::HP::Guard old_guard;
+    old_guard.protect(m.atomic_ptr());
 
     if (nptr != nullptr) {
       delete nptr;
     }
 
-    optr = (std::unordered_map<K,V>*)(guard.get_native());
+    optr = (std::unordered_map<K,V>*)(old_guard.get_native());
     auto it = optr->find(k);
 
     if (it != optr->end()) {
@@ -135,12 +137,11 @@ void map_on_sync_insert_cds(
     nptr = new std::unordered_map<K,V>(*optr);
     nptr->insert({k, fn_value()});
 
+    new_guard.assign(nptr);
+
   } while (!m.atomic_ptr().compare_exchange_strong(optr, nptr));
 
-  cds::gc::HP::Guard guard;
-  guard.assign(m.atomic_ptr().load());
-
-  nptr = (std::unordered_map<K,V>*)(guard.get_native());
+  nptr = (std::unordered_map<K,V>*)(nptr);
 
   auto it = nptr->find(k);
   assert(it != nptr->end());

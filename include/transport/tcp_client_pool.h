@@ -26,6 +26,7 @@ class tcp_client_pool {
     tcp_client_pool(size_t thread_num, const std::string host, const int port,
                     size_t batch_size, output_events_fn_t output_events_fn);
     void push_event(const Event & event);
+    void stop();
 
   private:
     void create_conn(int fd, async_loop & loop, tcp_connection & conn);
