@@ -41,8 +41,12 @@ for i in $(seq 0 300); do
     sleep 10
 
     kill -INT $valgrind_pid
-    wait $valgrind_pid
-    echo "valgrind output: " $?
+
+    if !  wait $valgrind_pid then
+      echo "valgrind reported an error"
+      cat valgrind.out
+      exit 1
+    fi
 
     grep -q "definitely lost: 0 bytes" valgrind.out \
          || (cat valgrind.out && false)
