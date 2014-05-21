@@ -5,7 +5,7 @@
 
 class mailer_pool {
 public:
-  mailer_pool(const size_t thread_num);
+  mailer_pool(const size_t thread_num, const bool enable_debug);
   void push_event(const std::string server, const std::string from,
                   const std::vector<std::string> to, const Event & event);
 private:
@@ -15,6 +15,7 @@ private:
 
 private:
   curl_pool curl_pool_;
+  bool enable_debug_;
 };
 
 #endif

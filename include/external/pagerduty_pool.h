@@ -12,7 +12,7 @@ public:
   };
 
 public:
-  pagerduty_pool(const size_t thread_num);
+  pagerduty_pool(const size_t thread_num, const bool enable_debug);
   void push_event(const pd_action action, const std::string pd_key,
                   const Event & event);
 
@@ -22,6 +22,7 @@ private:
 
 private:
   curl_pool curl_pool_;
+  bool enable_debug_;
 };
 
 #endif

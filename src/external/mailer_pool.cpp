@@ -62,12 +62,13 @@ std::vector<char> payload_text(const mailer_extra extra, const Event & e) {
 
 }
 
-mailer_pool::mailer_pool(const size_t thread_num)
+mailer_pool::mailer_pool(const size_t thread_num, const bool enable_debug)
   :
   curl_pool_(
       thread_num,
       std::bind(&mailer_pool::curl_event, this, _1, _2, _3)
-  )
+  ),
+  enable_debug_(enable_debug)
 {
 }
 
@@ -110,6 +111,7 @@ void mailer_pool::curl_event(const queued_event_t queued_event,
   curl_easy_setopt(easy.get(), CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
   curl_easy_setopt(easy.get(), CURLOPT_READFUNCTION, payload_source);
   curl_easy_setopt(easy.get(), CURLOPT_READDATA, payload.get());
+  curl_easy_setopt(easy.get(), CURLOPT_VERBOSE, enable_debug_);
 
   clean_fn = [=]()
   {

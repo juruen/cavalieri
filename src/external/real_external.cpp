@@ -4,8 +4,8 @@ real_external::real_external(const config conf)
 : external_interface(),
   riemann_tcp_client_(conf),
   graphite_(conf),
-  pagerduty_(conf.pagerduty_pool_size),
-  email_(conf.mail_pool_size)
+  pagerduty_(conf.pagerduty_pool_size, conf.enable_pagerduty_debug),
+  email_(conf.mail_pool_size, conf.enable_mail_debug)
 {
 }
 

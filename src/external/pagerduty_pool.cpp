@@ -30,12 +30,13 @@ std::string pd_action_to_string(const pagerduty_pool::pd_action action) {
 
 };
 
-pagerduty_pool::pagerduty_pool(const size_t thread_num)
+pagerduty_pool::pagerduty_pool(const size_t thread_num, const bool enable_debug)
   :
   curl_pool_(
       thread_num,
       std::bind(&pagerduty_pool::curl_event, this, _1, _2, _3)
-  )
+  ),
+  enable_debug_(enable_debug)
 {
 }
 
@@ -75,5 +76,6 @@ void pagerduty_pool::curl_event(const queued_event_t queued_event,
 
   curl_easy_setopt(easy.get(), CURLOPT_URL, k_pd_url.c_str());
   curl_easy_setopt(easy.get(), CURLOPT_COPYPOSTFIELDS, json_str.c_str());
+  curl_easy_setopt(easy.get(), CURLOPT_VERBOSE, enable_debug_);
 
 }

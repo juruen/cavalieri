@@ -28,6 +28,10 @@ DEFINE_int32(graphite_pool_size, 4, "number of threads for graphite pool");
 
 DEFINE_int32(forward_pool_size, 4, "number of threads for forward pool");
 
+DEFINE_bool(enable_mail_debug, false, "enable smtp libcurl debug");
+
+DEFINE_bool(enable_pagerduty_debug, false, "enable pagerduty libcurl debug");
+
 
 config create_config() {
 
@@ -43,6 +47,8 @@ config create_config() {
   conf.mail_pool_size = FLAGS_mail_pool_size;
   conf.graphite_pool_size = FLAGS_graphite_pool_size;
   conf.forward_pool_size = FLAGS_forward_pool_size;
+  conf.enable_mail_debug = FLAGS_enable_mail_debug;
+  conf.enable_pagerduty_debug = FLAGS_enable_pagerduty_debug;
 
   return conf;
 }
@@ -60,6 +66,8 @@ void log_config(config conf) {
   VLOG(1) << "\tmail_pool_size: " << conf.mail_pool_size;
   VLOG(1) << "\tgraphite_pool_size: " << conf.graphite_pool_size;
   VLOG(1) << "\tforward_pool_size: " << conf.forward_pool_size;
+  VLOG(1) << "\tenable_mail_debug: " << conf.enable_mail_debug;
+  VLOG(1) << "\tenable_pagerduty_debug: " << conf.enable_pagerduty_debug;
   VLOG(1) << "--";
 
 }

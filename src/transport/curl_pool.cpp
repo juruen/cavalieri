@@ -382,7 +382,6 @@ void curl_pool::async(async_loop & loop) {
 
 
     curl_easy_setopt(easy, CURLOPT_WRITEFUNCTION,  write_cb);
-    curl_easy_setopt(easy, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(easy, CURLOPT_ERRORBUFFER, &error_[0]);
     curl_easy_setopt(easy, CURLOPT_LOW_SPEED_TIME, 3L);
     curl_easy_setopt(easy, CURLOPT_LOW_SPEED_LIMIT, 10L);
