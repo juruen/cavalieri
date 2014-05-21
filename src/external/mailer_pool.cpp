@@ -124,3 +124,9 @@ void mailer_pool::curl_event(const queued_event_t queued_event,
   };
 
 }
+
+void mailer_pool::stop() {
+  VLOG(3) << "stop()";
+
+  curl_pool_.stop();
+}

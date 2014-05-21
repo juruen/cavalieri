@@ -204,6 +204,18 @@ void curl_pool::push_event(const Event & event, boost::any extra) {
 
 }
 
+void curl_pool::stop() {
+
+  VLOG(3) << "stop()";
+
+  tcp_pool_.stop_threads();
+
+  for (size_t i = 0; i < curl_conns_.size(); i++) {
+    cleanup_conns(i);
+  }
+
+}
+
 void curl_pool::set_fd(const size_t loop_id, const int fd,
                        const async_fd::mode mode)
 {

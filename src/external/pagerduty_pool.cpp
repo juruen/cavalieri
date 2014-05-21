@@ -79,3 +79,9 @@ void pagerduty_pool::curl_event(const queued_event_t queued_event,
   curl_easy_setopt(easy.get(), CURLOPT_VERBOSE, enable_debug_);
 
 }
+
+void pagerduty_pool::stop() {
+  VLOG(3) << "stop()";
+
+  curl_pool_.stop();
+}

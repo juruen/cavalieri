@@ -18,6 +18,8 @@ public:
   void pager_duty_acknowledge(const std::string pg_key, const Event event);
   void email(const std::string server, const std::string from,
              const std::string to, const Event event);
+  void stop();
+
 private:
   riemann_tcp_client riemann_tcp_client_;
   class graphite graphite_;

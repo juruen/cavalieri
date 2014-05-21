@@ -1,3 +1,4 @@
+#include <glog/logging.h>
 #include <external/real_external.h>
 
 real_external::real_external(const config conf)
@@ -43,4 +44,13 @@ void real_external::email(const std::string server, const std::string from,
                           const std::string to, const Event event)
 {
   email_.push_event(server, from, {to}, event);
+}
+
+void real_external::stop() {
+
+  VLOG(3) << "stop()";
+
+  pagerduty_.stop();
+  email_.stop();
+
 }

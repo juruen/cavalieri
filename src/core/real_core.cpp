@@ -53,6 +53,7 @@ void real_core::start() {
   tcp_server_->stop();
   udp_server_->stop();
   ws_server_->stop();
+  externals_->stop();
 
   LOG(INFO) << "Screw you guys, I'm going home.";
 }

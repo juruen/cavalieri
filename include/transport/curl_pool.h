@@ -26,6 +26,7 @@ class curl_pool {
   public:
     curl_pool(const size_t thread_num, const curl_event_fn_t curl_event_fn);
     void push_event(const Event & event, const boost::any extra);
+    void stop();
 
   public:
     typedef std::function<void(const int)> create_socket_cb_t;
