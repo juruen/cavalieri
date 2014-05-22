@@ -260,6 +260,18 @@ TEST(query_grammar_fields_test_case, test)
   ASSERT_TRUE(eval_fn(e));
 
 
+  query = "(metric = 0)";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.evaluate();
+
+  ASSERT_FALSE(eval_fn(e));
+
+  clear_metrics(e);
+  e.set_metric_sint64(0);
+  ASSERT_TRUE(eval_fn(e));
+
+
   query = "(metric = 7.1)";
   ASSERT_TRUE(driver.parse_string(query, "query"));
 
@@ -268,6 +280,7 @@ TEST(query_grammar_fields_test_case, test)
   ASSERT_FALSE(eval_fn(e));
 
   e.clear_ttl();
+  clear_metrics(e);
   e.set_metric_d(7.1);
   ASSERT_TRUE(eval_fn(e));
 

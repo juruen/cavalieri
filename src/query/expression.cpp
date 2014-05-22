@@ -168,7 +168,13 @@ query_fn_t query_field::evaluate(const int & value) const {
   } else if (*field_ == "metric") {
 
     return [=](const Event & e) {
-      return compare(e.metric_sint64(), static_cast<int64_t>(ival), op);
+
+      if (!metric_set(e)) {
+        return false;
+      }
+
+      return compare(metric_to_double(e), static_cast<double>(ival), op);
+
     };
 
   } else {
