@@ -47,14 +47,21 @@ bool tcp_connection::read(const uint32_t & to_read) {
                                       to_read, 0);
 
   if (nread < 0) {
-    VLOG(3) << "read error: " << strerror(errno);
-    return true;
+
+    LOG(ERROR) << "read error: " << strerror(errno);
+
+    close_connection = true;
+    return false;
+
   }
 
   if (nread == 0) {
+
     VLOG(3) << "peer has disconnected gracefully";
+
     close_connection = true;
     return false;
+
   }
 
   bytes_read += nread;
@@ -83,8 +90,11 @@ bool tcp_connection::write() {
                                           bytes_to_write);
 
   if (nwritten < 0) {
-    VLOG(3) << "write error: " << strerror(errno);
-    return true;
+
+    LOG(ERROR) << "write error: " << strerror(errno);
+
+    close_connection = true;
+    return false;
   }
 
   bytes_written += nwritten;
