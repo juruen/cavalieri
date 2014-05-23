@@ -533,6 +533,13 @@ It adds the list of passed *tags* to events and forwards them.
 tags({"processed"}) >> prn("tag added")
 ```
 
+### send_index()
+
+It indexes the receivied events. Indexed events can be queried through
+the websocket.
+
+This is usful to know the current state of an event from a dashboard.
+
 #### send_graphite(const std::string host, const int port)
 
 It forwards the received events to a graphite server using new line carbon
