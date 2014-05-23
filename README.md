@@ -212,8 +212,8 @@ continous integration process.
 Sending events
 --------------
 
-You can use any of the existing [riemann.io](http://riemann.io/clients.html) clients. Just make them send events to
-a host running *cavalieri*.
+You can use any of the existing [riemann.io](http://riemann.io/clients.html)
+clients. Just make them send events to a host running *cavalieri*.
 
 Streams API
 ------------
@@ -538,14 +538,87 @@ tags({"processed"}) >> prn("tag added")
 It forwards the received events to a graphite server using new line carbon
 TCP protocol.
 
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, a graphite server.
+
 #### forward(const std::string host, const int port)
 
 It forwards the received events to a cavalieri or riemann server using
 TCP.
 
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, a cavalieri or riemann server.
+
+#### email(const std::string server, const std::string from, const std::string to)
+
+It emails the received events with *from* sender to *to* recipient using
+the specified SMTP *server*.
+
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, an SMTP server.
+
+
+
+#### pd_trigger(const std::string pd_key)
+
+It triggers a Pager Duty incident based on the received event and using
+*pd_key* as the API key. Note that service key will be event's host and
+service.
+
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, Pager Duty.
+
+#### pd_acknowoledge(const std::string pd_key)
+
+It acknowledges a Pager Duty incident based on the received event and using
+*pd_key* as the API key. Note that service key will be event's host and
+service.
+
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, Pager Duty.
+
+#### pd_resolve(const std::string pd_key)
+
+It resolves a Pager Duty incident based on the received event and using
+*pd_key* as the API key. Note that service key will be event's host and
+service.
+
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, Pager Duty.
 
 
 ### Fold functions
+
+Fold functions are functions that take a list of events, do some processing
+with them such as reducing and return an event with the result.
+
+These functions are mostly meant to be used with stream functions that forward
+a list of events.
+
+#### sum(const std::vector<Event> events)
+
+It returns an event that contains the sum of the metrics of *events*.
+
+#### product(const std::vector<Event> events)
+
+It returns an event that contains the product of the metrics of *events*.
+
+#### difference(const std::vector<Event> events)
+
+It returns an event that contains the difference of the metrics of *events*.
+
+#### mean(const std::vector<Event> events)
+
+It returns an event that contains the mean of the metrics of *events*.
+
+#### minimum(const std::vector<Event> events)
+
+It returns an event that contains the minimum value of the metrics of *events*.
+
+#### maximum(const std::vector<Event> events)
+
+It returns an event that contains the maximum of the metrics of *events*.
+
 
 ### Predicate functions
 

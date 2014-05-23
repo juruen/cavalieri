@@ -1,3 +1,8 @@
+0.0.6 TBD
+=========
+
+  * Fix issue with queries mixing int and doubles
+
 0.0.5 2014-05-21
 ================
 
