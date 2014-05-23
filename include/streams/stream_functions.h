@@ -109,6 +109,8 @@ streams_t expired();
 
 streams_t tag(tags_t tags);
 
+streams_t ddt();
+
 streams_t send_index();
 
 streams_t send_graphite(const std::string host, const int port);

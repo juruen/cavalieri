@@ -821,6 +821,45 @@ streams_t counter() {
   });
 }
 
+typedef struct {
+  double metric;
+  int64_t time;
+  bool initialized;
+} ddt_prev_t;
+
+streams_t ddt() {
+  auto prev = make_shared_atom<ddt_prev_t>({0, 0, false});
+
+  return create_stream(
+    [=](forward_fn_t forward, e_t e) {
+
+      ddt_prev_t curr({metric_to_double(e), e.time(), true});
+
+      prev->update(
+        curr,
+        [&](const ddt_prev_t & prev, const ddt_prev_t &)
+        {
+
+          if (!prev.initialized) {
+            return;
+          }
+
+          auto dt = e.time() - prev.time;
+
+          if (dt == 0) {
+            return;
+          }
+
+          Event ne(e);
+          set_metric(ne, (curr.metric - prev.metric) / dt);
+
+          forward(ne);
+        }
+      );
+
+    });
+}
+
 streams_t expired() {
   return create_stream(
     [=](forward_fn_t forward, e_t e) {

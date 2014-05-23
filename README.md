@@ -533,7 +533,12 @@ It adds the list of passed *tags* to events and forwards them.
 tags({"processed"}) >> prn("tag added")
 ```
 
-### send_index()
+#### ddt ()
+
+It differenciates two subsequent events. The metric of the forwarded
+event is (metric_current - metric_previous) / (time_current - time_previous).
+
+#### send_index()
 
 It indexes the receivied events. Indexed events can be queried through
 the websocket.

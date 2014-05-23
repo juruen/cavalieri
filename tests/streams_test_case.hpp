@@ -1194,5 +1194,39 @@ TEST(state_streams_test_case, test)
   ASSERT_EQ("foo", v[0].state());
 }
 
+TEST(ddt_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto ddt_stream = ddt() >>  sink(v);
+
+  Event e;
+
+  e.set_metric_sint64(1);
+  e.set_time(1);
+
+  push_event(ddt_stream, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_sint64(5);
+  e.set_time(1);
+
+  push_event(ddt_stream, e);
+
+  ASSERT_EQ(0, v.size());
+
+
+  e.set_metric_sint64(9);
+  e.set_time(3);
+
+  push_event(ddt_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(2, v[0].metric_d());
+
+}
+
+
 
 #endif
