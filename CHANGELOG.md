@@ -2,6 +2,7 @@
 =========
 
   * Fix issue with queries mixing int and doubles
+  * Support "true" as a query and not only "(true)"
 
 0.0.5 2014-05-21
 ================
