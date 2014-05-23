@@ -191,8 +191,6 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
   });
 }
 
-#include <iostream>
-
 streams_t rate(const int interval) {
 
   auto rate = std::make_shared<std::atomic<double>>(0);
