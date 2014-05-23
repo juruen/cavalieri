@@ -66,6 +66,7 @@
 
 %token TRUE
 %token TAGGED
+%token NIL
 %left OR AND NOT
 
 %type <querynode> all action expr
@@ -119,6 +120,12 @@ action : TAGGED EQUAL STRING
             delete $2;
             $$ = new query_tagged($3);
           }
+        | UNQUOTEDSTRING EQUAL NIL
+          {
+            delete $2;
+            $$ = new query_field($1);
+          }
+
         | UNQUOTEDSTRING operator STRING
           {
             $$ = new query_field($1, $3, $2);

@@ -309,6 +309,18 @@ TEST(query_grammar_fields_test_case, test)
   att->set_key("foo");
   att->set_value("7.1");
   ASSERT_TRUE(eval_fn(e));
+
+  query = "(host = nil)";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.evaluate();
+
+  e.set_host("foo");
+  ASSERT_FALSE(eval_fn(e));
+
+  e.clear_host();
+  ASSERT_TRUE(eval_fn(e));
+
 }
 
 #endif

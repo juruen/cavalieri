@@ -89,6 +89,26 @@ std::string string_to_value(const Event& e, const std::string& key) {
   }
 }
 
+bool field_set(const Event & e, const std::string & field) {
+
+  if (field == "host") {
+    return e.has_host();
+  } else if (field == "service") {
+    return e.has_service();
+  } else if (field == "description") {
+    return e.has_description();
+  } else if (field == "state") {
+    return e.has_state();
+  } else if (field == "metric") {
+    return metric_set(e);
+  } else if (field == "ttl") {
+    return e.has_ttl();
+  } else {
+    return attribute_exists(e, field);
+  }
+
+}
+
 std::string event_to_json(const Event &e) {
   char tags[buff_size] =  "";
   char attrs[buff_size] = "";

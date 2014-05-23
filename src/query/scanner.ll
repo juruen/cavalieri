@@ -99,6 +99,10 @@ tagged {
   return token::TAGGED;
 }
 
+nil {
+  return token::NIL;
+}
+
 true {
   return token::TRUE;
 }

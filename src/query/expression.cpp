@@ -57,29 +57,54 @@ query_field::query_field(std::string * field, const double value,
 {
 }
 
+query_field::query_field(std::string * field)
+:
+  query_node(),
+  op_(nullptr),
+  field_(field),
+  value_()
+{
+}
+
+
+
 
 query_fn_t query_field::evaluate() const {
 
-  switch (value_.which()) {
+  if (op_) {
 
-    case 0:
-      return evaluate(*(boost::get<std::shared_ptr<std::string>>(value_)));
-      break;
+    switch (value_.which()) {
 
-    case 1:
-      return evaluate(boost::get<int>(value_));
-      break;
+      case 0:
+        return evaluate(*(boost::get<std::shared_ptr<std::string>>(value_)));
+        break;
 
-    case 2:
-      return evaluate(boost::get<double>(value_));
-      break;
+      case 1:
+        return evaluate(boost::get<int>(value_));
+        break;
 
-    default:
-      VLOG(2) << "query_field::evluate() unknown rvalue";
-      return [=](const Event &) { return false; };
-      break;
+      case 2:
+        return evaluate(boost::get<double>(value_));
+        break;
+
+      default:
+        VLOG(2) << "query_field::evluate() unknown rvalue";
+        return [=](const Event &) { return false; };
+        break;
+
+    }
+
+  } else {
+
+    return evaluate_nil();
 
   }
+
+}
+
+query_fn_t query_field::evaluate_nil() const {
+
+   return [=](const Event & e) { return ! field_set(e, *field_); };
 
 }
 

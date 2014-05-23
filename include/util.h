@@ -16,6 +16,8 @@ double metric_to_double(const Event &e);
 
 bool metric_set(const Event & e);
 
+bool field_set(const Event & e, const std::string & field);
+
 Event & set_metric(Event & e, const double m);
 
 Event set_metric_c(const Event  e, const double m);
