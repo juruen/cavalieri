@@ -9,11 +9,13 @@
 #include <proto.pb.h>
 
 typedef std::function<void(const Event&)> forward_fn_t;
+typedef std::function<void(forward_fn_t)> on_join_fn_t;
 
 struct stream_t {
   stream_t();
   forward_fn_t output_fn;
   forward_fn_t input_fn;
+  on_join_fn_t on_join_fn;
 };
 
 typedef std::shared_ptr<stream_t> stream_node_t;
@@ -23,6 +25,8 @@ typedef std::list<stream_node_t> streams_t;
 typedef std::function<void(forward_fn_t, const Event &)> node_fn_t;
 
 streams_t create_stream(node_fn_t fn);
+
+streams_t create_stream(node_fn_t fn, on_join_fn_t on_join_fn);
 
 void push_event(stream_node_t, const Event &);
 

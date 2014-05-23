@@ -691,7 +691,6 @@ TEST(rate_streams_test_case, test)
   auto rate_stream = rate(5) >>  sink(v);
 
   // Check that we send a 0-valued metric if no event is received
-  push_event(rate_stream, e1);
   g_core->sched().set_time(5);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ(0, v[0].metric_d());

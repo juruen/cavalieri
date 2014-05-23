@@ -191,21 +191,34 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
   });
 }
 
+#include <iostream>
+
 streams_t rate(const int interval) {
 
   auto rate = std::make_shared<std::atomic<double>>(0);
-  auto task_created = std::make_shared<bool>(false);
 
   return create_stream(
 
     [=](forward_fn_t forward, e_t e) mutable
     {
 
-      if (!*task_created) {
+      double expected, newval;
 
-        g_core->sched().add_periodic_task(
+      do {
+
+        expected = rate->load();
+        newval = expected + metric_to_double(e);
+
+      } while (!rate->compare_exchange_strong(expected, newval));
+
+    },
+    [=](forward_fn_t forward)
+    {
+
+      g_core->sched().add_periodic_task(
           [=]() mutable
           {
+
             VLOG(3) << "rate-timer()";
 
             Event event;
@@ -217,20 +230,7 @@ streams_t rate(const int interval) {
           },
 
           interval
-        );
-
-          *task_created = true;
-
-      }
-
-      double expected, newval;
-
-      do {
-
-        expected = rate->load();
-        newval = expected + metric_to_double(e);
-
-      } while (!rate->compare_exchange_strong(expected, newval));
+          );
 
     }
 
