@@ -18,6 +18,14 @@ TEST(query_grammar_true_test_case, test)
 
   Event e;
   ASSERT_TRUE(eval_fn(e));
+
+  query = "true";
+  ASSERT_TRUE(driver.parse_string(query, "query"));
+
+  eval_fn = query_ctx.evaluate();
+
+  ASSERT_TRUE(eval_fn(e));
+
 }
 
 

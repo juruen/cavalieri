@@ -84,10 +84,14 @@
 
 %% /*** Grammar Rules ***/
 
-all : '(' TRUE ')'
-      {
-        $$ = new query_true();
-      }
+all :   '(' TRUE ')'
+        {
+          $$ = new query_true();
+        }
+      | TRUE
+        {
+          $$ = new query_true();
+        }
 
 operator: EQUAL
             {
