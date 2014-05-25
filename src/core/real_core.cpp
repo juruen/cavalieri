@@ -45,6 +45,8 @@ void real_core::start() {
 
   LOG(INFO) << "Brace for impact, starting nuclear core.";
 
+  signal(SIGPIPE, SIG_IGN);
+
   main_loop_->start();
 
   VLOG(3) << "Stopping services";
