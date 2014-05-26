@@ -38,16 +38,19 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
                             expire_interval);
 }
 
-std::vector<Event> real_index::all_events() {
+std::vector<std::shared_ptr<Event>> real_index::all_events() {
 
-  std::vector<Event> events;
+  mutex_.lock();
+  auto idx_cpy(index_map_);
+  mutex_.unlock();
 
-  for (const auto & kv: index_map_) {
+  std::vector<std::shared_ptr<Event>> events;
+
+  for (const auto & kv: idx_cpy) {
     events.push_back(kv.second);
   }
 
   return events;
-
 }
 
 void real_index::add_event(const Event& e) {
@@ -56,8 +59,12 @@ void real_index::add_event(const Event& e) {
 
   const std::string ev_key(key(e));
 
-  index_map_.erase(ev_key);
-  index_map_.insert({ev_key, e});
+  auto shared_event = std::make_shared<Event>(e);
+
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    index_map_.insert({ev_key, shared_event});
+  }
 
   pubsub_.publish(k_default_index, e);
 }
@@ -84,35 +91,39 @@ void real_index::expire_events() {
 
   VLOG(3) << "index size: " << index_map_.size();
 
-  std::vector<std::string> keys_to_remove;
-  std::vector<Event> expired_events;
+  std::vector<std::shared_ptr<Event>> expired_events;
 
   int64_t now = static_cast<int64_t>(sched_.unix_time());
 
-  for (const auto & pair : index_map_) {
+  {
 
-    const Event & event(pair.second);
+    std::lock_guard<std::mutex> lock(mutex_);
 
-    auto expire = event.time() + static_cast<int64_t>(event.ttl());
-    if (expire < now) {
-      keys_to_remove.push_back(pair.first);
-      expired_events.push_back(event);
+    auto it = index_map_.begin();
+    while (it != index_map_.end()) {
+
+      const auto & event(it->second);
+
+      auto expire = event->time() + static_cast<int64_t>(event->ttl());
+      if (expire < now) {
+        expired_events.push_back(event);
+        index_map_.erase(it++);
+      } else {
+        ++it;
+      }
+
     }
 
   }
 
-  for (const auto & key : keys_to_remove) {
-    index_map_.erase(key);
-  }
-
-  for (auto & event : expired_events) {
-    event.set_state("expired");
-    pubsub_.publish(k_default_index, event);
-    push_event_fn_(event);
-  }
-
   VLOG(3) << "expire process took "
           << static_cast<int64_t>(sched_.unix_time()) - now << " seconds";
+
+  for (auto & event : expired_events) {
+    event->set_state("expired");
+    pubsub_.publish(k_default_index, *event);
+    push_event_fn_(*event);
+  }
 
   VLOG(3) << "expire_fn()--";
 
@@ -128,8 +139,6 @@ real_index::~real_index() {
   if (expiring_.exchange(true)) {
 
     VLOG(3) << "expire_events thread is running";
-
-    index_map_.clear();
 
     for (size_t attempts = k_stop_attempts; attempts > 0; attempts--) {
 

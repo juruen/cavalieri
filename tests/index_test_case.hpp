@@ -31,8 +31,8 @@ TEST(index_test_case, test)
 
   auto all_events = all_events_fn();
   ASSERT_EQ(1, all_events.size());
-  ASSERT_EQ("foo", all_events[0].host());
-  ASSERT_EQ("bar", all_events[0].service());
+  ASSERT_EQ("foo", all_events[0]->host());
+  ASSERT_EQ("bar", all_events[0]->service());
 
   e.set_host("baz");
   e.set_time(100);

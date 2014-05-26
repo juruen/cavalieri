@@ -9,7 +9,7 @@
 #include <tbb/concurrent_queue.h>
 #include <memory>
 
-typedef std::function<std::vector<Event>()> all_events_fn_t;;
+typedef std::function<std::vector<std::shared_ptr<Event>>()> all_events_fn_t;
 typedef std::shared_ptr<tbb::concurrent_bounded_queue<Event>> notify_queue_t;
 typedef std::pair<all_events_fn_t, std::vector<notify_queue_t>> publisher_data_t;
 typedef std::unordered_map<std::string, publisher_data_t> publishers_t;
