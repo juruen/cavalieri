@@ -81,7 +81,7 @@ void websocket_pool::add_client(int fd) {
 
 void websocket_pool::notify_event(const Event & event) {
   for (auto & queue: thread_event_queues_) {
-    queue->push(event);
+    queue->try_push(event);
   }
 }
 
@@ -128,8 +128,8 @@ void websocket_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
     auto & str_queue = std::get<2>(it->second);
     for (const auto & event : all_events_fn_()) {
 
-      if (query_fn(event)) {
-        str_queue.push(event_to_json(event));
+      if (query_fn(*event)) {
+        str_queue.push(event_to_json(*event));
       }
     }
 
