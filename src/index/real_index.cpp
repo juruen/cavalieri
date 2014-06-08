@@ -63,7 +63,7 @@ void real_index::add_event(const Event& e) {
 
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    index_map_.insert({ev_key, shared_event});
+    index_map_[ev_key] = shared_event;
   }
 
   pubsub_.publish(k_default_index, e);
