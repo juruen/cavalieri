@@ -30,6 +30,9 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/async/real_async_loop.cpp
     ${CMAKE_SOURCE_DIR}/src/index/real_index.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/rate.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/curl_pool.cpp
@@ -79,6 +82,9 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/rate.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp

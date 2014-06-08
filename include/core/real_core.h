@@ -2,6 +2,7 @@
 #define CORE_REAL_CORE_H
 
 #include <core/core.h>
+#include <instrumentation/instrumentation.h>
 #include <streams/stream_functions.h>
 #include <async/real_async_loop.h>
 #include <pub_sub/pub_sub.h>
@@ -26,6 +27,8 @@ public:
 
 private:
   config config_;
+
+  instrumentation instrumentation_;
 
   std::unique_ptr<main_async_loop_interface> main_loop_;
   std::unique_ptr<real_scheduler> scheduler_;

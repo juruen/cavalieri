@@ -1,6 +1,13 @@
 #include <glog/logging.h>
 #include <core/real_core_helper.h>
+#include <util.h>
 #include <transport/listen_tcp_socket.h>
+
+namespace {
+
+const float k_snapshot_interval = 5;
+
+}
 
 void detach_thread(std::function<void()> fn) {
   std::thread t(fn);
@@ -81,3 +88,24 @@ std::unique_ptr<websocket_pool> init_ws_server(
 
   return ws_server;
 }
+
+void snapshot(instrumentation & inst, streams & streams) {
+
+  for (const auto & event : inst.snapshot()) {
+    streams.push_event(event);
+  }
+
+}
+
+
+void start_instrumentation(scheduler_interface & sched,
+                           instrumentation & instrumentation,
+                           streams & streams)
+{
+  sched.add_periodic_task(
+      [&]() { snapshot(instrumentation, streams); },
+      k_snapshot_interval
+  );
+}
+
+

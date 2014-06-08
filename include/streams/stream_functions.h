@@ -9,6 +9,7 @@
 #include <proto.pb.h>
 #include <streams/stream_infra.h>
 #include <index/index.h>
+#include <instrumentation/instrumentation.h>
 
 typedef const Event& e_t;
 typedef std::vector<Event> events_t;
@@ -169,13 +170,17 @@ bool match_like_(e_t e, const std::string key, const std::string value);
 
 class streams {
 public:
-  streams();
+  streams(instrumentation &);
   void add_stream(streams_t stream);
   void process_message(const Msg& message);
   void push_event(const Event& e);
   void stop();
 
 private:
+  instrumentation & instrumentation_;
+  int rate_id_;
+  int latency_id_;
+  int in_latency_id_;
   std::vector<streams_t> streams_;
   bool stop_;
 };

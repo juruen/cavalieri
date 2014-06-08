@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <core/real_core.h>
+#include <scheduler/scheduler.h>
 
 void detach_thread(std::function<void()> fn);
 
@@ -21,5 +22,9 @@ std::unique_ptr<websocket_pool> init_ws_server(
     const config & conf,
     main_async_loop_interface & loop,
     pub_sub & pubsub);
+
+void start_instrumentation(scheduler_interface & sched,
+                           instrumentation & instrumentation,
+                           streams & streams);
 
 #endif

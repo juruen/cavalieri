@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <queue>
 #include <atomic>
+#include <chrono>
 #include <atom/atom.h>
 #include <util.h>
 #include <core/core.h>
@@ -10,7 +11,55 @@
 #include <streams/stream_functions.h>
 
 namespace {
-  const unsigned int k_default_ttl = 60;
+
+const unsigned int k_default_ttl = 60;
+
+const std::string k_rate_service = "cavalieri stream rate";
+const std::string k_rate_desc = "events per second in streams";
+
+const std::string k_latency_service = "cavalieri stream latency";
+const std::string k_latency_desc = "distribution of proccessing time "
+                                   "of events through streams";
+
+const std::string k_in_latency_service = "cavalieri incoming events "
+                                         "latency";
+
+const std::string k_in_latency_desc = "distribution of processing time "
+                                      "before entering streams";
+
+
+
+const std::vector<double> k_percentiles = {0.0, .5, .95, .99, 1};
+
+using namespace std::chrono;
+using time_point_t = high_resolution_clock::time_point;
+
+time_point_t now() {
+
+  return std::chrono::high_resolution_clock::now();
+
+}
+
+void update_latency(instrumentation & inst, const int id, time_point_t start)
+{
+
+  inst.update_latency(
+      id,
+      duration_cast<microseconds>(now() - start).count() / 1000.0
+  );
+
+}
+
+void update_in_latency(instrumentation & inst, const int id,
+                       const long int start)
+{
+
+  inst.update_latency(id, difftime(time(0), start));
+
+}
+
+
+
 }
 
 streams_t  prn() {
@@ -1070,7 +1119,21 @@ bool match_like_(e_t e, const std::string key, const std::string value) {
 
 }
 
-streams::streams() : stop_(false) {}
+streams::streams(instrumentation & instrumentation)
+  : instrumentation_(instrumentation), stop_(false)
+{
+
+  rate_id_ = instrumentation_.add_rate(k_rate_service,
+                                       k_latency_desc);
+
+  latency_id_ = instrumentation_.add_latency(k_latency_service,
+                                             k_latency_desc,
+                                             k_percentiles);
+
+  in_latency_id_ = instrumentation_.add_latency(k_in_latency_service,
+                                                k_in_latency_desc,
+                                                k_percentiles);
+}
 
 void streams::add_stream(streams_t stream) {
   streams_.push_back(stream);
@@ -1082,26 +1145,17 @@ void streams::process_message(const Msg& message) {
     return;
   }
 
+  instrumentation_.update_rate(rate_id_, message.events_size());
+
   VLOG(3) << "process message. num of streams " << streams_.size();
   VLOG(3) << "process message. num of events " << message.events_size();
 
-  unsigned long int sec = time(0);
-
   for (int i = 0; i < message.events_size(); i++) {
 
-    const Event &event = message.events(i);
+    const Event & event = message.events(i);
 
-    if (!event.has_time()) {
+    push_event(event);
 
-      Event nevent(event);
-      nevent.set_time(sec);
-      push_event(std::move(nevent));
-
-    } else {
-
-      push_event(event);
-
-    }
   }
 }
 
@@ -1114,10 +1168,20 @@ void streams::push_event(const Event& e) {
   for (auto& s: streams_) {
 
     if (e.has_time()) {
+
+      update_in_latency(instrumentation_, in_latency_id_, e.time());
+
+      auto start_time = now();
+
       ::push_event(s, e);
+
+      update_latency(instrumentation_, latency_id_, start_time);
+
     } else {
       Event ne(e);
       ne.set_time(g_core->sched().unix_time());
+
+      ::push_event(s, ne);
     }
 
   }

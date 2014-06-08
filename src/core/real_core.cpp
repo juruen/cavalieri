@@ -14,13 +14,15 @@ real_core::real_core(const config & conf)
   :
     config_(conf),
 
+    instrumentation_(conf),
+
     main_loop_(make_main_async_loop()),
 
     scheduler_(new real_scheduler(*main_loop_)),
 
     externals_(new real_external(conf)),
 
-    streams_(new streams()),
+    streams_(new streams(instrumentation_)),
 
     pubsub_(new pub_sub()),
 
@@ -34,7 +36,7 @@ real_core::real_core(const config & conf)
 
     ws_server_(init_ws_server(conf, *main_loop_, *pubsub_))
 {
-
+  start_instrumentation(*scheduler_, instrumentation_, *streams_);
 }
 
 void real_core::start() {
