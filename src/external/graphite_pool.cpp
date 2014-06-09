@@ -40,7 +40,7 @@ std::vector<char> graphite_pool::output_events(const std::vector<Event> events)
   for (const auto & event : events) {
 
     sstream << event.host() << "." << event.service() << " "
-            << metric_to_double(event) << event.time() << "\n";
+            << metric_to_double(event) << " " << event.time() << "\n";
   }
 
   std::string ev_str = sstream.str();
