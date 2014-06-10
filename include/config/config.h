@@ -16,6 +16,7 @@ struct config {
   size_t forward_pool_size;
   bool enable_mail_debug;
   bool enable_pagerduty_debug;
+  bool enable_internal_metrics;
 };
 
 config create_config();

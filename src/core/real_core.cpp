@@ -36,7 +36,11 @@ real_core::real_core(const config & conf)
 
     ws_server_(init_ws_server(conf, *main_loop_, *pubsub_))
 {
-  start_instrumentation(*scheduler_, instrumentation_, *streams_);
+
+  if (conf.enable_internal_metrics) {
+    start_instrumentation(*scheduler_, instrumentation_, *streams_);
+  }
+
 }
 
 void real_core::start() {
