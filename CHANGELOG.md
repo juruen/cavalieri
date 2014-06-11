@@ -3,6 +3,8 @@
 
   * Fix issue with queries mixing int and doubles
   * Support "true" as a query and not only "(true)"
+  * Add internal metrics
+  * Graphite fixes
 
 0.0.5 2014-05-21
 ================
