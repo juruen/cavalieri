@@ -1,8 +1,12 @@
 #include <glog/logging.h>
 #include <algorithm>
-#include <util.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <netdb.h>
 #include <instrumentation/mem.h>
 #include <instrumentation/instrumentation.h>
+
+
 
 namespace {
 
@@ -44,6 +48,15 @@ void set_mem_meausres(std::vector<Event> & events, Event & event) {
 
 }
 
+const std::string fqdn() {
+  char hostname[1024];
+  hostname[1023] = '\0';
+  gethostname(hostname, 1023);
+
+  return gethostbyname(hostname)->h_name;
+}
+
+const std::string k_fqdn(fqdn());
 
 };
 
@@ -111,7 +124,7 @@ std::vector<Event> instrumentation::snapshot() {
 
   *(event.add_tags()) = k_instrumentation_tag;
 
-  event.set_host("localhost");
+  event.set_host(k_fqdn);
   event.set_state("ok");
   event.set_ttl(k_default_ttl);
 
