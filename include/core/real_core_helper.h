@@ -12,7 +12,8 @@ std::shared_ptr<core_interface> make_real_core(const config conf);
 std::unique_ptr<riemann_tcp_pool> init_tcp_server(
     const config & conf,
     main_async_loop_interface & loop,
-    std::shared_ptr<streams> streams);
+    std::shared_ptr<streams> streams,
+    instrumentation & instr);
 
 std::unique_ptr<riemann_udp_pool> init_udp_server(
     const config & conf,

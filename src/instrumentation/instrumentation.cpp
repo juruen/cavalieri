@@ -117,37 +117,16 @@ void instrumentation::update_latency(const id_t id,
   latencies_[id].reservoir.add_sample(value);
 }
 
-std::vector<Event> instrumentation::snapshot() {
-
-  VLOG(3) << "snapshot()";
-
-  std::vector<Event> events;
-
-  Event event;
-
-  *(event.add_tags()) = k_instrumentation_tag;
-
-  event.set_host(k_fqdn);
-  event.set_state("ok");
-  event.set_ttl(k_default_ttl);
-
-  set_rates(events, event);
-  set_gauges(events, event);
-  set_mem_meausres(events, event);
-
-  return events;;
-}
-
 unsigned int instrumentation::add_gauge(const std::string service,
                                         const std::string description)
 {
 
-  CHECK(rates_id_.load() < k_max_rates) << "max number of gauges reached";
+  CHECK(gauges_id_.load() < k_max_gauges) << "max number of gauges reached";
 
-  int id = rates_id_.fetch_add(1);
+  int id = gauges_id_.fetch_add(1);
 
-  rates_[id].service = service;
-  rates_[id].description = description;
+  gauges_[id].service = service;
+  gauges_[id].description = description;
 
   return id;
 }
@@ -168,6 +147,28 @@ void instrumentation::decr_gauge(id_t id,
                                  const unsigned int ticks)
 {
   gauges_[id].gauge.decr(ticks);
+}
+
+std::vector<Event> instrumentation::snapshot() {
+
+  VLOG(3) << "snapshot()";
+
+  std::vector<Event> events;
+
+  Event event;
+
+  *(event.add_tags()) = k_instrumentation_tag;
+
+  event.set_host(k_fqdn);
+  event.set_state("ok");
+  event.set_ttl(k_default_ttl);
+
+  set_rates(events, event);
+  set_latencies(events, event);
+  set_gauges(events, event);
+  set_mem_meausres(events, event);
+
+  return events;;
 }
 
 void instrumentation::set_rates(std::vector<Event> & events, Event event) {

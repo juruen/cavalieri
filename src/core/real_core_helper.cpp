@@ -37,7 +37,9 @@ inline void incoming_event(const std::vector<unsigned char> raw_msg,
 std::unique_ptr<riemann_tcp_pool> init_tcp_server(
     const config & conf,
     main_async_loop_interface & loop,
-    std::shared_ptr<streams> streams)
+    std::shared_ptr<streams> streams,
+    instrumentation & instr
+    )
 {
 
   auto income_tcp_event = [=](const std::vector<unsigned char> raw_msg)
@@ -47,7 +49,8 @@ std::unique_ptr<riemann_tcp_pool> init_tcp_server(
 
   std::unique_ptr<riemann_tcp_pool> tcp_server(new riemann_tcp_pool(
       conf.riemann_tcp_pool_size,
-      income_tcp_event
+      income_tcp_event,
+      instr
   ));
 
   auto ptr_server = tcp_server.get();

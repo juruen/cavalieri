@@ -30,7 +30,7 @@ real_core::real_core(const config & conf)
                           conf.index_expire_interval, *scheduler_,
                           instrumentation_, detach_thread)),
 
-    tcp_server_(init_tcp_server(conf, *main_loop_, streams_)),
+    tcp_server_(init_tcp_server(conf, *main_loop_, streams_, instrumentation_)),
 
     udp_server_(init_udp_server(conf, streams_)),
 
