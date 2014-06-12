@@ -2,6 +2,7 @@
 #define INDEX_TEST_CASE_H
 
 #include <index/real_index.h>
+#include <instrumentation/instrumentation.h>
 #include <scheduler/mock_scheduler.h>
 #include <core/core.h>
 #include <glog/logging.h>
@@ -15,8 +16,12 @@ TEST(index_test_case, test)
   pub_sub pubsub;
 
   auto no_thread = [](std::function<void()> fn) { fn(); };
+
+  config conf;
+  instrumentation instr(conf);
+
   real_index index(pubsub, [&](const Event & pe) {  s.push_back(pe); },
-                   60, g_core->sched(), no_thread);
+                   60, g_core->sched(), instr, no_thread);
 
   Event e;
   e.set_host("foo");

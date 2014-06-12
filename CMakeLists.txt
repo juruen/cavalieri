@@ -33,6 +33,7 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/rate.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/gauge.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/mem.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/udp_pool.cpp
@@ -86,6 +87,7 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/rate.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/gauge.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/mem.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp

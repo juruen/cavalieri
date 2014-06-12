@@ -9,9 +9,12 @@
 namespace {
 
 const std::string k_default_index = "index";
+const std::string k_preexpire_service = "cavalieri index size pre-expire";
+const std::string k_preexpire_desc = "number of events before removing expired";
+const std::string k_postexpire_service = "cavalieri index size post-expire";
+const std::string k_postexpire_desc = "number of events after removing expired";
 const size_t k_stop_attempts = 120;
 const size_t k_stop_interval_check_ms = 500;
-
 
 std::string key(const Event& e) {
   return e.host() + "-" + e.service();
@@ -22,9 +25,13 @@ std::string key(const Event& e) {
 real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
                        const int64_t expire_interval,
                        scheduler_interface &  sched,
+                       instrumentation & instr,
                        spwan_thread_fn_t spwan_thread_fn)
 :
   pubsub_(pubsub),
+  instrumentation_(instr),
+  instr_ids_({instr.add_gauge(k_preexpire_service, k_preexpire_desc),
+              instr.add_gauge(k_postexpire_service, k_postexpire_desc)}),
   push_event_fn_(push_event),
   expiring_(false),
   spwan_thread_fn_(spwan_thread_fn),
@@ -36,6 +43,7 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
 
   sched_.add_periodic_task(std::bind(&real_index::timer_cb, this),
                             expire_interval);
+
 }
 
 std::vector<std::shared_ptr<Event>> real_index::all_events() {
@@ -89,7 +97,7 @@ void real_index::expire_events() {
 
   VLOG(3) << "expire_fn()++";
 
-  VLOG(3) << "index size: " << index_map_.size();
+  instrumentation_.update_gauge(instr_ids_.first, index_map_.size());
 
   std::vector<std::shared_ptr<Event>> expired_events;
 
@@ -115,6 +123,8 @@ void real_index::expire_events() {
     }
 
   }
+
+  instrumentation_.update_gauge(instr_ids_.second, index_map_.size());
 
   VLOG(3) << "expire process took "
           << static_cast<int64_t>(sched_.unix_time()) - now << " seconds";

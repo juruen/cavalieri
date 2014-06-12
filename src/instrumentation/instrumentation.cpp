@@ -12,6 +12,7 @@ namespace {
 
 const int k_max_rates = 1000;
 const int k_max_latencies = 1000;
+const int k_max_gauges= 1000;
 const std::string k_instrumentation_tag = "cavalieri::internal";
 const std::string k_vm_mem_service = "vm memory usage";
 const std::string k_vm_mem_description = "vm memory in MB";
@@ -64,13 +65,15 @@ instrumentation::instrumentation(const config)
   :
     rates_id_(0),
     latencies_id_(0),
+    gauges_id_(0),
     rates_(k_max_rates),
-    latencies_(k_max_latencies)
+    latencies_(k_max_latencies),
+    gauges_(k_max_gauges)
 
 {
 }
 
-int instrumentation::add_rate(const std::string service,
+id_t instrumentation::add_rate(const std::string service,
                               const std::string description)
 {
 
@@ -85,13 +88,13 @@ int instrumentation::add_rate(const std::string service,
   return id;
 }
 
-void instrumentation::update_rate(const unsigned int id,
+void instrumentation::update_rate(const id_t id,
                                   const unsigned int ticks)
 {
   rates_[id].rate.add(ticks);
 }
 
-int instrumentation::add_latency(const std::string service,
+id_t instrumentation::add_latency(const std::string service,
                                  const std::string description,
                                  std::vector<double> percentiles)
 {
@@ -108,7 +111,7 @@ int instrumentation::add_latency(const std::string service,
   return id;
 }
 
-void instrumentation::update_latency(const unsigned int id,
+void instrumentation::update_latency(const id_t id,
                                      const double value)
 {
   latencies_[id].reservoir.add_sample(value);
@@ -128,6 +131,47 @@ std::vector<Event> instrumentation::snapshot() {
   event.set_state("ok");
   event.set_ttl(k_default_ttl);
 
+  set_rates(events, event);
+  set_gauges(events, event);
+  set_mem_meausres(events, event);
+
+  return events;;
+}
+
+unsigned int instrumentation::add_gauge(const std::string service,
+                                        const std::string description)
+{
+
+  CHECK(rates_id_.load() < k_max_rates) << "max number of gauges reached";
+
+  int id = rates_id_.fetch_add(1);
+
+  rates_[id].service = service;
+  rates_[id].description = description;
+
+  return id;
+}
+
+void instrumentation::update_gauge(id_t id,
+                                   const unsigned int ticks)
+{
+  gauges_[id].gauge.update(ticks);
+}
+
+void instrumentation::incr_gauge(id_t id,
+                                 const unsigned int ticks)
+{
+  gauges_[id].gauge.incr(ticks);
+}
+
+void instrumentation::decr_gauge(id_t id,
+                                 const unsigned int ticks)
+{
+  gauges_[id].gauge.decr(ticks);
+}
+
+void instrumentation::set_rates(std::vector<Event> & events, Event event) {
+
   for (int i = 0; i < rates_id_.load(); i++) {
 
     event.set_service(rates_[i].service);
@@ -137,10 +181,13 @@ std::vector<Event> instrumentation::snapshot() {
     events.push_back(event);
   }
 
+}
+
+void instrumentation::set_latencies(std::vector<Event> & events, Event event) {
+
   for (int i = 0; i < latencies_id_.load(); i++) {
 
     auto samples = latencies_[i].reservoir.snapshot();
-
 
     if (samples.empty()) {
       continue;
@@ -163,7 +210,21 @@ std::vector<Event> instrumentation::snapshot() {
 
   }
 
-  set_mem_meausres(events, event);
-
-  return events;;
 }
+
+void instrumentation::set_gauges(std::vector<Event> & events, Event event)
+{
+
+  for (int i = 0; i < gauges_id_.load(); i++) {
+
+    event.set_service(gauges_[i].service);
+    event.set_description(gauges_[i].description);
+    event.set_metric_d(gauges_[i].gauge.snapshot());
+
+    events.push_back(event);
+  }
+
+
+}
+
+

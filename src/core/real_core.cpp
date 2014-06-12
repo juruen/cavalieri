@@ -28,7 +28,7 @@ real_core::real_core(const config & conf)
 
     index_(new real_index(*pubsub_, [=](e_t e) { streams_->push_event(e); },
                           conf.index_expire_interval, *scheduler_,
-                          detach_thread)),
+                          instrumentation_, detach_thread)),
 
     tcp_server_(init_tcp_server(conf, *main_loop_, streams_)),
 
