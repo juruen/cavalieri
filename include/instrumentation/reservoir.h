@@ -1,6 +1,7 @@
 #ifndef INSTRUMENTATION_RESERVOIR_H
 #define INSTRUMENTATION_RESERVOIR_H
 
+#include <atomic>
 #include <atom/atom.h>
 
 class reservoir {
