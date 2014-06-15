@@ -13,77 +13,49 @@ std::mt19937_64 eng(rd());
 
 reservoir::reservoir()
   :
-    reservoir_size_(k_default_size)
+    reservoir_size_(k_default_size),
+    samples_(k_default_size, 0),
+    n_(0)
 {
 }
 
 reservoir::reservoir(const size_t size)
   :
-    reservoir_size_(size)
+    reservoir_size_(size),
+    samples_(size, 0),
+    n_(0)
 {
 }
 
 void reservoir::add_sample(const double sample)
 {
 
-  VLOG(3) << "add_sample";
+  VLOG(1) << "add_sample";
 
-  reservoir_.update(
-      [&](const reservoir_t & current) {
+  if (uint64_t i= n_.fetch_add(1) < reservoir_size_) {
 
-        if (current.n < reservoir_size_) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    samples_[i] = sample;
 
-          VLOG(3) << "not full";
+  } else {
 
-          auto copy(current);
-          copy.samples.push_back(sample);
-          copy.n++;
+    std::uniform_int_distribution<> distr(0, n_);
 
-          return copy;
+    auto index = distr(eng);
+    if (static_cast<size_t>(index)  < reservoir_size_) {
+      std::lock_guard<std::mutex> lock(mutex_);
+      samples_[index] = sample;
+    }
 
-        } else {
+    n_++;
 
-          VLOG(3) << "full";
+  }
 
-          std::uniform_int_distribution<> distr(0, current.n);
-
-          auto index = distr(eng);
-          if (static_cast<size_t>(index)  < reservoir_size_) {
-
-            auto copy(current);
-            copy.n++;
-            copy.samples[index] = sample;
-
-            return copy;
-
-          }
-
-        }
-
-        return current;
-
-      });
 }
-
 
 std::vector<double> reservoir::snapshot() {
 
-  samples_t copy;
-
-  reservoir_.update(
-      [&](const reservoir_t &) {
-
-          return reservoir_t({0, samples_t(reservoir_size_)});
-
-      },
-      [&](const reservoir_t & old, const reservoir_t &) {
-
-        copy =  old.samples;
-
-      }
-          
-      );
-
-  return copy;
+  std::lock_guard<std::mutex> lock(mutex_);
+  return samples_;
 
 }

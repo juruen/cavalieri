@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <atom/atom.h>
+#include <mutex>
 
 class reservoir {
 public:
@@ -15,14 +16,10 @@ public:
 
 private:
 
-  typedef struct {
-    uint64_t n;
-    samples_t samples;
-  } reservoir_t;
-
   const size_t reservoir_size_;
+  samples_t samples_;
   std::atomic<uint64_t> n_;
-  atom<reservoir_t> reservoir_;
+  std::mutex mutex_;
 
 };
 
