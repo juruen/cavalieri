@@ -571,7 +571,7 @@ service, in this case, an SMTP server.
 
 
 
-#### pd_trigger(const std::string pd_key)
+#### pagerduty_trigger(const std::string pd_key)
 
 It triggers a Pager Duty incident based on the received event and using
 *pd_key* as the API key. Note that service key will be event's host and
@@ -580,7 +580,7 @@ service.
 This is an *external* function, meaning that cavalieri will talk to an external
 service, in this case, Pager Duty.
 
-#### pd_acknowoledge(const std::string pd_key)
+#### pagerduty_acknowoledge(const std::string pd_key)
 
 It acknowledges a Pager Duty incident based on the received event and using
 *pd_key* as the API key. Note that service key will be event's host and
@@ -589,7 +589,7 @@ service.
 This is an *external* function, meaning that cavalieri will talk to an external
 service, in this case, Pager Duty.
 
-#### pd_resolve(const std::string pd_key)
+#### pagerduty_resolve(const std::string pd_key)
 
 It resolves a Pager Duty incident based on the received event and using
 *pd_key* as the API key. Note that service key will be event's host and
