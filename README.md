@@ -686,9 +686,9 @@ stable_metric( /* seconds */ 300, above_pred(200))
 ```
 
 
-#### agg_stable_metric(double dt, fold_fn_t fold_fn, predicate_t trigger, predicate_t cancel)
+#### agg_stable_metric (double dt, fold_fn_t fold_fn, predicate_t trigger, predicate_t cancel)
 
-This functions aggregates metrics of events that are received using
+This function aggregates metrics of events that are received using
 *fold_fn* (See fold functions). The event that results is passed to a
 *stable_metric* stream using *dt*, *trigger* and *cancel*.
 
@@ -704,6 +704,25 @@ service("failed_requests_rate")
     >> agg_stable_metric(/* secs */ 300, sum, above_pred(200), under_pred(50))
       >> changed_state("ok")
         >> email();
+```
+
+
+#### max_critical_hosts(size_t n)
+
+This function sets the state of the events to critical when it receives
+more than *n* different critical events.
+
+In the example below, we trigger an alert when more than 20 servers
+report a puppet failure in a DC.
+
+```cpp
+service("puppet")
+  >> tagged("datacenter::paris")
+    >> max_critial_hosts(20)
+      >> changed_state("ok")
+        >> set_host("datacenter::paris")
+          >> set_service("too many puppet failures")
+            >> email();
 ```
 
 

@@ -171,4 +171,46 @@ TEST(agg_sum_trigger_above_test_case,test)
   ASSERT_EQ(6, v[0].metric_d());
 }
 
+
+TEST(max_critical_hosts_test_case,test)
+{
+  std::vector<Event> v;
+
+  auto max = max_critical_hosts(3) >> changed_state("ok") >> sink(v);
+
+  std::vector<Event> events(5);
+
+  for (size_t i = 0; i < events.size(); i++) {
+    events[i].set_host(std::to_string(i));
+    events[i].set_state("ok");
+    events[i].set_ttl(300);
+    push_event(max, events[i]);
+  }
+
+  ASSERT_EQ(0, v.size());
+
+  events[0].set_state("critical");
+  push_event(max, events[0]);
+  ASSERT_EQ(0, v.size());
+
+  events[1].set_state("critical");
+  events[2].set_state("critical");
+  push_event(max, events[1]);
+  push_event(max, events[2]);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("critical", v[0].state());
+
+  v.clear();
+
+  events[0].set_state("ok");
+  events[1].set_state("ok");
+  events[2].set_state("oj");
+  push_event(max, events[0]);
+  push_event(max, events[1]);
+  push_event(max, events[2]);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("ok", v[0].state());
+
+}
+
 #endif

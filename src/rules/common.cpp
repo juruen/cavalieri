@@ -1,5 +1,6 @@
 #include <atomic>
 #include <folds.h>
+#include <algorithm>
 #include <streams/stream_functions.h>
 #include <rules/common.h>
 
@@ -19,6 +20,20 @@ streams_t stable_stream(double dt, atomic_bool_t state) {
   return stable(dt) >> set_state;
 }
 
+fold_fn_t fold_max_critical_hosts(size_t n) {
+
+  return [=](std::vector<Event> events)
+  {
+    auto c = std::count_if(begin(events), end(events),
+                           [](e_t e) { return e.state() == "critical"; });
+
+
+    Event e(events[0]);
+    e.set_state(static_cast<size_t>(c) >= n ? "critical" : "ok");
+
+    return e;
+  };
+}
 
 }
 
@@ -87,3 +102,9 @@ streams_t agg_stable_metric(double dt, fold_fn_t fold_fn, predicate_t trigger,
 {
   return coalesce(fold_fn) >> stable_metric(dt, trigger, cancel);
 }
+
+
+streams_t max_critical_hosts(size_t n) {
+  return coalesce(fold_max_critical_hosts(n));
+}
+

@@ -14,4 +14,6 @@ streams_t stable_metric(double dt, predicate_t trigger, predicate_t cancel);
 streams_t agg_stable_metric(double dt, fold_fn_t fold_fn, predicate_t trigger,
                             predicate_t cancel);
 
+streams_t max_critical_hosts(size_t n);
+
 #endif
