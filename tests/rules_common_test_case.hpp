@@ -17,10 +17,12 @@ TEST(critical_above_test_case, test)
 
   e.set_metric_d(1);
   push_event(cabove, e);
+  ASSERT_EQ(1, v.size());
   ASSERT_EQ("ok", v[0].state());
 
   e.set_metric_d(6);
   push_event(cabove, e);
+  ASSERT_EQ(2, v.size());
   ASSERT_EQ("critical", v[1].state());
 }
 
@@ -41,11 +43,11 @@ TEST(critical_under_test_case, test)
   ASSERT_EQ("ok", v[1].state());
 }
 
-TEST(trigger_detrigger_above_test_case, test)
+TEST(stable_metric_above_test_case, test)
 {
   std::vector<Event> v;
 
-  auto td_above = trigger_detrigger_above(5, 5, 3) >> bsink(v);
+  auto td_above = stable_metric(5, above_pred(5), under_pred(3)) >> bsink(v);
 
   Event e;
 
@@ -78,11 +80,11 @@ TEST(trigger_detrigger_above_test_case, test)
   ASSERT_EQ("critical", v[2].state());
 }
 
-TEST(trigger_detrigger_under_test_case, test)
+TEST(stable_metric_under_test_case, test)
 {
   std::vector<Event> v;
 
-  auto td_under = trigger_detrigger_under(5, 5, 3) >> bsink(v);
+  auto td_under = stable_metric(5, under_pred(5), above_pred(3)) >> bsink(v);
 
   Event e;
 
@@ -119,7 +121,9 @@ TEST(agg_sum_trigger_above_test_case,test)
 {
   std::vector<Event> v;
 
-  auto agg =  agg_sum_trigger_above(5, 5, 3) >> sink(v);
+  auto agg =  agg_stable_metric(5, sum, above_eq_pred(5), under_eq_pred(3))
+              >> sink(v);
+
   g_core->sched().clear();
 
   Event e1,e2;

@@ -631,6 +631,81 @@ It returns an event that contains the minimum value of the metrics of *events*.
 
 It returns an event that contains the maximum of the metrics of *events*.
 
+### Common Rules
+
+These rules are based on the above stream functions, but they are more
+high-level and more opinionated.
+
+They asumme that two states *critical* and *ok* are enough. Events coming
+out from these function have their state set to any of them.
+
+#### critical_above (double value)
+
+It sets state to critical if metric is above *value*. Otherwise, it sets it to
+ok.
+
+#### critical_under (double value)
+
+It sets state to ok if metric is under *value*. Otherwise, it sets it to
+critical.
+
+#### stable_metric (double dt, predicate_t trigger)
+
+It takes *trigger* as a function predicate to check events. It sets the state
+to critical when *trigger* has returned *true* for more than *dt* seconds.
+
+It sets it back to critical when *trigger* has returned *false* for more than
+*dt* seconds.
+
+This is useful to avoid spikes.
+
+```cpp
+stable_metric( /* seconds */ 300, above_pred(200))
+  >> changed_state("ok")
+    >>  email();
+```
+
+#### stable_metric (double dt, predicate_t trigger, predicate_t cancel)
+
+Similar to the above function but taking an extra predicate *cancel* that is
+used as a threshold to set it back to ok.
+
+
+It sets the state to critical when *trigger* has return *true* for more than
+*dt* seconds.
+
+It sets it back to critical when *cancel* has returned *true* for more than
+*dt* seconds.
+
+This is useful to avoid spikes.
+
+```cpp
+stable_metric( /* seconds */ 300, above_pred(200))
+  >> changed_state("ok")
+    >>  email();
+```
+
+
+#### agg_stable_metric(double dt, fold_fn_t fold_fn, predicate_t trigger, predicate_t cancel)
+
+This functions aggregates metrics of events that are received using
+*fold_fn* (See fold functions). The event that results is passed to a
+*stable_metric* stream using *dt*, *trigger* and *cancel*.
+
+Let's see an example. Say we have a bunch of web servers in our London data
+center. Those servers are reporting a metric called *failed_requests_rate*. We
+would like to create another metric that is the aggregated sum of all the
+servers and trigger an alert when that value is above a given value for
+more than *dt* seconds.
+
+```cpp
+service("failed_requests_rate")
+  >> tagged("datacenter::london")
+    >> agg_stable_metric(/* secs */ 300, sum, above_pred(200), under_pred(50))
+      >> changed_state("ok")
+        >> email();
+```
+
 
 ### Predicate functions
 
