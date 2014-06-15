@@ -51,10 +51,8 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
     ${CMAKE_SOURCE_DIR}/src/external/real_external.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mailer_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/external/pagerduty_pool.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/email.cpp
     ${CMAKE_SOURCE_DIR}/src/external/graphite_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/external/graphite.cpp
     ${CMAKE_SOURCE_DIR}/src/external/riemann_tcp_client_pool.cpp
@@ -95,8 +93,6 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/index/mock_index.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/email.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
   )
 
 ADD_DEFINITIONS( -Wall -std=c++11 -g )
