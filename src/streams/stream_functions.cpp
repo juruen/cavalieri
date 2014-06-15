@@ -971,6 +971,47 @@ streams_t forward(const std::string host, const int port) {
   );
 }
 
+streams_t email(const std::string server, const std::string from,
+                const std::string to) {
+  return create_stream(
+    [=](forward_fn_t, e_t e) {
+
+      g_core->externals().email(server, from, to, e);
+
+    }
+  );
+}
+
+streams_t pagerduty_resolve(const std::string key) {
+  return create_stream(
+    [=](forward_fn_t, e_t e) {
+
+      g_core->externals().pager_duty_resolve(key, e);
+
+    }
+  );
+}
+
+streams_t pagerduty_acknowledge(const std::string key) {
+  return create_stream(
+    [=](forward_fn_t, e_t e) {
+
+      g_core->externals().pager_duty_acknowledge(key, e);
+
+    }
+  );
+}
+
+streams_t pagerduty_trigger(const std::string key) {
+  return create_stream(
+    [=](forward_fn_t, e_t e) {
+
+      g_core->externals().pager_duty_trigger(key, e);
+
+    }
+  );
+}
+
 predicate_t above_eq_pred(const double value) {
   return PRED(above_eq_(e, value));
 }

@@ -118,6 +118,15 @@ streams_t send_graphite(const std::string host, const int port);
 
 streams_t forward(const std::string host, const int port);
 
+streams_t email(const std::string server, const std::string from,
+                const std::string to);
+
+streams_t pagerduty_resolve(const std::string key);
+
+streams_t pagerduty_acknowledge(const std::string key);
+
+streams_t pagerduty_trigger(const std::string key);
+
 predicate_t above_eq_pred(const double value);
 
 predicate_t above_pred(const double value);
