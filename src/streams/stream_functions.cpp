@@ -218,7 +218,7 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
 
       std::string key;
       for (const auto & k: keys) {
-        key += string_to_value(e, k) + " ";
+        key += event_str_value(e, k) + " ";
       }
 
       auto fw_stream = create_stream(
@@ -244,7 +244,7 @@ streams_t rate(const int interval) {
 
   return create_stream(
 
-    [=](forward_fn_t forward, e_t e) mutable
+    [=](forward_fn_t, e_t e) mutable
     {
 
       double expected, newval;
