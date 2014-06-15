@@ -160,6 +160,11 @@ streams_t split_(const split_clauses_t clauses, streams_t default_stream)
         };
 
         push_event(default_stream, e);
+
+      } else {
+
+        forward(e);
+
       }
 
   });
