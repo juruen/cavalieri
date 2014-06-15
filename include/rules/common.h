@@ -16,4 +16,13 @@ streams_t agg_stable_metric(double dt, fold_fn_t fold_fn, predicate_t trigger,
 
 streams_t max_critical_hosts(size_t n);
 
+struct target_t {
+  streams_t pagerduty;
+  streams_t email;
+  streams_t index;
+  streams_t all;
+};
+
+target_t create_targets(const std::string pd_key, const std::string email);
+
 #endif

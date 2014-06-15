@@ -108,3 +108,19 @@ streams_t max_critical_hosts(size_t n) {
   return coalesce(fold_max_critical_hosts(n));
 }
 
+
+target_t create_targets(const std::string pagerduty_key, const std::string to) {
+  target_t target;
+
+  auto pg_stream = (state("ok")       >> pagerduty_resolve(pagerduty_key),
+                    state("critical") >> pagerduty_trigger(pagerduty_key));
+
+  auto mail_stream = email("localhost", "cavalieri@localhost", to);
+
+  target.pagerduty = changed_state("ok") >> pg_stream;
+  target.email = changed_state("ok") >> mail_stream;
+  target.index = send_index();
+  target.all = (target.pagerduty, target.email, target.index);
+
+  return target;
+}
