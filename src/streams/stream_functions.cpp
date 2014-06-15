@@ -206,9 +206,7 @@ typedef std::unordered_map<std::string, streams_t> by_stream_map_t;
 
 streams_t by(const by_keys_t & keys, const by_stream_t stream) {
 
-  auto pre_delete = [](by_stream_map_t & m) { m.clear(); };
-
-  auto atom_streams = make_shared_atom<by_stream_map_t>(pre_delete);
+  auto atom_streams = make_shared_atom<by_stream_map_t>();
 
   return create_stream(
 
