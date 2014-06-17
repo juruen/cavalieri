@@ -846,11 +846,31 @@ streams_t scale(double s) {
   });
 }
 
-streams_t sdo() {
+streams_t svec(std::vector<streams_t> streams) {
   return create_stream(
     [=](forward_fn_t forward, e_t e) {
-      forward(e);
-    });
+
+      if (!streams.empty()) {
+
+        for (auto stream : streams) {
+
+          stream.back()->output_fn = [&](e_t e)
+          {
+            forward(e);
+          };
+
+          push_event(stream, e);
+        }
+
+      } else {
+
+        forward(e);
+
+      }
+
+    }
+
+    );
 }
 
 streams_t counter() {

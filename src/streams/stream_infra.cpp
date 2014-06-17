@@ -122,9 +122,12 @@ streams_t create_stream(node_fn_t node_fn, on_join_fn_t on_join_fn) {
 
 stream_t::stream_t() : output_fn(null_fn), input_fn(null_fn) {}
 
+
+/*
 streams_t operator, (streams_t left, streams_t right) {
   return child_join(left, right);
-}
+}*/
+
 
 streams_t operator>>(stream_node_t left, stream_node_t right) {
   return join(left, right);

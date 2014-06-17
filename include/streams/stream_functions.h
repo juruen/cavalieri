@@ -18,6 +18,7 @@ typedef std::vector<Event> events_t;
 #define TR(EXP) [](Event & e) {(EXP); }
 #define BY(EXP) [=]() { return (EXP); }
 #define NE(EXP) [=](const Event & event) { Event e(event); (EXP); return e;  }
+#define sdo(...) svec({__VA_ARGS__})
 
 
 typedef std::function<bool(e_t)> predicate_t;
@@ -102,7 +103,7 @@ streams_t without(double a, double b);
 
 streams_t scale(double s);
 
-streams_t sdo();
+streams_t svec(std::vector<streams_t> streams);
 
 streams_t counter();
 

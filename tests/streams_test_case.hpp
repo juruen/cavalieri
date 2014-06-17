@@ -69,17 +69,17 @@ TEST(streams_test_case, test)
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (sink(v), f, g), e);
+  push_event(a >>  b >> c >> d >> svec({sink(v), f, g}), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (f, sink(v),  g), e);
+  push_event(a >>  b >> c >> d >> svec({f, sink(v),  g}), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (f, g, sink(v)), e);
+  push_event(a >>  b >> c >> d >> svec({f, g, sink(v)}), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
@@ -243,8 +243,8 @@ TEST(split_streams_test_case, test)
 
   split_clauses_t clauses_stream =
   {
-    {PRED(e.host() == "host1"),       sdo()},
-    {PRED(metric_to_double(e) > 3.3), sdo()}
+    {PRED(e.host() == "host1"),       svec({})},
+    {PRED(metric_to_double(e) > 3.3), svec({})}
   };
 
   e.set_host("host1");
