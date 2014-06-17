@@ -37,7 +37,7 @@ std::vector<std::string> so_files(std::string dir) {
 
 std::shared_ptr<streams_t> load_library(std::string lib) {
 
-  void *handle = dlopen(lib.c_str(), RTLD_LAZY);
+  void *handle = dlopen(lib.c_str(), RTLD_NOW);
 
   if (!handle) {
     LOG(ERROR) << "error opening " << lib << " " << dlerror();
@@ -60,7 +60,7 @@ std::shared_ptr<streams_t> load_library(std::string lib) {
 
   LOG(INFO) << "rules loaded succesfully from " << lib;
 
-  dlclose(handle);
+  //TODO Store lib handle and close it
 
   return std::shared_ptr<streams_t>(stream);
 }
