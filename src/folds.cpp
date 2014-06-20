@@ -1,4 +1,6 @@
+#include <glog/logging.h>
 #include <folds.h>
+#include <util.h>
 #include <functional>
 #include <util.h>
 
@@ -54,7 +56,7 @@ Event fold(const reduce_fn_t f, events_t events) {
     }
 
     Event e(events.front());
-    e.set_metric_d(reduce(f, events));
+    set_metric(e, reduce(f, events));
     e.set_time(max_time(events));
 
     return e;
