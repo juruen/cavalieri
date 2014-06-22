@@ -36,6 +36,28 @@ fold_fn_t fold_max_critical_hosts(size_t n) {
   };
 }
 
+fold_fn_t fold_stable_events(size_t n) {
+
+  return [=](std::vector<Event> events)
+  {
+    const std::string state(events[0].state());
+
+    auto c = std::count_if(begin(events), end(events),
+                           [=](e_t e) { return e.state() == state; });
+
+    if (static_cast<size_t>(c) == n) {
+
+      return events[events.size() - 1];
+
+    } else {
+
+      return Event();
+
+    }
+
+  };
+}
+
 bool compare_event_time(const Event & a, const Event & b) {
 
   return a.time() < b.time();
@@ -169,6 +191,11 @@ streams_t per_host_ratio(const std::string a, const std::string b,
 {
   return by({"host"}, BY(ratio(a, b, default_zero)))
          >> stable_metric(dt, trigger, cancel);
+}
+
+streams_t stable_event_stream(size_t events) {
+  return moving_event_window(events, fold_stable_events(events))
+         >> where(PRED(e.has_state()));
 }
 
 target_t create_targets(const std::string pagerduty_key, const std::string to) {

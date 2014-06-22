@@ -23,6 +23,9 @@ streams_t per_host_ratio(const std::string a, const std::string b,
                          const double default_zero, double dt,
                          predicate_t trigger,
                          predicate_t cancel);
+
+streams_t stable_event_stream(size_t events);
+
 struct target_t {
   streams_t pagerduty;
   streams_t email;

@@ -213,8 +213,6 @@ TEST(max_critical_hosts_test_case,test)
 
 }
 
-#include <iostream>
-
 TEST(per_host_ratio_test_case,test)
 {
 
@@ -309,6 +307,42 @@ TEST(per_host_ratio_test_case,test)
   ASSERT_EQ(2, v.size());
   ASSERT_EQ("ok", v[0].state());
   ASSERT_EQ("ok", v[1].state());
+
+}
+TEST(stable_event_stream_test_case,test)
+{
+
+  std::vector<Event> v;
+
+  auto stable = stable_event_stream(3) >> sink(v);
+
+  Event e;
+  e.set_time(0);
+  e.set_ttl(300);
+
+  for (int i = 0; i < 6; i++) {
+    e.set_state(i % 2 ? "ok" : "critical");
+    push_event(stable, e);
+  }
+
+  ASSERT_EQ(0, v.size());
+
+  for (int i = 0; i < 3; i++) {
+    e.set_state("critical");
+    push_event(stable, e);
+  }
+
+  ASSERT_EQ(1, v.size());
+
+  v.clear();
+
+  for (int i = 1; i < 6; i++) {
+    e.set_state(i % 2 ? "ok" : "critical");
+    push_event(stable, e);
+  }
+
+  ASSERT_EQ(0, v.size());
+
 
 }
 
