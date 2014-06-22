@@ -213,4 +213,103 @@ TEST(max_critical_hosts_test_case,test)
 
 }
 
+#include <iostream>
+
+TEST(per_host_ratio_test_case,test)
+{
+
+  std::vector<Event> v;
+
+  auto ratio = per_host_ratio("a", "b", 1, 300,
+                              above_pred(0.7), under_pred(0.5)) >> sink(v);
+
+  Event e;
+
+  e.set_host("h");
+  e.set_ttl(600);
+  e.set_time(0);
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(5);
+  push_event(ratio, e);
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(100);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(5);
+
+  push_event(ratio, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(200);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(1);
+  push_event(ratio, e);
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(400);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(1);
+  push_event(ratio, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(500);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(1);
+  push_event(ratio, e);
+
+  ASSERT_EQ(3, v.size());
+
+  ASSERT_EQ("critical", v[0].state());
+  ASSERT_EQ("critical", v[1].state());
+  ASSERT_EQ("critical", v[2].state());
+
+  v.clear();
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(600);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(5);
+  push_event(ratio, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(900);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(5);
+  push_event(ratio, e);
+
+  ASSERT_EQ(2, v.size());
+  ASSERT_EQ("ok", v[0].state());
+  ASSERT_EQ("ok", v[1].state());
+
+}
+
 #endif

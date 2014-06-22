@@ -1,5 +1,6 @@
 #include <atomic>
 #include <folds.h>
+#include <util.h>
 #include <algorithm>
 #include <streams/stream_functions.h>
 #include <rules/common.h>
@@ -33,6 +34,52 @@ fold_fn_t fold_max_critical_hosts(size_t n) {
 
     return e;
   };
+}
+
+bool compare_event_time(const Event & a, const Event & b) {
+
+  return a.time() < b.time();
+
+}
+
+const int64_t k_same_interval = 60;
+
+bool same_interval(const std::vector<Event> events) {
+
+  auto min = std::min_element(begin(events), end(events), compare_event_time);
+  auto max = std::max_element(begin(events), end(events), compare_event_time);
+
+  return (max->time() - min->time()) < k_same_interval;
+}
+
+fold_fn_t fold_ratio(const double zero_ratio) {
+
+  return [=](const std::vector<Event> events)
+  {
+    if (events.size() == 2 && metric_set(events[0]) && metric_set(events[1])
+        && same_interval(events))
+    {
+
+      auto a = metric_to_double(events[0]);
+      auto b = metric_to_double(events[1]);
+
+      double ratio;
+      if (b == 0) {
+        ratio = zero_ratio;
+      } else {
+        ratio = a / b;
+      }
+
+      Event e(events[0]);
+      e.set_service(events[0].service() + " / " + events[1].service());
+
+      return set_metric(e, ratio);
+
+    } else {
+      return Event();
+    }
+  };
+
 }
 
 }
@@ -108,6 +155,21 @@ streams_t max_critical_hosts(size_t n) {
   return coalesce(fold_max_critical_hosts(n));
 }
 
+streams_t ratio(const std::string a, const std::string b,
+                const double default_zero)
+{
+  return project({service_pred(a), service_pred(b)}, fold_ratio(default_zero))
+         >> where(PRED(metric_set(e)));
+}
+
+streams_t per_host_ratio(const std::string a, const std::string b,
+                         const double default_zero, double dt,
+                         predicate_t trigger,
+                         predicate_t cancel)
+{
+  return by({"host"}, BY(ratio(a, b, default_zero)))
+         >> stable_metric(dt, trigger, cancel);
+}
 
 target_t create_targets(const std::string pagerduty_key, const std::string to) {
   target_t target;
