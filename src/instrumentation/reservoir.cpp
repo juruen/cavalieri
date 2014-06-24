@@ -56,6 +56,10 @@ void reservoir::add_sample(const double sample)
 std::vector<double> reservoir::snapshot() {
 
   std::lock_guard<std::mutex> lock(mutex_);
-  return samples_;
 
+  auto snap(samples_);
+  samples_ = std::vector<double>(k_default_size, 0);
+  n_.store(0);
+
+  return snap;
 }
