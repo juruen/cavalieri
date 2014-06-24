@@ -243,12 +243,12 @@ TEST(split_streams_test_case, test)
 
   split_clauses_t clauses_stream =
   {
-    {PRED(e.host() == "host1"),       svec({})},
-    {PRED(metric_to_double(e) > 3.3), svec({})}
+    {PRED(e.host() == "host1"),       sink(v3)},
+    {PRED(metric_to_double(e) > 3.3), sink(v3)}
   };
 
   e.set_host("host1");
-  push_event(split(clauses_stream) >> sink(v3), e);
+  push_event(split(clauses_stream), e);
   ASSERT_EQ(0, v1.size());
   ASSERT_EQ(0, v2.size());
   ASSERT_EQ(1, v3.size());

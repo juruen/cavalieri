@@ -104,38 +104,34 @@ fold_fn_t fold_ratio(const double zero_ratio) {
 
 }
 
+streams_t set_critical_predicate(predicate_t predicate) {
+  return
+    create_stream([=](forward_fn_t forward, e_t e) {
+
+        Event ne(e);
+
+        ne.set_state(predicate(e) ? "critical" : "ok");
+
+        forward(ne);
+    });
+
+}
+
+
+
 }
 
 streams_t critical_above(double value) {
-  return
-    split(
-    {
-      {above_eq_pred(value), set_state("critical")},
-      {default_pred(), set_state("ok")}
-    });
+  return set_critical_predicate(above_pred(value));
 }
 
 streams_t critical_under(double value) {
-  return
-    split(
-    {
-      {under_eq_pred(value), set_state("critical")},
-      {default_pred(), set_state("ok")}
-    });
-
+  return set_critical_predicate(under_pred(value));
 }
 
 streams_t stable_metric(double dt, predicate_t trigger)
 {
-
-  split_clauses_t clauses =
-  {
-    {trigger, set_state("critical")},
-    {default_pred(), set_state("ok")}
-  };
-
-  return split(clauses) >>  stable(dt);
-
+  return set_critical_predicate(trigger) >>  stable(dt);
 }
 
 streams_t stable_metric(double dt, predicate_t trigger, predicate_t cancel)
@@ -155,13 +151,8 @@ streams_t stable_metric(double dt, predicate_t trigger, predicate_t cancel)
     return false;
   };
 
-  split_clauses_t clauses =
-  {
-    {is_critical, set_state("critical")},
-    {default_pred(), set_state("ok")}
-  };
 
-  return split(clauses) >>  stable_stream(dt, state_ok);
+  return set_critical_predicate(is_critical) >>  stable_stream(dt, state_ok);
 }
 
 

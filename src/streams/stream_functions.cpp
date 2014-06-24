@@ -140,11 +140,6 @@ streams_t split_(const split_clauses_t clauses, streams_t default_stream)
 
         if (pair.first(e)) {
 
-          pair.second.back()->output_fn = [&](e_t e)
-          {
-            forward(e);
-          };
-
           push_event(pair.second, e);
 
           return;
@@ -153,11 +148,6 @@ streams_t split_(const split_clauses_t clauses, streams_t default_stream)
       }
 
       if (!default_stream.empty()) {
-
-        default_stream.back()->output_fn = [&](e_t e)
-        {
-          forward(e);
-        };
 
         push_event(default_stream, e);
 
@@ -853,11 +843,6 @@ streams_t svec(std::vector<streams_t> streams) {
       if (!streams.empty()) {
 
         for (auto stream : streams) {
-
-          stream.back()->output_fn = [&](e_t e)
-          {
-            forward(e);
-          };
 
           push_event(stream, e);
         }
