@@ -98,6 +98,11 @@ streams_t state(const std::string state) {
   return where(match_pred("state", state));
 }
 
+streams_t state_any(const std::vector<std::string> states) {
+  return where(
+      PRED(std::find(begin(states), end(states), e.state()) != states.end()));
+}
+
 streams_t set_state(const std::string state) {
   return with({{"state", state}});
 }

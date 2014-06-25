@@ -197,8 +197,10 @@ target_t create_targets(const std::string pagerduty_key, const std::string to) {
 
   auto mail_stream = email("localhost", "cavalieri@localhost", to);
 
-  target.pagerduty = changed_state("ok") >> pg_stream;
-  target.email = changed_state("ok") >> mail_stream;
+  auto filter_states = state_any({"ok", "critical"});
+
+  target.pagerduty = filter_states >> changed_state("ok") >> pg_stream;
+  target.email = filter_states >> changed_state("ok") >> mail_stream;
   target.index = send_index();
   target.all = sdo(target.pagerduty, target.email, target.index);
 
