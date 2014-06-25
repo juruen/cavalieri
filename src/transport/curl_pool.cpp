@@ -14,6 +14,7 @@ namespace {
 
 const size_t k_queue_capacity = 10000;
 const float k_initial_interval_secs = 2;
+const size_t k_max_concurrent_conns = 10;
 
 char error_[CURL_ERROR_SIZE];
 
@@ -349,6 +350,11 @@ void curl_pool::async(async_loop & loop) {
   VLOG(3) << "async()";
 
   size_t loop_id =  loop.id();
+
+  if (curl_conns_[loop_id].size() > k_max_concurrent_conns) {
+    LOG(ERROR) << "too many concurrent connections";
+    return;
+  }
 
   auto event_queue = thread_event_queues_[loop_id];
 
