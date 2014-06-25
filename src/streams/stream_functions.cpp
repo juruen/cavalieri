@@ -99,8 +99,14 @@ streams_t state(const std::string state) {
 }
 
 streams_t state_any(const std::vector<std::string> states) {
-  return where(
-      PRED(std::find(begin(states), end(states), e.state()) != states.end()));
+  return create_stream(
+    [=](forward_fn_t forward, e_t e)
+    {
+      if (std::find(begin(states), end(states), e.state()) != end(states)) {
+        forward(e);
+        return;
+      }
+    });
 }
 
 streams_t set_state(const std::string state) {

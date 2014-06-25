@@ -117,7 +117,9 @@ streams_t set_critical_predicate(predicate_t predicate) {
 
 }
 
-
+streams_t no_expire() {
+  return state_any({"ok", "critical"});
+}
 
 }
 
@@ -197,10 +199,8 @@ target_t create_targets(const std::string pagerduty_key, const std::string to) {
 
   auto mail_stream = email("localhost", "cavalieri@localhost", to);
 
-  auto filter_states = state_any({"ok", "critical"});
-
-  target.pagerduty = filter_states >> changed_state("ok") >> pg_stream;
-  target.email = filter_states >> changed_state("ok") >> mail_stream;
+  target.pagerduty = no_expire() >> changed_state("ok") >> pg_stream;
+  target.email = no_expire() >> changed_state("ok") >> mail_stream;
   target.index = send_index();
   target.all = sdo(target.pagerduty, target.email, target.index);
 
