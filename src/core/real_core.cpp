@@ -20,7 +20,7 @@ real_core::real_core(const config & conf)
 
     scheduler_(new real_scheduler(*main_loop_)),
 
-    externals_(new real_external(conf)),
+    externals_(new real_external(conf, instrumentation_)),
 
     streams_(new streams(instrumentation_)),
 
