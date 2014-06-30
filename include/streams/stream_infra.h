@@ -1,45 +1,21 @@
-#ifndef XTREAMS_H
-#define XTREAMS_H
+#ifndef STREAMS_STREAM_INFRA_H
+#define STREAMS_STREAM_INFRA_H
 
 #include <functional>
-#include <vector>
 #include <list>
-#include <iostream>
-#include <memory>
+#include <boost/optional.hpp>
 #include <proto.pb.h>
 
-typedef std::function<void(const Event&)> forward_fn_t;
-typedef std::function<void(forward_fn_t)> on_join_fn_t;
+typedef const std::function<void(const Event&)> forward_fn_t;
 
-struct stream_t {
-  stream_t();
-  forward_fn_t output_fn;
-  forward_fn_t input_fn;
-  on_join_fn_t on_join_fn;
-};
+typedef std::function<void(const forward_fn_t, const Event &)> node_fn_t;
 
-typedef std::shared_ptr<stream_t> stream_node_t;
+typedef std::list<node_fn_t> streams_t;
 
-typedef std::list<stream_node_t> streams_t;
+streams_t create_stream(const node_fn_t fn);
 
-typedef std::function<void(forward_fn_t, const Event &)> node_fn_t;
+void push_event(const streams_t, const Event &);
 
-streams_t create_stream(node_fn_t fn);
-
-streams_t create_stream(node_fn_t fn, on_join_fn_t on_join_fn);
-
-void push_event(stream_node_t, const Event &);
-
-void push_event(streams_t, const Event &);
-
-streams_t operator, (streams_t left, streams_t right);
-
-streams_t operator>>(stream_node_t left, stream_node_t right);
-
-streams_t operator>>(stream_node_t left, streams_t right);
-
-streams_t operator>>(streams_t left, stream_node_t right);
-
-streams_t operator>>(streams_t left, streams_t right);
+streams_t operator>>(const streams_t left, const streams_t right);
 
 #endif

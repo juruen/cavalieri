@@ -681,6 +681,7 @@ TEST(expired_streams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
+#ifdef ENABLE_RATE
 TEST(rate_streams_test_case, test)
 {
   std::vector<Event> v;
@@ -725,6 +726,7 @@ TEST(rate_streams_test_case, test)
 
   g_core->sched().clear();
 }
+#endif
 
 TEST(coalesce_streams_test_case, test)
 {

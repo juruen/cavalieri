@@ -262,7 +262,8 @@ streams_t rate(const int interval) {
 
       } while (!rate->compare_exchange_strong(expected, newval));
 
-    },
+    });
+  /*
     [=](forward_fn_t forward)
     {
 
@@ -286,6 +287,7 @@ streams_t rate(const int interval) {
     }
 
   );
+  */
 
 }
 
