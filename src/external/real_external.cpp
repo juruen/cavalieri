@@ -16,7 +16,7 @@ const std::string k_email_service = "email";
 const std::string k_email_description = "email rate";
 
 const size_t k_forward_id = 0;
-const size_t k_graphote_id = 1;
+const size_t k_graphite_id = 1;
 const size_t k_pagerduty_id = 2;
 const size_t k_email_id = 3;
 
@@ -47,42 +47,42 @@ void real_external::forward(const std::string server, const int port,
                             const Event event)
 {
   riemann_tcp_client_.push_event(server, port, event);
-  instrumentation_.incr_gauge(rates_[k_forward_id], 1);
+  instrumentation_.update_rate(rates_[k_forward_id], 1);
 }
 
 void real_external::graphite(const std::string server, const int port,
                              const Event event)
 {
   graphite_.push_event(server, port, event);
-  instrumentation_.incr_gauge(rates_[k_graphote_id], 1);
+  instrumentation_.update_rate(rates_[k_graphite_id], 1);
 }
 
 void real_external::pager_duty_trigger(const std::string pg_key,
                                        const Event event)
 {
   pagerduty_.push_event(pagerduty_pool::pd_action::trigger, pg_key, event);
-  instrumentation_.incr_gauge(rates_[k_pagerduty_id], 1);
+  instrumentation_.update_rate(rates_[k_pagerduty_id], 1);
 }
 
 void real_external::pager_duty_resolve(const std::string pg_key,
                                        const Event event)
 {
   pagerduty_.push_event(pagerduty_pool::pd_action::resolve, pg_key, event);
-  instrumentation_.incr_gauge(rates_[k_pagerduty_id], 1);
+  instrumentation_.update_rate(rates_[k_pagerduty_id], 1);
 }
 
 void real_external::pager_duty_acknowledge(const std::string pg_key,
                                            const Event event)
 {
   pagerduty_.push_event(pagerduty_pool::pd_action::acknowledge, pg_key, event);
-  instrumentation_.incr_gauge(rates_[k_pagerduty_id], 1);
+  instrumentation_.update_rate(rates_[k_pagerduty_id], 1);
 }
 
 void real_external::email(const std::string server, const std::string from,
                           const std::string to, const Event event)
 {
   email_.push_event(server, from, {to}, event);
-  instrumentation_.incr_gauge(rates_[k_email_id], 1);
+  instrumentation_.update_rate(rates_[k_email_id], 1);
 }
 
 void real_external::stop() {
