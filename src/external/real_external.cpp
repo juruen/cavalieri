@@ -60,21 +60,21 @@ void real_external::graphite(const std::string server, const int port,
 void real_external::pager_duty_trigger(const std::string pg_key,
                                        const Event event)
 {
-  pagerduty_.push_event(pagerduty_pool::pd_action::trigger, pg_key, event);
+  //pagerduty_.push_event(pagerduty_pool::pd_action::trigger, pg_key, event);
   instrumentation_.update_rate(rates_[k_pagerduty_id], 1);
 }
 
 void real_external::pager_duty_resolve(const std::string pg_key,
                                        const Event event)
 {
-  pagerduty_.push_event(pagerduty_pool::pd_action::resolve, pg_key, event);
+  //pagerduty_.push_event(pagerduty_pool::pd_action::resolve, pg_key, event);
   instrumentation_.update_rate(rates_[k_pagerduty_id], 1);
 }
 
 void real_external::pager_duty_acknowledge(const std::string pg_key,
                                            const Event event)
 {
-  pagerduty_.push_event(pagerduty_pool::pd_action::acknowledge, pg_key, event);
+  //pagerduty_.push_event(pagerduty_pool::pd_action::acknowledge, pg_key, event);
   instrumentation_.update_rate(rates_[k_pagerduty_id], 1);
 }
 
