@@ -19,6 +19,8 @@ SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/rate.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp

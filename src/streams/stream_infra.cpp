@@ -33,8 +33,6 @@ void push_event(const streams_t stream, const Event & event) {
   std::vector<Event> forwarded_events({event});
   bool forward;
 
-  //std::cout << "forwarding: " << event_to_json(forwarded_event) << "\n";
-
   forward_fn_t forward_fn = [&](const Event & e)
   {
     forward = true;

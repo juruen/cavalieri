@@ -973,10 +973,6 @@ TEST(moving_time_window_streams_test_case, test)
   ASSERT_EQ(1, v.size());
   v.clear();
 
-  e.clear_time();
-  push_event(moving_stream, e);
-  ASSERT_EQ(1, v.size());
-  v.clear();
 }
 
 TEST(fixed_time_window_streams_test_case, test)
