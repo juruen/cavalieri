@@ -805,7 +805,7 @@ void streams::push_event(const Event& e) {
 
   for (const auto & s: streams_) {
 
-    if (expired_(e)) {
+    if (e.state() == "expired") {
       ::push_event(s, e);
       continue;
     }
