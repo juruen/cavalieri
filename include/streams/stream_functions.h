@@ -23,7 +23,7 @@ typedef std::vector<Event> events_t;
 
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::function<void(Event &)> smap_fn_t;
-typedef std::function<Event(const events_t)> fold_fn_t;
+typedef std::function<Event(const events_t &)> fold_fn_t;
 typedef std::vector<predicate_t> predicates_t;
 typedef std::pair<const predicate_t, const streams_t> split_pair_t;
 typedef boost::variant<std::string, int, double> change_value_t;

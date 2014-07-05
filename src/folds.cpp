@@ -10,7 +10,7 @@ typedef std::function<double(double, double)> reduce_fn_t;
 typedef std::vector<Event> events_t;
 typedef std::function<Event(const events_t)> fold_fn_t;
 
-double reduce(const reduce_fn_t f, const events_t & events) {
+double reduce(const reduce_fn_t & f, const events_t & events) {
 
   double t(metric_to_double(events[0]));
 
@@ -35,7 +35,7 @@ double difference_fn(const double & x, const double & y) {
   return x - y;
 }
 
-double max_time(events_t events) {
+double max_time(const events_t & events) {
 
   double max_time = 0;
 
@@ -48,7 +48,7 @@ double max_time(events_t events) {
   return max_time;
 }
 
-Event fold(const reduce_fn_t f, events_t events) {
+Event fold(const reduce_fn_t & f, const events_t & events) {
 
     //TODO: Filter nil metric events
     if (events.empty()) {
@@ -65,19 +65,19 @@ Event fold(const reduce_fn_t f, events_t events) {
 }
 
 
-Event sum(events_t events) {
+Event sum(const events_t & events) {
   return fold(sum_fn, events);
 }
 
-Event product(events_t events) {
+Event product(const events_t & events) {
   return fold(product_fn, events);
 }
 
-Event difference(events_t events) {
+Event difference(const events_t & events) {
   return fold(difference_fn, events);
 }
 
-Event mean(events_t events) {
+Event mean(const events_t & events) {
 
   if (events.empty()) {
     return {};
@@ -90,7 +90,7 @@ Event mean(events_t events) {
   return e;
 }
 
-Event minimum(events_t events) {
+Event minimum(const events_t & events) {
 
   if (events.empty()) {
     return {};
@@ -114,7 +114,7 @@ Event minimum(events_t events) {
   return e;
 }
 
-Event maximum(events_t events) {
+Event maximum(const events_t & events) {
 
   if (events.empty()) {
     return {};

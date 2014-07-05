@@ -8,14 +8,14 @@
 
 typedef const std::function<void(const Event&)> forward_fn_t;
 
-typedef std::function<void(const forward_fn_t, const Event &)> node_fn_t;
+typedef std::function<void(const forward_fn_t &, const Event &)> node_fn_t;
 
 typedef std::list<node_fn_t> streams_t;
 
-streams_t create_stream(const node_fn_t fn);
+streams_t create_stream(const node_fn_t & fn);
 
-void push_event(const streams_t, const Event &);
+void push_event(const streams_t &, const Event &);
 
-streams_t operator>>(const streams_t left, const streams_t right);
+streams_t operator>>(const streams_t & left , const streams_t & right);
 
 #endif
