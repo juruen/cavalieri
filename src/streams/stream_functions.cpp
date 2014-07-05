@@ -803,7 +803,12 @@ void streams::push_event(const Event& e) {
     return;
   }
 
-  for (auto& s: streams_) {
+  for (const auto & s: streams_) {
+
+    if (expired_(e)) {
+      ::push_event(s, e);
+      continue;
+    }
 
     if (e.has_time()) {
 
