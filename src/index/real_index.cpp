@@ -47,7 +47,7 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
   sched_(sched),
   events_(),
   pool_(2, static_cast<float>(expire_interval),
-        std::bind(&real_index::real_index::expire_events, this, _1)),
+        std::bind(&real_index::real_index::run, this, _1)),
   stop_(false)
 {
 
@@ -55,8 +55,6 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
 
   pubsub_.add_publisher(k_default_index,
                         std::bind(&real_index::all_events, this));
-
-  pool_.set_run_hook(std::bind(&real_index::dequeue_events, this, _1));
 
   instrs_ids_.push_back(instr.add_gauge(k_preexpire_service,
                                         k_preexpire_desc));
@@ -96,11 +94,15 @@ void real_index::add_event(const Event& e) {
 
 }
 
-void real_index::dequeue_events(async_loop & loop) {
+void real_index::run(async_loop & loop) {
+    if (loop.id() == k_queue_id) {
+      dequeue_events();
+    } else {
+      expire_events();
+    }
+}
 
-  if (loop.id() != k_queue_id) {
-    return;
-  }
+void real_index::dequeue_events() {
 
   VLOG(3) << "start dequeue_events() from index";
 
@@ -141,11 +143,7 @@ void real_index::stop() {
   pool_.stop_threads();
 }
 
-void real_index::expire_events(async_loop & loop) {
-
-  if (loop.id() != k_expire_id) {
-    return;
-  }
+void real_index::expire_events() {
 
   VLOG(3) << "expire_fn()++";
 
