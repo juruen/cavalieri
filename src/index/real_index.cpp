@@ -11,8 +11,14 @@ namespace {
 const std::string k_default_index = "index";
 const std::string k_preexpire_service = "cavalieri index size pre-expire";
 const std::string k_preexpire_desc = "number of events before removing expired";
+const size_t k_preexpire_guage_id = 0;
 const std::string k_postexpire_service = "cavalieri index size post-expire";
 const std::string k_postexpire_desc = "number of events after removing expired";
+const size_t k_postexpire_gauge_id = 1;
+const std::string k_queue_service = "cavalieri index queue";
+const std::string k_queue_desc = "number of events in index queue";
+const size_t k_queue_gauge_id = 2;
+
 const size_t k_stop_attempts = 120;
 const size_t k_stop_interval_check_ms = 500;
 const size_t k_max_queue_events = 10000000;
@@ -35,8 +41,6 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
 :
   pubsub_(pubsub),
   instrumentation_(instr),
-  instr_ids_({instr.add_gauge(k_preexpire_service, k_preexpire_desc),
-              instr.add_gauge(k_postexpire_service, k_postexpire_desc)}),
   push_event_fn_(push_event),
   expiring_(false),
   spwan_thread_fn_(spwan_thread_fn),
@@ -53,6 +57,16 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
                         std::bind(&real_index::all_events, this));
 
   pool_.set_run_hook(std::bind(&real_index::dequeue_events, this, _1));
+
+  instrs_ids_.push_back(instr.add_gauge(k_preexpire_service,
+                                        k_preexpire_desc));
+
+  instrs_ids_.push_back(instr.add_gauge(k_postexpire_service,
+                                        k_postexpire_desc));
+
+  instrs_ids_.push_back(instr.add_gauge(k_queue_service,
+                                        k_queue_desc));
+
 
   pool_.start_threads();
 }
@@ -135,7 +149,11 @@ void real_index::expire_events(async_loop & loop) {
 
   VLOG(3) << "expire_fn()++";
 
-  instrumentation_.update_gauge(instr_ids_.first, index_map_.size());
+  instrumentation_.update_gauge(instrs_ids_[k_preexpire_guage_id],
+                                index_map_.size());
+
+  instrumentation_.update_gauge(instrs_ids_[k_queue_gauge_id],
+                                events_.size());
 
   std::vector<std::shared_ptr<Event>> expired_events;
 
@@ -162,7 +180,8 @@ void real_index::expire_events(async_loop & loop) {
 
   }
 
-  instrumentation_.update_gauge(instr_ids_.second, index_map_.size());
+  instrumentation_.update_gauge(instrs_ids_[k_postexpire_gauge_id],
+                                index_map_.size());
 
   VLOG(3) << "expire process took "
           << static_cast<int64_t>(sched_.unix_time()) - now << " seconds";

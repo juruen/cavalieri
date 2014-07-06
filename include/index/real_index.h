@@ -32,7 +32,6 @@ private:
 
   pub_sub & pubsub_;
   instrumentation & instrumentation_;
-  std::pair<instrumentation::id_t, instrumentation::id_t> instr_ids_;
   push_event_fn_t push_event_fn_;
   std::atomic<bool> expiring_;
   spwan_thread_fn_t spwan_thread_fn_;
@@ -40,6 +39,7 @@ private:
   tbb::concurrent_bounded_queue<std::shared_ptr<Event>> events_;
   thread_pool pool_;
   bool stop_;
+  std::vector<instrumentation::id_t> instrs_ids_;
   real_index_t index_map_;
   std::mutex mutex_;
 
