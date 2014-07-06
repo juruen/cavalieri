@@ -23,7 +23,7 @@ public:
   void stop();
 
 private:
-  void dequeue_events(const size_t id);
+  void dequeue_events(async_loop &);
   void expire_events(async_loop &);
   std::vector<std::shared_ptr<Event>> all_events();
 

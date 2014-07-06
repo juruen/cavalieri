@@ -52,6 +52,9 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
   pubsub_.add_publisher(k_default_index,
                         std::bind(&real_index::all_events, this));
 
+  pool_.set_run_hook(std::bind(&real_index::dequeue_events, this, _1));
+
+  pool_.start_threads();
 }
 
 std::vector<std::shared_ptr<Event>> real_index::all_events() {
@@ -79,9 +82,9 @@ void real_index::add_event(const Event& e) {
 
 }
 
-void real_index::dequeue_events(const size_t id) {
+void real_index::dequeue_events(async_loop & loop) {
 
-  if (id != k_queue_id) {
+  if (loop.id() != k_queue_id) {
     return;
   }
 
