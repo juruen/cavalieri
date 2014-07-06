@@ -8,7 +8,7 @@
 
 
 namespace {
-  const size_t k_queue_capacity = 1000000;
+  const size_t k_queue_capacity = 100000;
   const float  k_ws_send_interval = 1;
 
   std::function<bool(const Event&)> filter_query(const std::string uri) {
