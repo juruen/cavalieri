@@ -57,6 +57,7 @@ void real_core::start() {
 
   VLOG(3) << "Stopping services";
 
+  index_->stop();
   streams_->stop();
   tcp_server_->stop();
   udp_server_->stop();
