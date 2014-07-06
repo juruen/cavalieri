@@ -150,8 +150,9 @@ void real_index::expire_events() {
   instrumentation_.update_gauge(instrs_ids_[k_preexpire_guage_id],
                                 index_map_.size());
 
+  auto queue_size = events_.size();
   instrumentation_.update_gauge(instrs_ids_[k_queue_gauge_id],
-                                events_.size());
+                                queue_size < 0 ? 0 : queue_size);
 
   std::vector<std::shared_ptr<Event>> expired_events;
 
