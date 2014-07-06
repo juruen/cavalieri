@@ -4,8 +4,10 @@
 #include <proto.pb.h>
 #include <atomic>
 #include <mutex>
+#include <tbb/concurrent_queue.h>
 #include <pub_sub/pub_sub.h>
 #include <scheduler/scheduler.h>
+#include <pool/thread_pool.h>
 #include <instrumentation/instrumentation.h>
 #include <index/index.h>
 
@@ -18,10 +20,11 @@ public:
              spwan_thread_fn_t spwan_thread_fn);
   ~real_index();
   void add_event(const Event& e);
+  void stop();
 
 private:
-  void timer_cb();
-  void expire_events();
+  void dequeue_events(const size_t id);
+  void expire_events(async_loop &);
   std::vector<std::shared_ptr<Event>> all_events();
 
 private:
@@ -34,6 +37,9 @@ private:
   std::atomic<bool> expiring_;
   spwan_thread_fn_t spwan_thread_fn_;
   scheduler_interface & sched_;
+  tbb::concurrent_bounded_queue<std::shared_ptr<Event>> events_;
+  thread_pool pool_;
+  bool stop_;
   real_index_t index_map_;
   std::mutex mutex_;
 

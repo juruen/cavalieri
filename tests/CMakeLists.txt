@@ -28,7 +28,6 @@ SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/instrumentation/mem.cpp
     ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
-    ${CMAKE_SOURCE_DIR}/src/index/real_index.cpp
     ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp

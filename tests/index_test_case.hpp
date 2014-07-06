@@ -1,11 +1,15 @@
 #ifndef INDEX_TEST_CASE_H
 #define INDEX_TEST_CASE_H
 
+#ifdef ENABLE_INDEX_TEST
+
 #include <index/real_index.h>
 #include <instrumentation/instrumentation.h>
 #include <scheduler/mock_scheduler.h>
 #include <core/core.h>
 #include <glog/logging.h>
+
+
 
 TEST(index_test_case, test)
 {
@@ -57,5 +61,7 @@ TEST(index_test_case, test)
   s.clear();
 
 }
+
+#endif
 
 #endif

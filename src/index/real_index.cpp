@@ -15,12 +15,17 @@ const std::string k_postexpire_service = "cavalieri index size post-expire";
 const std::string k_postexpire_desc = "number of events after removing expired";
 const size_t k_stop_attempts = 120;
 const size_t k_stop_interval_check_ms = 500;
+const size_t k_max_queue_events = 10000000;
+const size_t k_queue_id = 0;
+const size_t k_expire_id = 1;
 
 std::string key(const Event& e) {
   return e.host() + "-" + e.service();
 }
 
 }
+
+using namespace std::placeholders;
 
 real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
                        const int64_t expire_interval,
@@ -35,14 +40,17 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
   push_event_fn_(push_event),
   expiring_(false),
   spwan_thread_fn_(spwan_thread_fn),
-  sched_(sched)
+  sched_(sched),
+  events_(),
+  pool_(2, static_cast<float>(expire_interval),
+        std::bind(&real_index::real_index::expire_events, this, _1)),
+  stop_(false)
 {
+
+  events_.set_capacity(k_max_queue_events);
 
   pubsub_.add_publisher(k_default_index,
                         std::bind(&real_index::all_events, this));
-
-  sched_.add_periodic_task(std::bind(&real_index::timer_cb, this),
-                            expire_interval);
 
 }
 
@@ -65,35 +73,62 @@ void real_index::add_event(const Event& e) {
 
   VLOG(3) << "add_event()";
 
-  const std::string ev_key(key(e));
-
-  auto shared_event = std::make_shared<Event>(e);
-
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    index_map_[ev_key] = shared_event;
+  if (!events_.try_push(std::make_shared<Event>(e))) {
+    LOG(ERROR) << "index queue is full";
   }
 
-  pubsub_.publish(k_default_index, e);
 }
 
-void real_index::timer_cb() {
+void real_index::dequeue_events(const size_t id) {
 
-
-  if (expiring_.exchange(true)) {
-
-    VLOG(1) << "previous expire_events thread hasn't finished yet";
+  if (id != k_queue_id) {
     return;
+  }
+
+  VLOG(3) << "start dequeue_events() from index";
+
+  std::shared_ptr<Event> event;
+
+  while (true) {
+
+    events_.pop(event);
+
+    if (!event) {
+
+      VLOG(3) << "dequeue_events() stop";
+      return;
+
+    }
+
+    const std::string ev_key(key(*event));
+
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      index_map_[ev_key] = event;
+    }
+
+    pubsub_.publish(k_default_index, *event);
 
   }
 
-  spwan_thread_fn_(std::bind(&real_index::expire_events, this));
-
 }
 
-void real_index::expire_events() {
+void real_index::stop() {
+  VLOG(3) << "stop()";
 
-  atom_attach_thread();
+  stop_ = true;
+
+  events_.clear();
+  events_.try_push(std::shared_ptr<Event>());
+
+  pool_.stop_threads();
+}
+
+void real_index::expire_events(async_loop & loop) {
+
+  if (loop.id() != k_expire_id) {
+    return;
+  }
 
   VLOG(3) << "expire_fn()++";
 
@@ -130,39 +165,22 @@ void real_index::expire_events() {
           << static_cast<int64_t>(sched_.unix_time()) - now << " seconds";
 
   for (auto & event : expired_events) {
-    event->set_state("expired");
-    pubsub_.publish(k_default_index, *event);
-    push_event_fn_(*event);
+    Event e(*event);
+    e.set_state("expired");
+    pubsub_.publish(k_default_index, e);
+    push_event_fn_(e);
   }
 
   VLOG(3) << "expire_fn()--";
 
-  expiring_.store(false);
-
-  atom_detach_thread();
 }
 
 real_index::~real_index() {
 
   VLOG(3) << "~real_index()++";
 
-  if (expiring_.exchange(true)) {
-
-    VLOG(3) << "expire_events thread is running";
-
-    for (size_t attempts = k_stop_attempts; attempts > 0; attempts--) {
-
-      if (!expiring_.exchange(true)) {
-        break;
-      }
-
-      VLOG(3) << "Waiting for expiring event to finish";
-
-      std::this_thread::sleep_for(
-          std::chrono::milliseconds(k_stop_interval_check_ms));
-    }
-
+  if (!stop_) {
+    stop();
   }
 
-  VLOG(3) << "~real_index()--";
 }
