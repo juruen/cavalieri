@@ -71,13 +71,9 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
 
 std::vector<std::shared_ptr<Event>> real_index::all_events() {
 
-  mutex_.lock();
-  auto idx_cpy(index_map_);
-  mutex_.unlock();
-
   std::vector<std::shared_ptr<Event>> events;
 
-  for (const auto & kv: idx_cpy) {
+  for (const auto & kv: index_map_) {
     events.push_back(kv.second);
   }
 
@@ -121,10 +117,8 @@ void real_index::dequeue_events() {
 
     const std::string ev_key(key(*event));
 
-    {
-      std::lock_guard<std::mutex> lock(mutex_);
-      index_map_[ev_key] = event;
-    }
+    index_map_.erase(ev_key);
+    index_map_.insert({ev_key,  event});
 
     pubsub_.publish(k_default_index, *event);
 
@@ -154,29 +148,31 @@ void real_index::expire_events() {
   instrumentation_.update_gauge(instrs_ids_[k_queue_gauge_id],
                                 queue_size < 0 ? 0 : queue_size);
 
-  std::vector<std::shared_ptr<Event>> expired_events;
+  std::vector<std::string> keys_to_remove;
+  std::vector<Event> expired_events;
 
   int64_t now = static_cast<int64_t>(sched_.unix_time());
 
-  {
+  for (const auto & pair : index_map_) {
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    auto  event = pair.second;
 
-    auto it = index_map_.begin();
-    while (it != index_map_.end()) {
-
-      const auto & event(it->second);
-
-      auto expire = event->time() + static_cast<int64_t>(event->ttl());
-      if (expire < now) {
-        expired_events.push_back(event);
-        index_map_.erase(it++);
-      } else {
-        ++it;
-      }
-
+    auto expire = event->time() + static_cast<int64_t>(event->ttl());
+    if (expire < now) {
+      keys_to_remove.push_back(pair.first);
+      expired_events.push_back(*event);
     }
 
+  }
+
+  for (const auto & key : keys_to_remove) {
+    index_map_.erase(key);
+  }
+
+  for (auto & event : expired_events) {
+    event.set_state("expired");
+    pubsub_.publish(k_default_index, event);
+    push_event_fn_(event);
   }
 
   instrumentation_.update_gauge(instrs_ids_[k_postexpire_gauge_id],
@@ -184,13 +180,6 @@ void real_index::expire_events() {
 
   VLOG(3) << "expire process took "
           << static_cast<int64_t>(sched_.unix_time()) - now << " seconds";
-
-  for (auto & event : expired_events) {
-    Event e(*event);
-    e.set_state("expired");
-    pubsub_.publish(k_default_index, e);
-    push_event_fn_(e);
-  }
 
   VLOG(3) << "expire_fn()--";
 

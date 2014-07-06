@@ -5,6 +5,7 @@
 #include <atomic>
 #include <mutex>
 #include <tbb/concurrent_queue.h>
+#include <tbb/concurrent_hash_map.h>
 #include <pub_sub/pub_sub.h>
 #include <scheduler/scheduler.h>
 #include <pool/thread_pool.h>
@@ -29,7 +30,8 @@ private:
   std::vector<std::shared_ptr<Event>> all_events();
 
 private:
-  typedef std::unordered_map<std::string, std::shared_ptr<Event>> real_index_t;
+  typedef tbb::concurrent_hash_map<std::string, std::shared_ptr<Event>>
+          real_index_t;
 
   pub_sub & pubsub_;
   instrumentation & instrumentation_;
@@ -42,7 +44,6 @@ private:
   bool stop_;
   std::vector<instrumentation::id_t> instrs_ids_;
   real_index_t index_map_;
-  std::mutex mutex_;
 
 };
 
