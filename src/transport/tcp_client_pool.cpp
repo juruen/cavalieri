@@ -187,7 +187,7 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
   /* First things first, check whether the connection is closed */
   if (async.ready_read()) {
 
-    tcp_conn.read(256);
+    tcp_conn.read();
 
     if (tcp_conn.close_connection) {
 
@@ -202,7 +202,7 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
 
   auto & out_queue = it->second.second;
 
-  if (tcp_conn.bytes_to_write == 0 && out_queue.empty()) {
+  if (!tcp_conn.pending_write() && out_queue.empty()) {
 
     /* There isn't anything to send, we only want read notifications. */
     async.loop().set_fd_mode(async.fd(), async_fd::read);
@@ -216,19 +216,7 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
     return;
   }
 
-  if (!tcp_conn.write()) {
-    return;
-  }
-
-  if (tcp_conn.bytes_to_write > 0) {
-
-    /* There is still data in the buffer that has not been sent */
-    return;
-  }
-
   /* Fill the buffer with more data to send */
-
-  tcp_conn.bytes_written = 0;
 
   while (!out_queue.empty()) {
 
@@ -237,7 +225,7 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
     auto out_ptr = reinterpret_cast<char *>(&event[0]);
     auto out_len = event.size();
 
-    if (!tcp_conn.copy_to_write_buffer(out_ptr, out_len)) {
+    if (!tcp_conn.queue_write(out_ptr, out_len)) {
       break;
     }
 
@@ -245,6 +233,8 @@ void tcp_client_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
     out_queue.pop();
 
   }
+
+  tcp_conn.write();
 
 }
 

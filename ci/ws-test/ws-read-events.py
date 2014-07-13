@@ -18,10 +18,13 @@ def main():
 
     ws = websocket.create_connection(ws_url(sys.argv[1]))
 
+    events_read = 0
     try:
         for i in range(int(sys.argv[2])):
             ws.recv()
+            events_read += 1
     except:
+        print "events_read: %i" % events_read
         sys.exit(1)
 
     ws.close()

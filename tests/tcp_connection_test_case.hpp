@@ -8,6 +8,7 @@
 
 extern mock_os_functions mock_os;
 
+/*
 TEST(tcp_connection_read_test_case, test)
 {
   mock_os.buffer.clear();
@@ -66,4 +67,6 @@ TEST(tcp_connection_write_test_case, test)
               == std::string{mock_os.buffer.begin(), mock_os.buffer.end()}));
 
 }
+
+*/
 #endif
