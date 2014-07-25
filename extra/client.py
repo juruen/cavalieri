@@ -27,5 +27,4 @@ def create_event(i):
 
 c = BatchClient(host='localhost')
 
-while True:
-    c.send([create_event(i) for i in range(batch_size)])
+c.send([create_event(i) for i in range(batch_size)])

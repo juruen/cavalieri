@@ -53,6 +53,8 @@ void real_async_fd::stop() {
 void real_async_fd::async_cb(ev::io &, int revents) {
   VLOG(3) << "async_cb() events: " << revents;
   error_ = EV_ERROR & revents;
+  if (error_)
+    VLOG(3) << "EV_ERROR";
   read_ = EV_READ & revents;
   write_ = EV_WRITE & revents;
   fd_cb_fn_(*this);

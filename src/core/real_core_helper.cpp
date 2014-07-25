@@ -21,7 +21,7 @@ std::shared_ptr<core_interface> make_real_core(const config conf) {
 
 }
 
-inline void incoming_event(const std::vector<unsigned char> raw_msg,
+inline void incoming_event(const std::vector<unsigned char> & raw_msg,
                            std::shared_ptr<streams> streams)
 {
     Msg msg;
@@ -29,6 +29,12 @@ inline void incoming_event(const std::vector<unsigned char> raw_msg,
     if (!msg.ParseFromArray(&raw_msg[0], raw_msg.size())) {
       VLOG(2) << "error parsing protobuf payload";
       return;
+    }
+
+    if (msg.has_query()) {
+      VLOG(1) << "query messages are not supported yet";
+      return;
+
     }
 
     streams->process_message(msg);

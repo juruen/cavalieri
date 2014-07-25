@@ -7,10 +7,16 @@ using namespace std::placeholders;
 namespace {
 
 async_fd::mode conn_to_mode(const tcp_connection & conn) {
+
+  VLOG(3) << "conn_to_mode";
+
   if (conn.pending_read() && conn.pending_write()) {
+    VLOG(3) << "conn_to_mode rw";
     return async_fd::readwrite;
+    VLOG(3) << "conn_to_mode r";
   } else if (conn.pending_read()) {
     return async_fd::read;
+    VLOG(3) << "conn_to_mode w";
   } else if (conn.pending_write()) {
     return async_fd::write;
   } else {

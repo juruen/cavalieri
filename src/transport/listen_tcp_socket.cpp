@@ -21,6 +21,26 @@ int create_tcp_listen_socket(int port) {
     LOG(ERROR) << "failed to set SO_REUSEADDR in socket";
   }
 
+  /*
+  int recv_buf = 21299200;
+
+  if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVBUF, &recv_buf,
+                 sizeof(recv_buf)) != 0)
+  {
+    LOG(ERROR) << "failed to set SO_REUSEADDR in socket";
+  }
+
+  if (setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, &recv_buf,
+                 sizeof(recv_buf)) != 0)
+  {
+    LOG(ERROR) << "failed to set SO_REUSEADDR in socket";
+  }
+  */
+
+
+
+
+
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = INADDR_ANY;

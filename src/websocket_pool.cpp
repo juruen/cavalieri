@@ -98,6 +98,8 @@ void websocket_pool::create_conn(int fd, async_loop & loop,
                            std::function<bool(const Event&)>{},
                            std::queue<std::string>{});
 
+  VLOG(3) << "create_conn: " << fd;
+
   fd_event_queues_[loop.id()].insert({fd, std::move(conn_data)});
 }
 
@@ -142,6 +144,8 @@ void websocket_pool::timer(async_loop & loop) {
   auto event_queue = thread_event_queues_[loop_id];
 
   while (!event_queue->empty()) {
+
+    VLOG(3) << "ws event queue size: " << event_queue->size();
 
     Event event;
     if (!event_queue->try_pop(event)) {
