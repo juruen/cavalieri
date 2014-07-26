@@ -77,14 +77,21 @@ void riemann_tcp_connection::callback(async_fd & async) {
 
 void riemann_tcp_connection::read_cb() {
 
-  bool from_msg = false;
+  if (!tcp_connection_.read()) {
+
+    return;
+
+  }
+
+  size_t bytes;
 
   do {
 
-    // XXX This might create an infinite loop
+    bytes = tcp_connection_.read_bytes();
+
     if (reading_header_) {
 
-      read_header(from_msg);
+      read_header();
 
     } else {
 
@@ -92,9 +99,7 @@ void riemann_tcp_connection::read_cb() {
 
     }
 
-    from_msg = (tcp_connection_.read_bytes() > 0);
-
-  } while (from_msg && !tcp_connection_.close_connection);
+  } while (bytes != tcp_connection_.read_bytes());
 
 }
 
@@ -110,15 +115,9 @@ void riemann_tcp_connection::write_cb() {
 
 }
 
-void riemann_tcp_connection::read_header(bool from_msg) {
+void riemann_tcp_connection::read_header() {
 
   VLOG(3) << "reading header";
-
-  if (!from_msg && !tcp_connection_.read())
-  {
-    return;
-  }
-
 
   if (tcp_connection_.read_bytes() < 4) {
     return;
@@ -133,21 +132,12 @@ void riemann_tcp_connection::read_header(bool from_msg) {
   }
 
   reading_header_ = false;
-  read_message();
 }
 
 void riemann_tcp_connection::read_message() {
 
   if (tcp_connection_.read_bytes() < protobuf_size_) {
-
-    if (!tcp_connection_.read()) {
-      return;
-    }
-
-    if ((tcp_connection_.read_bytes()) < protobuf_size_) {
-      return;
-    }
-
+    return;
   }
 
   /* We have a complete message */

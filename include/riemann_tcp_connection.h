@@ -20,7 +20,7 @@ class riemann_tcp_connection {
   private:
     void read_cb();
     void write_cb();
-    void read_header(bool);
+    void read_header();
     void read_message();
 
   private:
