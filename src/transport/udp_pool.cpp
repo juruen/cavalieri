@@ -35,12 +35,12 @@ udp_pool::udp_pool(
     uint32_t port,
     udp_read_fn_t udp_read_fn)
 :
-  thread_pool_(thread_num),
+  async_thread_pool_(thread_num),
   port_(port),
   udp_read_fn_(udp_read_fn)
 {
   VLOG(3) << "udp_pool() size: " << thread_num;
-  thread_pool_.set_run_hook(std::bind(&udp_pool::run_hook, this, _1));
+  async_thread_pool_.set_run_hook(std::bind(&udp_pool::run_hook, this, _1));
 }
 
 void udp_pool::run_hook(async_loop & loop) {
@@ -77,13 +77,13 @@ void udp_pool::socket_callback(async_fd & async) {
 }
 
 void udp_pool::start_threads() {
-  thread_pool_.start_threads();
+  async_thread_pool_.start_threads();
 }
 
 void udp_pool::stop_threads() {
-  thread_pool_.stop_threads();
+  async_thread_pool_.stop_threads();
 }
 
 udp_pool::~udp_pool() {
-  thread_pool_.stop_threads();
+  async_thread_pool_.stop_threads();
 }

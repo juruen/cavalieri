@@ -8,6 +8,7 @@ struct config {
   size_t riemann_tcp_pool_size;
   uint32_t ws_port;
   size_t ws_pool_size;
+  size_t executor_pool_size;
   uint64_t index_expire_interval;
   std::string rules_directory;
   size_t pagerduty_pool_size;

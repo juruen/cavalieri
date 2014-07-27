@@ -16,6 +16,8 @@ real_core::real_core(const config & conf)
 
     instrumentation_(conf),
 
+    executor_pool_(instrumentation_, conf),
+
     main_loop_(make_main_async_loop()),
 
     scheduler_(new real_scheduler(*main_loop_)),
@@ -30,7 +32,8 @@ real_core::real_core(const config & conf)
                           conf.index_expire_interval, *scheduler_,
                           instrumentation_, detach_thread)),
 
-    tcp_server_(init_tcp_server(conf, *main_loop_, streams_, instrumentation_)),
+    tcp_server_(init_tcp_server(conf, *main_loop_, *streams_,
+                executor_pool_, instrumentation_)),
 
     udp_server_(init_udp_server(conf, streams_)),
 
@@ -57,6 +60,7 @@ void real_core::start() {
 
   VLOG(3) << "Stopping services";
 
+  executor_pool_.stop();
   streams_->stop();
   tcp_server_->stop();
   udp_server_->stop();

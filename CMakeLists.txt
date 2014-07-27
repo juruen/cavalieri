@@ -45,7 +45,8 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/listen_tcp_socket.cpp
-    ${CMAKE_SOURCE_DIR}/src/pool/thread_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/pool/async_thread_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/pool/executor_thread_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/query/parser.cpp
     ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp

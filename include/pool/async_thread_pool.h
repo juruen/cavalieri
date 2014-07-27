@@ -9,10 +9,10 @@
 
 typedef std::function<void(async_loop&)> hook_fn_t;
 
-class thread_pool {
+class async_thread_pool {
   public:
-     thread_pool(size_t thread_num);
-     thread_pool(size_t thread_num,
+     async_thread_pool(size_t thread_num);
+     async_thread_pool(size_t thread_num,
                  const float interval,
                  timer_cb_fn_t timer_cb
       );
@@ -23,7 +23,7 @@ class thread_pool {
      void signal_thread(size_t tid);
      size_t next_thread();
      async_loop & loop(const size_t id);
-     virtual ~thread_pool();
+     virtual ~async_thread_pool();
 
   private:
     virtual void run(const size_t thread_id);

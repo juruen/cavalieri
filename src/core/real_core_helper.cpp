@@ -22,7 +22,7 @@ std::shared_ptr<core_interface> make_real_core(const config conf) {
 }
 
 inline void incoming_event(const std::vector<unsigned char> & raw_msg,
-                           std::shared_ptr<streams> streams)
+                           streams & streams)
 {
     Msg msg;
 
@@ -37,20 +37,21 @@ inline void incoming_event(const std::vector<unsigned char> & raw_msg,
 
     }
 
-    streams->process_message(msg);
+    streams.process_message(msg);
 }
 
 std::unique_ptr<riemann_tcp_pool> init_tcp_server(
     const config & conf,
     main_async_loop_interface & loop,
-    std::shared_ptr<streams> streams,
+    streams & streams,
+    executor_thread_pool & executor_pool,
     instrumentation & instr
     )
 {
 
-  auto income_tcp_event = [=](const std::vector<unsigned char> raw_msg)
+  auto income_tcp_event = [&](const std::vector<unsigned char> & raw_msg)
   {
-    incoming_event(raw_msg, streams);
+    executor_pool.add_task(std::bind(incoming_event, raw_msg, streams));
   };
 
   std::unique_ptr<riemann_tcp_pool> tcp_server(new riemann_tcp_pool(
@@ -74,7 +75,7 @@ std::unique_ptr<riemann_udp_pool> init_udp_server(
 
   auto income_udp_event = [=](const std::vector<unsigned char> raw_msg)
   {
-    incoming_event(raw_msg, streams);
+    incoming_event(raw_msg, *streams);
   };
 
   return std::unique_ptr<riemann_udp_pool>(
