@@ -29,7 +29,8 @@ private:
   instrumentation::id_t gauge_id_;
   std::vector<int> finished_threads_;
   std::vector<std::thread> threads_;
-  tbb::concurrent_bounded_queue<task_t> tasks_;
+  size_t next_thread_;
+  std::vector<tbb::concurrent_bounded_queue<task_t>> tasks_;
 
 };
 
