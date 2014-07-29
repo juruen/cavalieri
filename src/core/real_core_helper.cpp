@@ -51,7 +51,8 @@ std::unique_ptr<riemann_tcp_pool> init_tcp_server(
 
   auto income_tcp_event = [&](const std::vector<unsigned char> & raw_msg)
   {
-    executor_pool.add_task(std::bind(incoming_event, raw_msg, streams));
+    executor_pool.add_task(
+      [=, &streams]() { incoming_event(raw_msg, streams); });
   };
 
   std::unique_ptr<riemann_tcp_pool> tcp_server(new riemann_tcp_pool(
