@@ -29,45 +29,39 @@ streams_t operator>>(const streams_t & left, const streams_t & right) {
   return std::move(join(left, right));
 }
 
-void push_event(const streams_t & stream, const Event & event) {
+next_events_t push_event(const streams_t & stream, const Event & event) {
 
-  std::vector<Event> forwarded_events;
-
-  bool forward;
-  bool first_event = true;
-
-  forward_fn_t forward_fn = [&](const Event & e)
-  {
-    forward = true;
-    forwarded_events.push_back(e);
-  };
+  next_events_t next_events;
 
   for (const auto & node: stream) {
 
-    forward = false;
+    if (next_events.empty()) { // First iteration
 
-    // FIXME This a dirty optimization in the critical path
-    // to avoid copying event in the first stream
-    if (first_event) {
-      node(forward_fn, event);
-      if (forward) {
-        first_event = false;
-        continue;
-      } else {
-        return;
+      next_events = node(event);
+
+      if (next_events.empty()) {
+        return {};
       }
-    }
 
-    auto f_events(std::move(forwarded_events));
-    for (const auto & f_event: f_events) {
-      node(forward_fn, f_event);
-    }
+    } else {
 
-    if (!forward) {
-      return;
+      const auto aux_next_events(next_events);
+      next_events.clear();
+
+      for (const auto & e : aux_next_events) {
+
+        const auto res = node(e);
+        std::copy(begin(res), end(res), back_inserter(next_events));
+
+      }
+
+      if (next_events.empty()) {
+        return {};
+      }
+
     }
 
   }
 
-  return;
+  return next_events;
 }

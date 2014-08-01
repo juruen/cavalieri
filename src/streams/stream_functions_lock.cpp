@@ -15,10 +15,10 @@ streams_t by_lock(const by_keys_t & keys, const by_stream_t stream) {
 
   return create_stream(
 
-    [=](forward_fn_t forward, e_t e) mutable {
+    [=](e_t e)->next_events_t {
 
       if (keys.empty()) {
-        return;
+        return {};
       }
 
       std::string key;
@@ -38,13 +38,7 @@ streams_t by_lock(const by_keys_t & keys, const by_stream_t stream) {
 
       streams->mutex.unlock();
 
-      auto fw_stream  = create_stream(
-        [=](forward_fn_t, e_t event)
-        {
-          forward(event);
-        });
-
-      push_event(s >> fw_stream, e);
+      return push_event(s, e);
 
      });
 
@@ -60,7 +54,7 @@ streams_t coalesce_lock(fold_fn_t fold) {
   auto coalesce = std::make_shared<coalesce_events_t>();
 
   return create_stream(
-    [=](forward_fn_t forward, e_t e) mutable
+    [=](e_t e) mutable
     {
 
       std::vector<Event> events;
@@ -89,13 +83,17 @@ streams_t coalesce_lock(fold_fn_t fold) {
 
       coalesce->mutex.unlock();
 
+      next_events_t next_events;
+
       if (!expired_events.empty()) {
-        forward(fold(expired_events));
+        next_events.push_back(fold(expired_events));
       }
 
       if (!events.empty()) {
-        forward(fold(events));
+        next_events.push_back(fold(events));
       }
+
+      return next_events;
 
     }
   );
@@ -114,7 +112,7 @@ streams_t project_lock(const predicates_t predicates, fold_fn_t fold) {
 
   return create_stream(
 
-    [=](forward_fn_t forward, e_t e) mutable {
+    [=](e_t e) mutable ->next_events_t {
 
       int match_index = -1;
       for (size_t i = 0; i < predicates.size(); i++) {
@@ -125,7 +123,7 @@ streams_t project_lock(const predicates_t predicates, fold_fn_t fold) {
       }
 
       if (match_index == -1) {
-        return;
+        return {};
       }
 
       std::vector<Event> events;
@@ -163,14 +161,18 @@ streams_t project_lock(const predicates_t predicates, fold_fn_t fold) {
 
       }
 
+      next_events_t next_events;
 
       if (!expired_events.empty()) {
-        forward(fold(expired_events));
+        next_events.push_back(fold(expired_events));
       }
 
       if (!events.empty()) {
-        forward(fold(events));
+        next_events.push_back(fold(events));
       }
+
+      return next_events;
+
 
     });
 
@@ -187,18 +189,18 @@ streams_t changed_state_lock(std::string initial) {
   prev->state = initial;
 
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
       {
         std::lock_guard<std::mutex> guard(prev->mutex);
         if (prev->state == e.state()) {
-          return;
+          return {};
         } else {
           prev->state = e.state();
         }
       }
 
-      forward(e);
+      return {e};
 
     });
 }
@@ -213,7 +215,7 @@ streams_t moving_event_window_lock(size_t n, fold_fn_t fold) {
   auto window = std::make_shared<moving_event_window_t>();
 
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e)->next_events_t {
 
       std::list<Event> events;
 
@@ -229,7 +231,7 @@ streams_t moving_event_window_lock(size_t n, fold_fn_t fold) {
         events = window->events;
       }
 
-      forward(fold({begin(events), end(events)}));
+      return {fold({begin(events), end(events)})};
 
     }
    );
@@ -246,7 +248,7 @@ streams_t fixed_event_window_lock(size_t n, fold_fn_t fold) {
 
   return create_stream(
 
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e)->next_events_t {
 
       std::list<Event> event_list;
 
@@ -263,14 +265,16 @@ streams_t fixed_event_window_lock(size_t n, fold_fn_t fold) {
 
         } else {
 
-          return;
+          return {};
 
         }
 
       }
 
       if (!event_list.empty()) {
-        forward(fold({begin(event_list), end(event_list)}));
+        return {fold({begin(event_list), end(event_list)})};
+      } else {
+        return {};
       }
    }
 
@@ -298,10 +302,10 @@ streams_t moving_time_window_lock(time_t dt, fold_fn_t fold) {
 
   return create_stream(
 
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
         if (!e.has_time()) {
-          return;
+          return {};
          }
 
          std::priority_queue<Event, std::vector<Event>, event_time_cmp> pq;
@@ -339,7 +343,7 @@ streams_t moving_time_window_lock(time_t dt, fold_fn_t fold) {
          pq.pop();
        }
 
-       forward(fold(events));
+       return {fold(events)};
 
       }
     );
@@ -359,13 +363,13 @@ streams_t fixed_time_window_lock(time_t dt, fold_fn_t fold) {
 
   return create_stream(
 
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
       std::vector<Event> flush;
 
        // Ignore event with no time
         if (!e.has_time()) {
-          return;
+          return {};
         }
 
        {
@@ -376,12 +380,12 @@ streams_t fixed_time_window_lock(time_t dt, fold_fn_t fold) {
             window->start = e.time();
             window->pq.push(e);
             window->max = e.time();
-            return;
+            return {};
           }
 
           // Too old
           if (e.time() < window->start) {
-            return;
+            return {};
           }
 
           if (e.time() > window->max) {
@@ -393,7 +397,7 @@ streams_t fixed_time_window_lock(time_t dt, fold_fn_t fold) {
           window->pq.push(e);
 
           if (window->max < next_interval) {
-            return;
+            return {};
           }
 
           // We can flush a window
@@ -408,7 +412,9 @@ streams_t fixed_time_window_lock(time_t dt, fold_fn_t fold) {
       }
 
       if (!flush.empty()) {
-        forward(fold(flush));
+        return {fold(flush)};
+      } else {
+        return {};
       }
   });
 
@@ -428,7 +434,7 @@ streams_t stable_lock(time_t dt) {
 
   return create_stream(
 
-    [=](forward_fn_t forward, e_t e)
+    [=](e_t e)->next_events_t
     {
 
       std::vector<Event> flush;
@@ -441,16 +447,16 @@ streams_t stable_lock(time_t dt) {
           stable->buffer.clear();
           stable->buffer.push_back(e);
           stable->state = e.state();
-          return;
+          return {};
         }
 
         if (e.time() < stable->start) {
-          return;
+          return {};
         }
 
         if (stable->start + dt > e.time()) {
           stable->buffer.push_back(e);
-          return;
+          return {};
         }
 
         if (!stable->buffer.empty()) {
@@ -460,9 +466,8 @@ streams_t stable_lock(time_t dt) {
 
       flush.push_back(e);
 
-      for (const auto & flush_event: flush) {
-        forward(flush_event);
-      }
+      return flush;
+
   });
 
 }
@@ -478,7 +483,7 @@ streams_t throttle_lock(size_t n, time_t dt) {
   auto throttled = std::make_shared<throttle_t>();
 
   return create_stream(
-    [=](forward_fn_t forward, e_t e) mutable {
+    [=](e_t e) mutable -> next_events_t {
 
       {
         std::lock_guard<std::mutex> guard(throttled->mutex);
@@ -491,12 +496,12 @@ streams_t throttle_lock(size_t n, time_t dt) {
         if (throttled->forwarded < n) {
           throttled->forwarded++;
         } else {
-          return;
+          return {};
         }
 
       }
 
-      forward(e);
+      return  {e};
 
     });
 
@@ -513,7 +518,7 @@ streams_t ddt_lock() {
   auto prev = std::make_shared<ddt_prev_t>();
 
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
       double metric;
 
@@ -528,13 +533,13 @@ streams_t ddt_lock() {
 
         if (!prev->initialized) {
           prev->initialized = true;
-          return;
+          return {};
         }
 
         auto dt = e.time() - tmp_time;
 
         if (dt == 0) {
-          return;
+          return {};
         }
 
         metric = (prev->metric - tmp_metric) / dt;
@@ -543,7 +548,7 @@ streams_t ddt_lock() {
 
       Event ne(e);
       set_metric(ne, metric);
-      forward(ne);
+      return {ne};
 
     });
 }

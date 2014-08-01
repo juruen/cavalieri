@@ -4,7 +4,8 @@
 #include <rules/common.h>
 
 streams_t bsink(std::vector<Event> & v) {
-  return create_stream([&](forward_fn_t, e_t e) { v.push_back(e); });
+  return create_stream([&](e_t e) -> next_events_t
+      { v.push_back(e);  return {}; });
 }
 
 TEST(critical_above_test_case, test)

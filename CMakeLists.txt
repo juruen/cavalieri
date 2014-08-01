@@ -27,7 +27,7 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
-    ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
+    #${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/async/real_async_loop.cpp
@@ -86,7 +86,7 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
-    ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
+    #${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/rate.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp

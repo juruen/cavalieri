@@ -12,10 +12,10 @@ typedef std::shared_ptr<std::atomic<bool>> atomic_bool_t;
 streams_t stable_stream(double dt, atomic_bool_t state) {
 
   auto set_state = create_stream(
-    [=](forward_fn_t forward, e_t e)
+    [=](e_t e) -> next_events_t
     {
       state->store(e.state() == "ok");
-      forward(e);
+      return {e};
     });
 
   return stable(dt) >> set_state;
@@ -106,13 +106,13 @@ fold_fn_t fold_ratio(const double zero_ratio) {
 
 streams_t set_critical_predicate(predicate_t predicate) {
   return
-    create_stream([=](forward_fn_t forward, e_t e) {
+    create_stream([=](e_t e) -> next_events_t {
 
         Event ne(e);
 
         ne.set_state(predicate(e) ? "critical" : "ok");
 
-        forward(ne);
+        return {ne};
     });
 
 }
