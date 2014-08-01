@@ -480,13 +480,16 @@ streams_t svec(std::vector<streams_t> streams) {
 
       if (!streams.empty()) {
 
+        next_events_t next_events;
+
         for (const auto & stream : streams) {
 
-          push_event(stream, e);
+          const auto ret = push_event(stream, e);
+          std::copy(begin(ret), end(ret), back_inserter(next_events));
 
         }
 
-        return {};
+        return next_events;
 
       } else {
 
