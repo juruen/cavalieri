@@ -103,32 +103,34 @@ void real_index::timer_cb() {
 }
 
 void real_index::expire_events() {
-  return;
 
   atom_attach_thread();
 
   VLOG(3) << "expire_fn()++";
 
-  /*
-  instrumentation_.update_gauge(instr_ids_.first, index_map_.size());
+
 
   std::vector<std::shared_ptr<Event>> expired_events;
 
   int64_t now = static_cast<int64_t>(sched_.unix_time());
 
-  {
+  size_t index_size = 0;
 
-    std::lock_guard<std::mutex> lock(mutex_);
+  for (size_t i = 0; i < indexes_.size(); i++) {
 
-    auto it = index_map_.begin();
-    while (it != index_map_.end()) {
+    std::lock_guard<std::mutex> lock(mutexes_[i]);
+
+    index_size += indexes_[i].size();
+
+    auto it = indexes_[i].begin();
+    while (it != indexes_[i].end()) {
 
       const auto & event(it->second);
 
       auto expire = event->time() + static_cast<int64_t>(event->ttl());
       if (expire < now) {
         expired_events.push_back(event);
-        index_map_.erase(it++);
+        indexes_[i].erase(it++);
       } else {
         ++it;
       }
@@ -137,8 +139,10 @@ void real_index::expire_events() {
 
   }
 
-  instrumentation_.update_gauge(instr_ids_.second, index_map_.size());
-  
+  instrumentation_.update_gauge(instr_ids_.first, index_size);
+  instrumentation_.update_gauge(instr_ids_.second,
+                                index_size - expired_events.size());
+
   VLOG(3) << "expire process took "
           << static_cast<int64_t>(sched_.unix_time()) - now << " seconds";
 
@@ -148,7 +152,6 @@ void real_index::expire_events() {
     push_event_fn_(*event);
   }
 
-  */
   VLOG(3) << "expire_fn()--";
 
   expiring_.store(false);
@@ -163,6 +166,13 @@ real_index::~real_index() {
   if (expiring_.exchange(true)) {
 
     VLOG(3) << "expire_events thread is running";
+
+    for (size_t i = 0; i < indexes_.size(); i++) {
+
+      std::lock_guard<std::mutex> lock(mutexes_[i]);
+      indexes_[i].clear();
+
+    }
 
     for (size_t attempts = k_stop_attempts; attempts > 0; attempts--) {
 
