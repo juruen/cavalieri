@@ -34,8 +34,8 @@ private:
   std::atomic<bool> expiring_;
   spwan_thread_fn_t spwan_thread_fn_;
   scheduler_interface & sched_;
-  real_index_t index_map_;
-  std::mutex mutex_;
+  std::vector<real_index_t> indexes_;
+  std::vector<std::mutex> mutexes_;
 
 };
 
