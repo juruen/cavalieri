@@ -9,26 +9,38 @@
 namespace {
 
 const std::string k_default_index = "index";
+const std::string k_preexpire_service = "cavalieri index size pre-expire";
+const std::string k_preexpire_desc = "number of events before removing expired";
+const std::string k_postexpire_service = "cavalieri index size post-expire";
+const std::string k_postexpire_desc = "number of events after removing expired";
 const size_t k_stop_attempts = 120;
 const size_t k_stop_interval_check_ms = 500;
-
+const size_t k_indexes = 8;
 
 std::string key(const Event& e) {
   return e.host() + "-" + e.service();
 }
+
+const std::hash<std::string> hash_fn;
 
 }
 
 real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
                        const int64_t expire_interval,
                        scheduler_interface &  sched,
+                       instrumentation & instr,
                        spwan_thread_fn_t spwan_thread_fn)
 :
   pubsub_(pubsub),
+  instrumentation_(instr),
+  instr_ids_({instr.add_gauge(k_preexpire_service, k_preexpire_desc),
+              instr.add_gauge(k_postexpire_service, k_postexpire_desc)}),
   push_event_fn_(push_event),
   expiring_(false),
   spwan_thread_fn_(spwan_thread_fn),
-  sched_(sched)
+  sched_(sched),
+  indexes_(k_indexes),
+  mutexes_(k_indexes)
 {
 
   pubsub_.add_publisher(k_default_index,
@@ -36,18 +48,26 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
 
   sched_.add_periodic_task(std::bind(&real_index::timer_cb, this),
                             expire_interval);
+
 }
 
-std::vector<Event> real_index::all_events() {
+std::vector<std::shared_ptr<Event>> real_index::all_events() {
 
-  std::vector<Event> events;
+  std::vector<std::shared_ptr<Event>> events;
 
-  for (const auto & kv: index_map_) {
-    events.push_back(kv.second);
+  for (size_t i = 0; i < indexes_.size(); i++) {
+
+    mutexes_[i].lock();
+    auto index(indexes_[i]);
+    mutexes_[i].unlock();
+
+    for (const auto & kv : index) {
+      events.push_back(kv.second);
+    }
+
   }
 
   return events;
-
 }
 
 void real_index::add_event(const Event& e) {
@@ -56,8 +76,14 @@ void real_index::add_event(const Event& e) {
 
   const std::string ev_key(key(e));
 
-  index_map_.erase(ev_key);
-  index_map_.insert({ev_key, e});
+  const size_t index(hash_fn(ev_key) % indexes_.size());
+
+  auto shared_event = std::make_shared<Event>(e);
+
+  {
+    std::lock_guard<std::mutex> lock(mutexes_[index]);
+    indexes_[index][ev_key] = shared_event;
+  }
 
   pubsub_.publish(k_default_index, e);
 }
@@ -82,37 +108,49 @@ void real_index::expire_events() {
 
   VLOG(3) << "expire_fn()++";
 
-  VLOG(3) << "index size: " << index_map_.size();
 
-  std::vector<std::string> keys_to_remove;
-  std::vector<Event> expired_events;
+
+  std::vector<std::shared_ptr<Event>> expired_events;
 
   int64_t now = static_cast<int64_t>(sched_.unix_time());
 
-  for (const auto & pair : index_map_) {
+  size_t index_size = 0;
 
-    const Event & event(pair.second);
+  for (size_t i = 0; i < indexes_.size(); i++) {
 
-    auto expire = event.time() + static_cast<int64_t>(event.ttl());
-    if (expire < now) {
-      keys_to_remove.push_back(pair.first);
-      expired_events.push_back(event);
+    std::lock_guard<std::mutex> lock(mutexes_[i]);
+
+    index_size += indexes_[i].size();
+
+    auto it = indexes_[i].begin();
+    while (it != indexes_[i].end()) {
+
+      const auto & event(it->second);
+
+      auto expire = event->time() + static_cast<int64_t>(event->ttl());
+      if (expire < now) {
+        expired_events.push_back(event);
+        indexes_[i].erase(it++);
+      } else {
+        ++it;
+      }
+
     }
 
   }
 
-  for (const auto & key : keys_to_remove) {
-    index_map_.erase(key);
-  }
-
-  for (auto & event : expired_events) {
-    event.set_state("expired");
-    pubsub_.publish(k_default_index, event);
-    push_event_fn_(event);
-  }
+  instrumentation_.update_gauge(instr_ids_.first, index_size);
+  instrumentation_.update_gauge(instr_ids_.second,
+                                index_size - expired_events.size());
 
   VLOG(3) << "expire process took "
           << static_cast<int64_t>(sched_.unix_time()) - now << " seconds";
+
+  for (auto & event : expired_events) {
+    event->set_state("expired");
+    pubsub_.publish(k_default_index, *event);
+    push_event_fn_(*event);
+  }
 
   VLOG(3) << "expire_fn()--";
 
@@ -129,7 +167,12 @@ real_index::~real_index() {
 
     VLOG(3) << "expire_events thread is running";
 
-    index_map_.clear();
+    for (size_t i = 0; i < indexes_.size(); i++) {
+
+      std::lock_guard<std::mutex> lock(mutexes_[i]);
+      indexes_[i].clear();
+
+    }
 
     for (size_t attempts = k_stop_attempts; attempts > 0; attempts--) {
 

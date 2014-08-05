@@ -1,3 +1,19 @@
+0.0.6 2014-08-05
+================
+
+  * Fix issue with queries mixing int and doubles
+  * Support "true" as a query and not only "(true)"
+  * Add internal metrics
+  * Graphite fixes
+  * Limit concurrent curl connections
+  * Use boost::circular to read/write from sockets
+  * Simplify stream infrastructure
+  * Use lock-based index
+  * Add set_description()
+  * Add also lock-based stream functions
+  * Use JsonCpp in event_to_json()
+
+
 0.0.5 2014-05-21
 ================
 

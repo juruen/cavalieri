@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <unistd.h>
+#include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <glog/logging.h>
@@ -5,30 +8,79 @@
 #include <os_functions.h>
 
 namespace {
-  const size_t k_default_buffer_size = 1024 * 1024;
+
+const size_t k_default_buffer_size = 1024 * 1024;
+
+bool read_from_fd(boost::circular_buffer<unsigned char> & buffer,
+                  const int & fd)
+{
+
+  VLOG(3) << "read_from_fd() free: " << buffer.reserve();
+
+  unsigned char b[buffer.reserve()];
+
+  ssize_t nread = g_os_functions.recv(fd, &b[0], buffer.reserve(), 0);
+
+  VLOG(3) << "read bytes: " << nread;
+
+  if (nread < 0) {
+
+    LOG(ERROR) << "read error: " << strerror(errno);
+
+    return false;
+
+  }
+
+  if (nread == 0) {
+
+    VLOG(3) << "peer has disconnected gracefully";
+
+    return false;
+
+  }
+
+  buffer.insert(buffer.end(), &b[0], &b[0] + nread);
+
+  return true;
+
+}
+
+bool write_to_fd(boost::circular_buffer<unsigned char> & buffer,
+                 const int & fd)
+{
+  VLOG(3) << "write() up to " << buffer.size() << " bytes";
+
+  auto p = buffer.linearize();
+  auto n = g_os_functions.write(fd, p, buffer.size());
+
+  if (n < 0) {
+    LOG(ERROR) << "write error: " << strerror(errno);
+    return false;
+  }
+
+  buffer.erase_begin(n);
+
+  return true;
+
+}
+
+
+
 }
 
 tcp_connection::tcp_connection(int sfd) :
+  buff_size(k_default_buffer_size),
   sfd(sfd),
-  bytes_to_read(0),
-  bytes_to_write(0),
-  bytes_read(0),
-  bytes_written(0),
   close_connection(false),
-  buffer_size(k_default_buffer_size),
   r_buffer(k_default_buffer_size),
   w_buffer(k_default_buffer_size)
 {
 }
 
 tcp_connection::tcp_connection(int sfd, size_t buff_size):
+  buff_size(k_default_buffer_size),
   sfd(sfd),
-  bytes_to_read(0),
-  bytes_to_write(0),
-  bytes_read(0),
-  bytes_written(0),
   close_connection(false),
-  buffer_size(buff_size),
   r_buffer(buff_size),
   w_buffer(buff_size)
 {
@@ -36,61 +88,47 @@ tcp_connection::tcp_connection(int sfd, size_t buff_size):
 
 
 
-bool tcp_connection::read(const uint32_t & to_read) {
+bool tcp_connection::read() {
 
-  if (k_default_buffer_size - bytes_read < to_read) {
-    LOG(ERROR) << "asked to read too many bytes!!!";
+  if ((r_buffer.reserve()) <= 0) {
+    LOG(ERROR) << "buffer is complete";
     return false;
   }
 
-  ssize_t nread = g_os_functions.recv(sfd, &r_buffer[0] + bytes_read,
-                                      to_read, 0);
-
-  if (nread < 0) {
-    VLOG(3) << "read error: " << strerror(errno);
-    return true;
-  }
-
-  if (nread == 0) {
-    VLOG(3) << "peer has disconnected gracefully";
+  if (!read_from_fd(r_buffer, sfd)) {
     close_connection = true;
     return false;
   }
 
-  bytes_read += nread;
-
   return true;
 }
 
-bool tcp_connection::copy_to_write_buffer(const char *src, uint32_t length) {
+bool tcp_connection::queue_write(const char *src, const size_t length) {
 
-  if ((bytes_to_write + length) > buffer_size) {
+  VLOG(3) << "queue_write with size: " << length;
+
+  if (w_buffer.reserve() < length) {
     LOG(ERROR) << "error write buffer is full";
     return false;
   }
 
-  memcpy(&w_buffer[0] + bytes_to_write, static_cast<const void*>(src), length);
-
-  bytes_to_write += length;
+  w_buffer.insert(w_buffer.end(), src, src + length);
 
   return true;
 }
 
 bool tcp_connection::write() {
-  VLOG(3) << "write() up to " << bytes_to_write << " bytes";
 
-  ssize_t nwritten = g_os_functions.write(sfd, &w_buffer[0] + bytes_written,
-                                          bytes_to_write);
+  if (!write_to_fd(w_buffer, sfd)) {
 
-  if (nwritten < 0) {
-    VLOG(3) << "write error: " << strerror(errno);
+    close_connection = true;
+    return false;
+
+  } else {
+
     return true;
   }
 
-  bytes_written += nwritten;
-  bytes_to_write -= nwritten;
-
-  return true;
 }
 
 bool tcp_connection::pending_read() const {
@@ -98,5 +136,9 @@ bool tcp_connection::pending_read() const {
 }
 
 bool tcp_connection::pending_write() const {
-  return (bytes_to_write > 0);
+  return w_buffer.size() > 0;
+}
+
+size_t tcp_connection::read_bytes() const {
+  return r_buffer.size();
 }

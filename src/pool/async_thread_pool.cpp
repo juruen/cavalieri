@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <glog/logging.h>
 #include <util.h>
-#include <pool/thread_pool.h>
+#include <pool/async_thread_pool.h>
 #include <atom/atom.h>
 
 namespace {
@@ -11,13 +11,13 @@ namespace {
 
 using namespace std::placeholders;
 
-thread_pool::thread_pool(size_t thread_num) :
+async_thread_pool::async_thread_pool(size_t thread_num) :
   stop_(false),
   thread_num_(thread_num),
   next_thread_(0),
   finished_threads_(thread_num, false),
   async_events_(make_async_events(thread_num,
-                                  std::bind(&thread_pool::async_callback,
+                                  std::bind(&async_thread_pool::async_callback,
                                             this, _1)))
 {
   if (thread_num < 1) {
@@ -25,7 +25,7 @@ thread_pool::thread_pool(size_t thread_num) :
   }
 }
 
-thread_pool::thread_pool(
+async_thread_pool::async_thread_pool(
     size_t thread_num,
     const float interval,
     timer_cb_fn_t timer_cb_fn
@@ -35,7 +35,7 @@ thread_pool::thread_pool(
   next_thread_(0),
   finished_threads_(thread_num, false),
   async_events_(make_async_events(thread_num,
-                                  std::bind(&thread_pool::async_callback,
+                                  std::bind(&async_thread_pool::async_callback,
                                             this, _1),
                                   interval,
                                   timer_cb_fn))
@@ -45,15 +45,15 @@ thread_pool::thread_pool(
   }
 }
 
-void thread_pool::set_run_hook(hook_fn_t hook) {
+void async_thread_pool::set_run_hook(hook_fn_t hook) {
   run_hook_fn_ = hook;
 }
 
-void thread_pool::set_async_hook(hook_fn_t hook) {
+void async_thread_pool::set_async_hook(hook_fn_t hook) {
   async_hook_fn_ = hook;
 }
 
-void thread_pool::start_threads() {
+void async_thread_pool::start_threads() {
   auto run_fn = [=](size_t i)
   {
     atom_attach_thread();
@@ -66,7 +66,7 @@ void thread_pool::start_threads() {
   }
 }
 
-void thread_pool::async_callback(async_loop & loop) {
+void async_thread_pool::async_callback(async_loop & loop) {
   size_t loop_id = loop.id();
   VLOG(3) << "async_callback loop_id: " << loop_id;
   if (!stop_) {
@@ -76,7 +76,7 @@ void thread_pool::async_callback(async_loop & loop) {
   }
 }
 
-void thread_pool::run(const size_t loop_id) {
+void async_thread_pool::run(const size_t loop_id) {
   VLOG(3) << "run() thread id: " << loop_id;
 
   if (run_hook_fn_) {
@@ -92,7 +92,7 @@ void thread_pool::run(const size_t loop_id) {
 }
 
 
-void thread_pool::stop_threads() {
+void async_thread_pool::stop_threads() {
   if (stop_) {
     VLOG(3) << "stop_threads(): already stopped";
     return;
@@ -127,7 +127,7 @@ void thread_pool::stop_threads() {
 
 }
 
-void thread_pool::signal_thread(size_t loop_id) {
+void async_thread_pool::signal_thread(size_t loop_id) {
   VLOG(3) << "signal_thread() loop_id: " << loop_id;
 
   if (loop_id >= thread_num_) {
@@ -138,16 +138,16 @@ void thread_pool::signal_thread(size_t loop_id) {
   async_events_->signal_loop(loop_id);
 }
 
-size_t thread_pool::next_thread() {
+size_t async_thread_pool::next_thread() {
   next_thread_ = (next_thread_ + 1) % thread_num_;
   return next_thread_;
 }
 
-async_loop & thread_pool::loop(const size_t id) {
+async_loop & async_thread_pool::loop(const size_t id) {
   return async_events_->loop(id);
 }
 
-thread_pool::~thread_pool() {
-  VLOG(3) << "~thread_pool()";
+async_thread_pool::~async_thread_pool() {
+  VLOG(3) << "~async_thread_pool()";
   stop_threads();
 }

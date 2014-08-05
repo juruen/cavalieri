@@ -2,6 +2,7 @@
 #include <util.h>
 #include <stdio.h>
 #include <sstream>
+#include <boost/algorithm/string/replace.hpp>
 #include <external/graphite_pool.h>
 
 using namespace std::placeholders;
@@ -10,6 +11,13 @@ namespace {
 
 const size_t k_buffer_size = 2048;
 const size_t k_batch_size = 100;
+
+std::string escape(const std::string str) {
+
+  const auto s(boost::replace_all_copy(str, ".", "-"));
+  return boost::replace_all_copy(s, " ", "-");
+
+}
 
 }
 
@@ -39,8 +47,9 @@ std::vector<char> graphite_pool::output_events(const std::vector<Event> events)
 
   for (const auto & event : events) {
 
-    sstream << event.host() << "." << event.service() << " "
-            << metric_to_double(event) << event.time() << "\n";
+    sstream << event.host() << "." << escape(event.service()) << " "
+            << metric_to_double(event) << " " << event.time() << "\n";
+
   }
 
   std::string ev_str = sstream.str();

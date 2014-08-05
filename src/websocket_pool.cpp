@@ -81,7 +81,7 @@ void websocket_pool::add_client(int fd) {
 
 void websocket_pool::notify_event(const Event & event) {
   for (auto & queue: thread_event_queues_) {
-    queue->push(event);
+    queue->try_push(event);
   }
 }
 
@@ -97,6 +97,8 @@ void websocket_pool::create_conn(int fd, async_loop & loop,
   auto conn_data = std::make_tuple(ws_connection(conn),
                            std::function<bool(const Event&)>{},
                            std::queue<std::string>{});
+
+  VLOG(3) << "create_conn: " << fd;
 
   fd_event_queues_[loop.id()].insert({fd, std::move(conn_data)});
 }
@@ -128,8 +130,8 @@ void websocket_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
     auto & str_queue = std::get<2>(it->second);
     for (const auto & event : all_events_fn_()) {
 
-      if (query_fn(event)) {
-        str_queue.push(event_to_json(event));
+      if (query_fn(*event)) {
+        str_queue.push(event_to_json(*event));
       }
     }
 
@@ -142,6 +144,8 @@ void websocket_pool::timer(async_loop & loop) {
   auto event_queue = thread_event_queues_[loop_id];
 
   while (!event_queue->empty()) {
+
+    VLOG(3) << "ws event queue size: " << event_queue->size();
 
     Event event;
     if (!event_queue->try_pop(event)) {

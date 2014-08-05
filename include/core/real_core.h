@@ -2,6 +2,7 @@
 #define CORE_REAL_CORE_H
 
 #include <core/core.h>
+#include <instrumentation/instrumentation.h>
 #include <streams/stream_functions.h>
 #include <async/real_async_loop.h>
 #include <pub_sub/pub_sub.h>
@@ -9,6 +10,7 @@
 #include <riemann_tcp_pool.h>
 #include <riemann_udp_pool.h>
 #include <websocket_pool.h>
+#include <pool/executor_thread_pool.h>
 #include <external/real_external.h>
 #include <scheduler/real_scheduler.h>
 #include <config/config.h>
@@ -26,6 +28,10 @@ public:
 
 private:
   config config_;
+
+  instrumentation instrumentation_;
+
+  executor_thread_pool executor_pool_;
 
   std::unique_ptr<main_async_loop_interface> main_loop_;
   std::unique_ptr<real_scheduler> scheduler_;

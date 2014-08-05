@@ -4,7 +4,7 @@
 #include <map>
 #include <queue>
 #include <mutex>
-#include <pool/thread_pool.h>
+#include <pool/async_thread_pool.h>
 
 class tcp_connection;
 
@@ -83,7 +83,7 @@ class tcp_pool {
   private:
     typedef std::map<int, tcp_connection> conn_map_t;
 
-    thread_pool thread_pool_;
+    async_thread_pool async_thread_pool_;
     std::vector<std::mutex> mutexes_;
     std::vector<std::queue<int>> new_fds_;
     std::vector<conn_map_t> conn_maps_;

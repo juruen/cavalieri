@@ -1,31 +1,84 @@
 #include <glog/logging.h>
 #include <boost/optional.hpp>
 #include <algorithm>
-#include <queue>
 #include <atomic>
+#include <chrono>
 #include <atom/atom.h>
 #include <util.h>
 #include <core/core.h>
 #include <scheduler/scheduler.h>
+#include <streams/stream_functions_lock.h>
 #include <streams/stream_functions.h>
 
 namespace {
-  const unsigned int k_default_ttl = 60;
+
+const unsigned int k_default_ttl = 60;
+
+const std::string k_rate_service = "cavalieri stream rate";
+const std::string k_rate_desc = "events per second in streams";
+
+const std::string k_latency_service = "cavalieri stream latency";
+const std::string k_latency_desc = "distribution of proccessing time "
+                                   "of events through streams";
+
+const std::string k_in_latency_service = "cavalieri incoming events "
+                                         "latency";
+
+const std::string k_in_latency_desc = "distribution of processing time "
+                                      "before entering streams";
+
+
+
+const std::vector<double> k_percentiles = {0.0, .5, .95, .99, 1};
+
+using namespace std::chrono;
+using time_point_t = high_resolution_clock::time_point;
+
+time_point_t now() {
+
+  return std::chrono::high_resolution_clock::now();
+
+}
+
+void update_latency(instrumentation & inst, const int id, time_point_t start)
+{
+
+  inst.update_latency(
+      id,
+      duration_cast<microseconds>(now() - start).count() / 1000.0
+  );
+
+}
+
+void update_in_latency(instrumentation & inst, const int id,
+                       const long int start)
+{
+
+  inst.update_latency(id, difftime(time(0), start));
+
+}
+
+
+
 }
 
 streams_t  prn() {
   return create_stream(
-    [](forward_fn_t, e_t e)
+    [](e_t e) -> next_events_t
     {
       LOG(INFO) << "prn() " <<  event_to_json(e);
+
+      return {};
     });
 }
 
 streams_t  prn(const std::string prefix) {
   return create_stream(
-    [=](forward_fn_t, e_t e)
+    [=](e_t e) -> next_events_t
     {
       LOG(INFO) << "prn() " << prefix <<  event_to_json(e);
+
+      return {};
     });
 }
 
@@ -49,6 +102,18 @@ streams_t state(const std::string state) {
   return where(match_pred("state", state));
 }
 
+streams_t state_any(const std::vector<std::string> states) {
+  return create_stream(
+    [=](e_t e) -> next_events_t
+    {
+      if (std::find(begin(states), end(states), e.state()) != end(states)) {
+        return {e};
+      } else {
+        return {};
+      }
+    });
+}
+
 streams_t set_state(const std::string state) {
   return with({{"state", state}});
 }
@@ -57,18 +122,23 @@ streams_t set_metric(const double metric) {
   return with({{"metric", metric}});
 }
 
+streams_t set_description(const std::string description) {
+  return with({{"description", description}});
+}
+
 streams_t with(const with_changes_t & changes, const bool & replace)
 {
   return create_stream(
-    [=](forward_fn_t forward, e_t e)
+    [=](e_t e) -> next_events_t
     {
-      Event ne(e);
+      std::vector<Event> ne = {e};
 
       for (auto & kv: changes) {
-        set_event_value(ne, kv.first, kv.second, replace);
+        set_event_value(ne[0], kv.first, kv.second, replace);
       }
 
-      forward(ne);
+      return ne;
+
     });
 }
 
@@ -85,32 +155,25 @@ streams_t split_(const split_clauses_t clauses, streams_t default_stream)
 {
   return create_stream(
 
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
       for (auto const & pair: clauses) {
 
         if (pair.first(e)) {
 
-          pair.second.back()->output_fn = [&](e_t e)
-          {
-            forward(e);
-          };
+          return push_event(pair.second, e);
 
-          push_event(pair.second, e);
-
-          return;
         }
 
       }
 
       if (!default_stream.empty()) {
 
-        default_stream.back()->output_fn = [&](e_t e)
-        {
-          forward(e);
-        };
+        return push_event(default_stream, e);
 
-        push_event(default_stream, e);
+      } else {
+
+        return {e};
       }
 
   });
@@ -129,10 +192,12 @@ streams_t split(const split_clauses_t clauses, streams_t default_stream)
 streams_t where(const predicate_t & predicate)
 {
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
       if (predicate(e)) {
-        forward(e);
+        return {e};
+      } else {
+        return {};
       }
 
   });
@@ -142,70 +207,57 @@ streams_t where(const predicate_t & predicate,
                    streams_t else_stream)
 {
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
       if (predicate(e)) {
-        forward(e);
+        return {e};
       } else {
-        push_event(else_stream, e);
+        return push_event(else_stream, e);
       }
 
   });
 }
 
-typedef std::unordered_map<std::string, streams_t> by_stream_map_t;
 
 streams_t by(const by_keys_t & keys, const by_stream_t stream) {
 
-  auto pre_delete = [](by_stream_map_t & m) { m.clear(); };
+#ifdef BY_LOCKFREE
+  return by_lockfree(keys, stream);
+#else
+  return by_lock(keys, stream);
+#endif
 
-  auto atom_streams = make_shared_atom<by_stream_map_t>(pre_delete);
-
-  return create_stream(
-
-    [=](forward_fn_t forward, e_t e) mutable {
-
-      if (keys.empty()) {
-        return;
-      }
-
-      std::string key;
-      for (const auto & k: keys) {
-        key += string_to_value(e, k) + " ";
-      }
-
-      auto fw_stream = create_stream(
-        [=](forward_fn_t, e_t e)
-        {
-          forward(e);
-        }
-      );
-
-      map_on_sync_insert<std::string, streams_t>(
-          atom_streams,
-          key,
-          [&]() { return stream() >> fw_stream;},
-          [&](streams_t & c) { push_event(c, e); }
-      );
-
-  });
 }
 
 streams_t rate(const int interval) {
 
   auto rate = std::make_shared<std::atomic<double>>(0);
-  auto task_created = std::make_shared<bool>(false);
 
   return create_stream(
 
-    [=](forward_fn_t forward, e_t e) mutable
+    [=](e_t e) mutable ->next_events_t
     {
 
-      if (!*task_created) {
+      double expected, newval;
 
-        g_core->sched().add_periodic_task(
+      do {
+
+        expected = rate->load();
+        newval = expected + metric_to_double(e);
+
+      } while (!rate->compare_exchange_strong(expected, newval));
+
+      return {};
+
+    });
+  /*
+    [=](forward_fn_t forward)
+    {
+
+      g_core->sched().add_periodic_task(
           [=]() mutable
           {
+
             VLOG(3) << "rate-timer()";
 
             Event event;
@@ -217,167 +269,43 @@ streams_t rate(const int interval) {
           },
 
           interval
-        );
-
-          *task_created = true;
-
-      }
-
-      double expected, newval;
-
-      do {
-
-        expected = rate->load();
-        newval = expected + metric_to_double(e);
-
-      } while (!rate->compare_exchange_strong(expected, newval));
+          );
 
     }
 
   );
+  */
 
 }
-
-typedef std::unordered_map<std::string, Event> coalesce_events_t;
 
 streams_t coalesce(fold_fn_t fold) {
 
-  auto coalesce = make_shared_atom<coalesce_events_t>();
+#ifdef COALESCE_LOCKFREE
+  return coalesce_lockfree(fold);
+#else
+  return coalesce_lock(fold);
+#endif
 
-  return create_stream(
-    [=](forward_fn_t forward, e_t e) mutable
-    {
-
-      std::vector<Event> expired_events;
-
-      coalesce->update(
-
-        [&](const coalesce_events_t & events) {
-
-          coalesce_events_t c;
-
-          std::string key(e.host() + " " +  e.service());
-
-          expired_events.clear();
-
-          c[key] = e;
-
-          for (const auto & it : events) {
-
-            if (key == it.first) {
-              continue;
-            }
-
-            if (expired_(it.second)) {
-              expired_events.push_back(it.second);
-            } else {
-              c.insert({it.first, it.second});
-            }
-          }
-
-          return c;
-        },
-
-        [&](const coalesce_events_t &, const coalesce_events_t & curr) {
-
-          if (!expired_events.empty()) {
-            forward(fold(expired_events));
-          }
-
-          events_t events;
-          for (const auto & it : curr) {
-            events.push_back(it.second);
-          }
-
-          if (!events.empty()) {
-            forward(fold(events));
-          }
-        }
-      );
-    }
-  );
 }
-
-typedef std::vector<boost::optional<Event>> project_events_t;
 
 streams_t project(const predicates_t predicates, fold_fn_t fold) {
 
-  auto events = make_shared_atom<project_events_t>({predicates.size(),
-                                                    boost::none});
-  return create_stream(
+#ifdef PROJECT_LOCKFREE
+  return project_lockfree(predicates, fold);
+#else
+  return project_lock(predicates, fold);
+#endif
 
-    [=](forward_fn_t forward, e_t e) mutable {
-
-      std::vector<Event> expired_events;
-
-      events->update(
-
-        [&](const project_events_t & curr) {
-
-          auto c(curr);
-
-          expired_events.clear();
-
-          bool match = false;
-          for (size_t i = 0; i < predicates.size(); i++) {
-
-            if (!match && predicates[i](e)) {
-
-              c[i] = e;
-              match = true;
-
-            } else {
-
-              if (c[i] && expired_(*c[i])) {
-
-                expired_events.push_back(*c[i]);
-                c[i].reset();
-
-              }
-
-            }
-          }
-
-          return c;
-        },
-
-        [&](const project_events_t &, const project_events_t & curr) {
-          forward(fold(expired_events));
-
-          events_t events;
-          for (const auto & ev : curr) {
-            if (ev) {
-              events.push_back(*ev);
-            }
-          }
-
-          if (!events.empty()) {
-            forward(fold(events));
-          }
-        }
-
-      );
-    }
-  );
 }
 
 streams_t changed_state_(std::string initial) {
-  auto state = make_shared_atom<std::string>(initial);
 
-  return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+#ifdef CHANGED_STATE_LOCKFREE
+  return changed_state_lockfree(initial);
+#else
+  return changed_state_lock(initial);
+#endif
 
-      state->update(
-        e.state(),
-        [&](const std::string & prev, const std::string &)
-        {
-          if (prev != e.state()) {
-            forward(e);
-          }
-        }
-      );
-
-    });
 }
 
 streams_t changed_state(std::string initial) {
@@ -388,11 +316,13 @@ streams_t changed_state(std::string initial) {
 
 streams_t tagged_any(const tags_t& tags) {
   return create_stream(
-    [=](forward_fn_t forward, e_t e)
+    [=](e_t e) -> next_events_t
     {
 
       if (tagged_any_(e, tags)) {
-        forward(e);
+        return {e};
+      } else {
+        return {};
       }
 
     });
@@ -400,10 +330,12 @@ streams_t tagged_any(const tags_t& tags) {
 
 streams_t tagged_all(const tags_t& tags) {
   return create_stream(
-    [=](forward_fn_t forward, e_t e)
+    [=](e_t e) -> next_events_t
     {
       if (tagged_all_(e, tags)) {
-        forward(e);
+        return {e};
+      } else {
+        return {};
       }
 
     });
@@ -415,341 +347,84 @@ streams_t tagged(const std::string tag) {
 
 streams_t smap(smap_fn_t f) {
   return create_stream(
-    [=](forward_fn_t forward, e_t e)
+    [=](e_t e) -> next_events_t
     {
       Event ne(e);
 
       f(ne);
 
-      forward(ne);
+      return {ne};
     });
 }
 
 streams_t moving_event_window(size_t n, fold_fn_t fold) {
 
-  auto window = make_shared_atom<std::list<Event>>();
+#ifdef MOVING_EVENT_WINDOW_LOCKFREE
+  return moving_event_window_lockfree(n, fold);
+#else
+  return moving_event_window_lock(n, fold);
+#endif
 
-  return create_stream(
-
-    [=](forward_fn_t forward, e_t e) {
-
-      window->update(
-
-        [&](const std::list<Event> w)
-        {
-
-            auto c(w);
-
-            c.push_back(e);
-            if (c.size() == (n + 1)) {
-              c.pop_front();
-            }
-
-            return std::move(c);
-        },
-
-        [&](const std::list<Event> &, const std::list<Event> & curr) {
-
-          forward(fold({begin(curr), end(curr)}));
-
-        }
-
-      );
-    });
 }
 
 streams_t fixed_event_window(size_t n, fold_fn_t fold) {
 
-  auto window = make_shared_atom<std::list<Event>>();
+#ifdef FIXED_EVENT_WINDOW_LOCKFREE
+  return fixed_event_window_lockfree(n, fold);
+#else
+  return fixed_event_window_lock(n, fold);
+#endif
 
-  return create_stream(
-
-    [=](forward_fn_t forward, e_t e) {
-
-      std::list<Event> event_list;
-      bool forward_events;
-
-      window->update(
-
-        [&](const std::list<Event> w) -> std::list<Event>
-        {
-
-          event_list = conj(w, e);
-
-          if ((forward_events = (event_list.size() == n))) {
-            return {};
-          } else {
-            return event_list;
-          }
-
-        },
-
-        [&](const std::list<Event> &, const std::list<Event> &) {
-
-          if (forward_events) {
-            forward(fold({begin(event_list), end(event_list)}));
-          }
-
-        }
-      );
-    }
-  );
 }
-
-struct event_time_cmp
-{
-  bool operator() (const Event & lhs, const Event & rhs) const
-  {
-    return (lhs.time() > rhs.time());
-  }
-};
-
-typedef struct {
-  std::priority_queue<Event, std::vector<Event>, event_time_cmp> pq;
-  time_t max{0};
-} moving_time_window_t;
 
 streams_t moving_time_window(time_t dt, fold_fn_t fold) {
 
-  auto window = make_shared_atom<moving_time_window_t>();
+#ifdef MOVING_TIME_WINDOW_LOCKFREE
+  return moving_time_window_lockfree(dt, fold);
+#else
+  return moving_time_window_lock(dt, fold);
+#endif
 
-  return create_stream(
-
-    [=](forward_fn_t forward, e_t e) {
-
-      window->update(
-
-        [&](const moving_time_window_t  w )
-        {
-
-          auto c(w);
-
-          if (!e.has_time()) {
-            return c;
-           }
-
-          if (e.time() > w.max) {
-            c.max = e.time();
-          }
-
-          c.pq.push(e);
-
-          if (c.max < dt) {
-            return c;
-          }
-
-          while (!c.pq.empty() && c.pq.top().time() <= (c.max - dt)) {
-            c.pq.pop();
-          }
-
-          return c;
-        },
-
-        [&](const moving_time_window_t &, const moving_time_window_t & curr) {
-
-          auto c(curr);
-
-           std::vector<Event> events;
-
-           while (!c.pq.empty()) {
-             events.push_back(c.pq.top());
-             c.pq.pop();
-           }
-
-           forward(fold(events));
-        }
-      );
-  });
 }
-
-typedef struct {
-  std::priority_queue<Event, std::vector<Event>, event_time_cmp> pq;
-  time_t start{0};
-  time_t max{0};
-  bool started{false};
-} fixed_time_window_t;
 
 streams_t fixed_time_window(time_t dt, fold_fn_t fold) {
 
-  auto window = make_shared_atom<fixed_time_window_t>();
+#ifdef FIXED_TIME_WINDOW_LOCKFREE
+  return fixed_time_window_lockfree(dt, fold);
+#else
+  return fixed_time_window_lock(dt, fold);
+#endif
 
-  return create_stream(
-
-    [=](forward_fn_t forward, e_t e) {
-
-      std::vector<Event> flush;
-
-      window->update(
-
-        [&](const fixed_time_window_t  w)
-        {
-          auto c(w);
-          flush.clear();
-
-          // Ignore event with no time
-          if (!e.has_time()) {
-            return c;
-          }
-
-          if (!c.started) {
-            c.started = true;
-            c.start = e.time();
-            c.pq.push(e);
-            c.max = e.time();
-            return c;
-          }
-
-          // Too old
-          if (e.time() < c.start) {
-            return c;
-          }
-
-          if (e.time() > c.max) {
-            c.max = e.time();
-          }
-
-          time_t next_interval = c.start - (c.start % dt) + dt;
-
-          c.pq.push(e);
-
-          if (c.max < next_interval) {
-            return c;
-          }
-
-          // We can flush a window
-          while (!c.pq.empty() && c.pq.top().time() < next_interval) {
-            flush.emplace_back(c.pq.top());
-            c.pq.pop();
-          }
-
-          c.start = next_interval;
-
-          return c;
-        },
-
-        [&](const fixed_time_window_t &, const fixed_time_window_t &) {
-           forward(fold(flush));
-        }
-      );
-  });
 }
-
-
-typedef struct {
-  std::string state;
-  std::vector<Event> buffer;
-  time_t start{0};
-} stable_t;
 
 streams_t stable(time_t dt) {
 
-  auto stable = make_shared_atom<stable_t>();
-
-  return create_stream(
-
-    [=](forward_fn_t forward, e_t e)
-    {
-
-      std::vector<Event> flush;
-      bool schedule_flush;
-
-      stable->update(
-
-          [&](const stable_t & s) {
-
-            auto c(s);
-            flush.clear();
-            schedule_flush = false;
-
-            if (s.state != e.state()) {
-              c.start = e.time();
-              c.buffer.clear();
-              c.buffer.push_back(e);
-              c.state = e.state();
-              schedule_flush = true;
-              return c;
-            }
-
-            if (e.time() < c.start) {
-              return c;
-            }
-
-            if (c.start + dt > e.time()) {
-              c.buffer.push_back(e);
-              return c;
-            }
-
-            if (!c.buffer.empty()) {
-              flush = std::move(c.buffer);
-            }
-            flush.push_back(e);
-
-            return c;
-
-          },
-
-          [&](const stable_t &, const stable_t &) {
-            for (const auto & flush_event: flush) {
-              forward(flush_event);
-            }
-          }
-      );
-    }
-  );
+#ifdef STABLE_LOCKFREE
+  return stable_lockfree(dt);
+#else
+  return stable_lock(dt);
+#endif
 
 }
 
-typedef struct {
-  size_t forwarded{0};
- time_t new_interval{0};
-} throttle_t;
-
 streams_t throttle(size_t n, time_t dt) {
 
-  auto throttled = make_shared_atom<throttle_t>();
-
-  return create_stream(
-    [=](forward_fn_t forward, e_t e) mutable {
-
-      bool forward_event;
-
-      throttled->update(
-        [&](const throttle_t & t) {
-
-          auto c(t);
-
-          if (c.new_interval < e.time()) {
-            c.new_interval += e.time() + dt;
-            c.forwarded = 0;
-          }
-
-          forward_event = (c.forwarded < n);
-
-          if (forward_event) {
-            c.forwarded++;
-          }
-
-          return c;
-        },
-
-        [&](const throttle_t &, const throttle_t &) {
-
-          if (forward_event) {
-            forward(e);
-          }
-
-      });
-    }
-  );
+#ifdef THROTTLE_LOCKFREE
+  return throttle_lockfree(n, dt);
+#else
+  return throttle_lock(n, dt);
+#endif
 
 }
 
 streams_t above(double m) {
   return create_stream(
-   [=](forward_fn_t forward, e_t e) {
+   [=](e_t e) -> next_events_t {
 
-      if (above_(e,m)) {
-        forward(e);
+      if (above_(e, m)) {
+        return {e};
+      } else {
+        return {};
       }
 
   });
@@ -757,10 +432,12 @@ streams_t above(double m) {
 
 streams_t under(double m) {
   return create_stream(
-   [=](forward_fn_t forward, e_t e) {
+   [=](e_t e) -> next_events_t {
 
-      if (under_(e,m)) {
-        forward(e);
+      if (under_(e, m)) {
+        return {e};
+      } else {
+        return {};
       }
 
   });
@@ -768,10 +445,12 @@ streams_t under(double m) {
 
 streams_t within(double a, double b) {
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
     if (above_eq_(e,a) && under_eq_(e, b)) {
-      forward(e);
+      return {e};
+    } else {
+      return {};
     }
 
   });
@@ -779,10 +458,12 @@ streams_t within(double a, double b) {
 
 streams_t without(double a, double b) {
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
     if (under_(e,a) || above_(e, b)) {
-      forward(e);
+      return {e};
+    } else {
+      return {};
     }
 
   });
@@ -790,51 +471,86 @@ streams_t without(double a, double b) {
 
 streams_t scale(double s) {
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
-      forward(set_metric_c(e, s * metric_to_double(e)));
+      return {set_metric_c(e, s * metric_to_double(e))};
+
   });
 }
 
-streams_t sdo() {
+streams_t svec(std::vector<streams_t> streams) {
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
-      forward(e);
-    });
+    [=](e_t e) -> next_events_t {
+
+      if (!streams.empty()) {
+
+        next_events_t next_events;
+
+        for (const auto & stream : streams) {
+
+          const auto ret = push_event(stream, e);
+          std::copy(begin(ret), end(ret), back_inserter(next_events));
+
+        }
+
+        return next_events;
+
+      } else {
+
+        return {e};
+
+      }
+
+    }
+
+    );
 }
 
 streams_t counter() {
    auto counter = std::make_shared<std::atomic<unsigned int>>(0);
 
   return create_stream(
-    [=](forward_fn_t forward, e_t e) mutable {
+    [=](e_t e) mutable -> next_events_t {
 
       if (metric_set(e)) {
 
         Event ne(e);
         ne.set_metric_sint64(counter->fetch_add(1) + 1);
-        forward(ne);
+        return {ne};
 
       } else {
 
-        forward(e);
+        return {e};
 
       }
   });
 }
 
+streams_t ddt() {
+
+#ifdef DDT_LOCKFREE
+  return ddt_lockfree();
+#else
+  return ddt_lock();
+#endif
+
+
+}
+
 streams_t expired() {
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
       if (expired_(e)) {
-        forward(e);
+        return {e};
+      } else {
+        return {};
       }
   });
 }
 
 streams_t tag(tags_t tags) {
   return create_stream(
-    [=](forward_fn_t forward, e_t e) {
+    [=](e_t e) -> next_events_t {
 
       Event ne(e);
 
@@ -842,20 +558,22 @@ streams_t tag(tags_t tags) {
         *(ne.add_tags()) = t;
       }
 
-      forward(ne);
+      return {ne};
     }
   );
 }
 
 streams_t send_index() {
   return create_stream(
-    [=](forward_fn_t, e_t e) {
+    [=](e_t e) -> next_events_t {
 
       if (!expired_(e)) {
 
         g_core->idx().add_event(e);
 
       }
+
+      return {};
 
     }
   );
@@ -864,9 +582,11 @@ streams_t send_index() {
 
 streams_t send_graphite(const std::string host, const int port) {
   return create_stream(
-    [=](forward_fn_t, e_t e) {
+    [=](e_t e) -> next_events_t {
 
       g_core->externals().graphite(host, port, e);
+
+      return {};
 
     }
   );
@@ -874,9 +594,60 @@ streams_t send_graphite(const std::string host, const int port) {
 
 streams_t forward(const std::string host, const int port) {
   return create_stream(
-    [=](forward_fn_t, e_t e) {
+    [=](e_t e) -> next_events_t {
 
       g_core->externals().forward(host, port, e);
+
+      return {};
+
+    }
+  );
+}
+
+streams_t email(const std::string server, const std::string from,
+                const std::string to) {
+  return create_stream(
+    [=](e_t e) -> next_events_t {
+
+      g_core->externals().email(server, from, to, e);
+
+      return {};
+
+    }
+  );
+}
+
+streams_t pagerduty_resolve(const std::string key) {
+  return create_stream(
+    [=](e_t e) -> next_events_t {
+
+      g_core->externals().pager_duty_resolve(key, e);
+
+      return {};
+
+    }
+  );
+}
+
+streams_t pagerduty_acknowledge(const std::string key) {
+  return create_stream(
+    [=](e_t e) -> next_events_t {
+
+      g_core->externals().pager_duty_acknowledge(key, e);
+
+      return {};
+
+    }
+  );
+}
+
+streams_t pagerduty_trigger(const std::string key) {
+  return create_stream(
+    [=](e_t e) -> next_events_t {
+
+      g_core->externals().pager_duty_trigger(key, e);
+
+      return {};
 
     }
   );
@@ -1033,7 +804,21 @@ bool match_like_(e_t e, const std::string key, const std::string value) {
 
 }
 
-streams::streams() : stop_(false) {}
+streams::streams(instrumentation & instrumentation)
+  : instrumentation_(instrumentation), stop_(false)
+{
+
+  rate_id_ = instrumentation_.add_rate(k_rate_service,
+                                       k_latency_desc);
+
+  latency_id_ = instrumentation_.add_latency(k_latency_service,
+                                             k_latency_desc,
+                                             k_percentiles);
+
+  in_latency_id_ = instrumentation_.add_latency(k_in_latency_service,
+                                                k_in_latency_desc,
+                                                k_percentiles);
+}
 
 void streams::add_stream(streams_t stream) {
   streams_.push_back(stream);
@@ -1045,26 +830,17 @@ void streams::process_message(const Msg& message) {
     return;
   }
 
+  instrumentation_.update_rate(rate_id_, message.events_size());
+
   VLOG(3) << "process message. num of streams " << streams_.size();
   VLOG(3) << "process message. num of events " << message.events_size();
 
-  unsigned long int sec = time(0);
-
   for (int i = 0; i < message.events_size(); i++) {
 
-    const Event &event = message.events(i);
+    const Event & event = message.events(i);
 
-    if (!event.has_time()) {
+    push_event(event);
 
-      Event nevent(event);
-      nevent.set_time(sec);
-      push_event(std::move(nevent));
-
-    } else {
-
-      push_event(event);
-
-    }
   }
 }
 
@@ -1074,13 +850,28 @@ void streams::push_event(const Event& e) {
     return;
   }
 
-  for (auto& s: streams_) {
+  for (const auto & s: streams_) {
+
+    if (e.state() == "expired") {
+      ::push_event(s, e);
+      continue;
+    }
 
     if (e.has_time()) {
+
+      update_in_latency(instrumentation_, in_latency_id_, e.time());
+
+      auto start_time = now();
+
       ::push_event(s, e);
+
+      update_latency(instrumentation_, latency_id_, start_time);
+
     } else {
       Event ne(e);
       ne.set_time(g_core->sched().unix_time());
+
+      ::push_event(s, ne);
     }
 
   }

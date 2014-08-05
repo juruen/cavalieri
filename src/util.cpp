@@ -1,5 +1,5 @@
-#include "util.h"
 #include <string>
+#include <jsoncpp/json/json.h>
 #include <sstream>
 #include <algorithm>
 #include <glog/logging.h>
@@ -7,14 +7,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <regex>
 #include <curl/curl.h>
-
-namespace {
-  const uint32_t buff_size = 1024;
-  const uint32_t json_buff_size = 1024 * 4;
-  const char *json_base =
-      "{\"host\": \"%s\", \"service\": \"%s\", \"description\": \"%s\""
-      ",\"state\": \"%s\", \"metric\": %f, \"time\": %lld, \"tags\": [%s] %s}";
-}
+#include <util.h>
 
 std::string metric_to_string(const Event& e) {
   std::ostringstream ss;
@@ -89,51 +82,73 @@ std::string string_to_value(const Event& e, const std::string& key) {
   }
 }
 
-std::string event_to_json(const Event &e) {
-  char tags[buff_size] =  "";
-  char attrs[buff_size] = "";
+bool field_set(const Event & e, const std::string & field) {
 
-  for (int i = 0; i < e.tags_size(); i++) {
-    if (i != 0) {
-      strncat(tags, ", ", buff_size- strlen(tags));
-    }
-    strncat(tags, "\"", buff_size - strlen(tags));
-    strncat(tags, e.tags(i).c_str(), buff_size - strlen(tags));
-    strncat(tags, "\"", buff_size - strlen(tags));
+  if (field == "host") {
+    return e.has_host();
+  } else if (field == "service") {
+    return e.has_service();
+  } else if (field == "description") {
+    return e.has_description();
+  } else if (field == "state") {
+    return e.has_state();
+  } else if (field == "metric") {
+    return metric_set(e);
+  } else if (field == "ttl") {
+    return e.has_ttl();
+  } else {
+    return attribute_exists(e, field);
+  }
+
+}
+
+std::string event_to_json(const Event &e) {
+
+  Json::Value event;
+
+  if (e.has_host()) {
+    event["host"] = Json::Value(e.host());
+  }
+
+  if (e.has_service()) {
+    event["service"] = Json::Value(e.service());
+  }
+
+  if (e.has_description()) {
+    event["description"] = Json::Value(e.description());
+  }
+
+  if (e.has_state()) {
+    event["state"] = Json::Value(e.state());
+  }
+
+  if (metric_set(e)) {
+    event["metric"] = Json::Value(metric_to_double(e));
   }
 
   for (int i = 0; i < e.attributes_size(); i++) {
-    strncat(attrs, ", ", buff_size - strlen(attrs));
-    strncat(attrs, "\"", buff_size - strlen(attrs));
-    strncat(attrs, e.attributes(i).key().c_str(), buff_size - strlen(attrs));
-    strncat(attrs, "\": ", buff_size - strlen(attrs));
-    strncat(attrs, "\"", buff_size - strlen(attrs));
-    strncat(attrs, e.attributes(i).value().c_str(), buff_size - strlen(attrs));
-    strncat(attrs, "\"", buff_size - strlen(attrs));
+
+    if (!(e.attributes(i).has_key() && e.attributes(i).has_value())) {
+      continue;
+    }
+
+    event[e.attributes(i).key()] = Json::Value(e.attributes(i).value());
+
   }
 
- double metric;
- if (e.has_metric_f()) {
-    metric = (double)e.metric_f();
-  } else if (e.has_metric_d()) {
-    metric =  e.metric_d();
-  } else if (e.has_metric_sint64()) {
-    metric = (double) e.metric_sint64();
-  } else {
-    metric = 0;
+  if (e.tags_size() > 0) {
+
+    auto tags = Json::Value(Json::arrayValue);
+
+    for (int i = 0; i < e.tags_size(); i++) {
+      tags.append(Json::Value(e.tags(i)));
+    }
+
+    event["tags"] = tags;
   }
 
-  char json_buffer[json_buff_size];
-  size_t r = snprintf(json_buffer, json_buff_size, json_base,
-                e.host().c_str(), e.service().c_str(), e.description().c_str(),
-                e.state().c_str(), metric, e.time(), tags, attrs);
+  return event.toStyledString();
 
-  if (r >= json_buff_size) {
-    VLOG(1) << "json string is too big";
-    return "";
-  } else {
-    return json_buffer;
-  }
 }
 
 bool match_regex(const std::string value, const std::string re) {

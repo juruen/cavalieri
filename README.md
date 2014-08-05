@@ -212,8 +212,8 @@ continous integration process.
 Sending events
 --------------
 
-You can use any of the existing [riemann.io](http://riemann.io/clients.html) clients. Just make them send events to
-a host running *cavalieri*.
+You can use any of the existing [riemann.io](http://riemann.io/clients.html)
+clients. Just make them send events to a host running *cavalieri*.
 
 Streams API
 ------------
@@ -533,19 +533,198 @@ It adds the list of passed *tags* to events and forwards them.
 tags({"processed"}) >> prn("tag added")
 ```
 
+#### ddt ()
+
+It differenciates two subsequent events. The metric of the forwarded
+event is (metric_current - metric_previous) / (time_current - time_previous).
+
+#### send_index()
+
+It indexes the receivied events. Indexed events can be queried through
+the websocket.
+
+This is usful to know the current state of an event from a dashboard.
+
 #### send_graphite(const std::string host, const int port)
 
 It forwards the received events to a graphite server using new line carbon
 TCP protocol.
+
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, a graphite server.
 
 #### forward(const std::string host, const int port)
 
 It forwards the received events to a cavalieri or riemann server using
 TCP.
 
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, a cavalieri or riemann server.
+
+#### email(const std::string server, const std::string from, const std::string to)
+
+It emails the received events with *from* sender to *to* recipient using
+the specified SMTP *server*.
+
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, an SMTP server.
+
+
+
+#### pagerduty_trigger(const std::string pd_key)
+
+It triggers a Pager Duty incident based on the received event and using
+*pd_key* as the API key. Note that service key will be event's host and
+service.
+
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, Pager Duty.
+
+#### pagerduty_acknowoledge(const std::string pd_key)
+
+It acknowledges a Pager Duty incident based on the received event and using
+*pd_key* as the API key. Note that service key will be event's host and
+service.
+
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, Pager Duty.
+
+#### pagerduty_resolve(const std::string pd_key)
+
+It resolves a Pager Duty incident based on the received event and using
+*pd_key* as the API key. Note that service key will be event's host and
+service.
+
+This is an *external* function, meaning that cavalieri will talk to an external
+service, in this case, Pager Duty.
 
 
 ### Fold functions
+
+Fold functions are functions that take a list of events, do some processing
+with them such as reducing and return an event with the result.
+
+These functions are mostly meant to be used with stream functions that forward
+a list of events.
+
+#### sum(const std::vector<Event> events)
+
+It returns an event that contains the sum of the metrics of *events*.
+
+#### product(const std::vector<Event> events)
+
+It returns an event that contains the product of the metrics of *events*.
+
+#### difference(const std::vector<Event> events)
+
+It returns an event that contains the difference of the metrics of *events*.
+
+#### mean(const std::vector<Event> events)
+
+It returns an event that contains the mean of the metrics of *events*.
+
+#### minimum(const std::vector<Event> events)
+
+It returns an event that contains the minimum value of the metrics of *events*.
+
+#### maximum(const std::vector<Event> events)
+
+It returns an event that contains the maximum of the metrics of *events*.
+
+### Common Rules
+
+These rules are based on the above stream functions, but they are more
+high-level and more opinionated.
+
+They asumme that two states *critical* and *ok* are enough. Events coming
+out from these function have their state set to any of them.
+
+#### critical_above (double value)
+
+It sets state to critical if metric is above *value*. Otherwise, it sets it to
+ok.
+
+#### critical_under (double value)
+
+It sets state to ok if metric is under *value*. Otherwise, it sets it to
+critical.
+
+#### stable_metric (double dt, predicate_t trigger)
+
+It takes *trigger* as a function predicate to check events. It sets the state
+to critical when *trigger* has returned *true* for more than *dt* seconds.
+
+It sets it back to critical when *trigger* has returned *false* for more than
+*dt* seconds.
+
+This is useful to avoid spikes.
+
+```cpp
+stable_metric( /* seconds */ 300, above_pred(200))
+  >> changed_state("ok")
+    >>  email();
+```
+
+#### stable_metric (double dt, predicate_t trigger, predicate_t cancel)
+
+Similar to the above function but taking an extra predicate *cancel* that is
+used as a threshold to set it back to ok.
+
+
+It sets the state to critical when *trigger* has return *true* for more than
+*dt* seconds.
+
+It sets it back to critical when *cancel* has returned *true* for more than
+*dt* seconds.
+
+This is useful to avoid spikes.
+
+```cpp
+stable_metric( /* seconds */ 300, above_pred(200))
+  >> changed_state("ok")
+    >>  email();
+```
+
+
+#### agg_stable_metric (double dt, fold_fn_t fold_fn, predicate_t trigger, predicate_t cancel)
+
+This function aggregates metrics of events that are received using
+*fold_fn* (See fold functions). The event that results is passed to a
+*stable_metric* stream using *dt*, *trigger* and *cancel*.
+
+Let's see an example. Say we have a bunch of web servers in our London data
+center. Those servers are reporting a metric called *failed_requests_rate*. We
+would like to create another metric that is the aggregated sum of all the
+servers and trigger an alert when that value is above a given value for
+more than *dt* seconds.
+
+```cpp
+service("failed_requests_rate")
+  >> tagged("datacenter::london")
+    >> agg_stable_metric(/* secs */ 300, sum, above_pred(200), under_pred(50))
+      >> changed_state("ok")
+        >> email();
+```
+
+
+#### max_critical_hosts(size_t n)
+
+This function sets the state of the events to critical when it receives
+more than *n* different critical events.
+
+In the example below, we trigger an alert when more than 20 servers
+report a puppet failure in a DC.
+
+```cpp
+service("puppet")
+  >> tagged("datacenter::paris")
+    >> max_critial_hosts(20)
+      >> changed_state("ok")
+        >> set_host("datacenter::paris")
+          >> set_service("too many puppet failures")
+            >> email();
+```
+
 
 ### Predicate functions
 

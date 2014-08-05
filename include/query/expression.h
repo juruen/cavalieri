@@ -40,6 +40,7 @@ class query_field : public query_node
   query_field(std::string * field, std::string * value, std::string * op);
   query_field(std::string * field, const int   value, std::string * op);
   query_field(std::string * field, const double  value, std::string * op);
+  query_field(std::string * field);
   query_fn_t evaluate() const;
 
 private:
@@ -47,6 +48,7 @@ private:
   query_fn_t evaluate(const std::string & value) const;
   query_fn_t evaluate(const int & value) const;
   query_fn_t evaluate(const double & value) const;
+  query_fn_t evaluate_nil() const;
 
   std::unique_ptr<std::string> op_;
   std::unique_ptr<std::string> field_;

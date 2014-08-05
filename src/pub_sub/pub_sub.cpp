@@ -31,7 +31,7 @@ void pub_sub::publish(const std::string & topic, const Event & event) {
   CHECK(it != end(publishers_)) << "topic not found";
 
   for (auto & notify_queue : notify_queues(it)) {
-    notify_queue->push(event);
+    notify_queue->try_push(event);
   }
 
 }

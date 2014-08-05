@@ -26,10 +26,17 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
+    #${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/async/real_async_loop.cpp
     ${CMAKE_SOURCE_DIR}/src/index/real_index.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/rate.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/gauge.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/mem.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/udp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/curl_pool.cpp
@@ -38,7 +45,8 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/listen_tcp_socket.cpp
-    ${CMAKE_SOURCE_DIR}/src/pool/thread_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/pool/async_thread_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/pool/executor_thread_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/query/parser.cpp
     ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
@@ -46,10 +54,8 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
     ${CMAKE_SOURCE_DIR}/src/external/real_external.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mailer_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/external/pagerduty_pool.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/email.cpp
     ${CMAKE_SOURCE_DIR}/src/external/graphite_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/external/graphite.cpp
     ${CMAKE_SOURCE_DIR}/src/external/riemann_tcp_client_pool.cpp
@@ -79,17 +85,22 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
+    #${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/rate.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/gauge.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/mem.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/index/mock_index.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/email.cpp
-    ${CMAKE_SOURCE_DIR}/src/external/pagerduty.cpp
   )
 
-ADD_DEFINITIONS( -Wall -std=c++11 -g )
+ADD_DEFINITIONS( -Wall -std=c++11 -g -O3 )
 
 INCLUDE(FindProtobuf)
 

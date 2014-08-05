@@ -113,9 +113,10 @@ namespace queryparser {
      UNQUOTEDSTRING = 268,
      TRUE = 269,
      TAGGED = 270,
-     NOT = 271,
-     AND = 272,
-     OR = 273
+     NIL = 271,
+     NOT = 272,
+     AND = 273,
+     OR = 274
    };
 
     };
@@ -295,7 +296,7 @@ namespace queryparser {
 } // queryparser
 
 /* Line 35 of lalr1.cc  */
-#line 299 "parser.h"
+#line 300 "parser.h"
 
 
 

@@ -19,6 +19,13 @@ SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
+#   ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/rate.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/gauge.cpp
+    ${CMAKE_SOURCE_DIR}/src/instrumentation/mem.cpp
     ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
     ${CMAKE_SOURCE_DIR}/src/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index/real_index.cpp
@@ -47,6 +54,7 @@ INCLUDE_DIRECTORIES(
     ${LibEv_INCLUDE_DIR}
     ${PYTHON_INCLUDE_DIRS}
     ${ThirdParty_INCLUDE_DIRS}
+    ${JsonCpp_INCLUDE_DIRS}
   )
 
 ADD_EXECUTABLE(
@@ -82,6 +90,7 @@ TARGET_LINK_LIBRARIES(
     ${LibEv_LIBRARIES}
     ${Glog_LIBRARIES}
     ${PYTHON_LIBRARIES}
+    ${JsonCpp_LIBRARIES}
     ssl
     crypto
     curl

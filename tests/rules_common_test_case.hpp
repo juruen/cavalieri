@@ -4,7 +4,8 @@
 #include <rules/common.h>
 
 streams_t bsink(std::vector<Event> & v) {
-  return create_stream([&](forward_fn_t, e_t e) { v.push_back(e); });
+  return create_stream([&](e_t e) -> next_events_t
+      { v.push_back(e);  return {}; });
 }
 
 TEST(critical_above_test_case, test)
@@ -17,10 +18,12 @@ TEST(critical_above_test_case, test)
 
   e.set_metric_d(1);
   push_event(cabove, e);
+  ASSERT_EQ(1, v.size());
   ASSERT_EQ("ok", v[0].state());
 
   e.set_metric_d(6);
   push_event(cabove, e);
+  ASSERT_EQ(2, v.size());
   ASSERT_EQ("critical", v[1].state());
 }
 
@@ -41,11 +44,11 @@ TEST(critical_under_test_case, test)
   ASSERT_EQ("ok", v[1].state());
 }
 
-TEST(trigger_detrigger_above_test_case, test)
+TEST(stable_metric_above_test_case, test)
 {
   std::vector<Event> v;
 
-  auto td_above = trigger_detrigger_above(5, 5, 3) >> bsink(v);
+  auto td_above = stable_metric(5, above_pred(5), under_pred(3)) >> bsink(v);
 
   Event e;
 
@@ -78,11 +81,11 @@ TEST(trigger_detrigger_above_test_case, test)
   ASSERT_EQ("critical", v[2].state());
 }
 
-TEST(trigger_detrigger_under_test_case, test)
+TEST(stable_metric_under_test_case, test)
 {
   std::vector<Event> v;
 
-  auto td_under = trigger_detrigger_under(5, 5, 3) >> bsink(v);
+  auto td_under = stable_metric(5, under_pred(5), above_pred(3)) >> bsink(v);
 
   Event e;
 
@@ -119,7 +122,9 @@ TEST(agg_sum_trigger_above_test_case,test)
 {
   std::vector<Event> v;
 
-  auto agg =  agg_sum_trigger_above(5, 5, 3) >> sink(v);
+  auto agg =  agg_stable_metric(5, sum, above_eq_pred(5), under_eq_pred(3))
+              >> sink(v);
+
   g_core->sched().clear();
 
   Event e1,e2;
@@ -165,6 +170,181 @@ TEST(agg_sum_trigger_above_test_case,test)
   ASSERT_EQ(3, v.size());
   ASSERT_EQ("critical", v[0].state());
   ASSERT_EQ(6, v[0].metric_d());
+}
+
+
+TEST(max_critical_hosts_test_case,test)
+{
+  std::vector<Event> v;
+
+  auto max = max_critical_hosts(3) >> changed_state("ok") >> sink(v);
+
+  std::vector<Event> events(5);
+
+  for (size_t i = 0; i < events.size(); i++) {
+    events[i].set_host(std::to_string(i));
+    events[i].set_state("ok");
+    events[i].set_ttl(300);
+    push_event(max, events[i]);
+  }
+
+  ASSERT_EQ(0, v.size());
+
+  events[0].set_state("critical");
+  push_event(max, events[0]);
+  ASSERT_EQ(0, v.size());
+
+  events[1].set_state("critical");
+  events[2].set_state("critical");
+  push_event(max, events[1]);
+  push_event(max, events[2]);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("critical", v[0].state());
+
+  v.clear();
+
+  events[0].set_state("ok");
+  events[1].set_state("ok");
+  events[2].set_state("oj");
+  push_event(max, events[0]);
+  push_event(max, events[1]);
+  push_event(max, events[2]);
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ("ok", v[0].state());
+
+}
+
+TEST(per_host_ratio_test_case,test)
+{
+
+  std::vector<Event> v;
+
+  auto ratio = per_host_ratio("a", "b", 1, 300,
+                              above_pred(0.7), under_pred(0.5)) >> sink(v);
+
+  Event e;
+
+  e.set_host("h");
+  e.set_ttl(600);
+  e.set_time(0);
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(5);
+  push_event(ratio, e);
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(100);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(5);
+
+  push_event(ratio, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(200);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(1);
+  push_event(ratio, e);
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(400);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(1);
+  push_event(ratio, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(500);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(1);
+  push_event(ratio, e);
+
+  ASSERT_EQ(3, v.size());
+
+  ASSERT_EQ("critical", v[0].state());
+  ASSERT_EQ("critical", v[1].state());
+  ASSERT_EQ("critical", v[2].state());
+
+  v.clear();
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(600);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(5);
+  push_event(ratio, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_service("a");
+  e.set_metric_d(1);
+  e.set_time(900);
+  push_event(ratio, e);
+
+  e.set_service("b");
+  e.set_metric_d(5);
+  push_event(ratio, e);
+
+  ASSERT_EQ(2, v.size());
+  ASSERT_EQ("ok", v[0].state());
+  ASSERT_EQ("ok", v[1].state());
+
+}
+TEST(stable_event_stream_test_case,test)
+{
+
+  std::vector<Event> v;
+
+  auto stable = stable_event_stream(3) >> sink(v);
+
+  Event e;
+  e.set_time(0);
+  e.set_ttl(300);
+
+  for (int i = 0; i < 6; i++) {
+    e.set_state(i % 2 ? "ok" : "critical");
+    push_event(stable, e);
+  }
+
+  ASSERT_EQ(0, v.size());
+
+  for (int i = 0; i < 3; i++) {
+    e.set_state("critical");
+    push_event(stable, e);
+  }
+
+  ASSERT_EQ(1, v.size());
+
+  v.clear();
+
+  for (int i = 1; i < 6; i++) {
+    e.set_state(i % 2 ? "ok" : "critical");
+    push_event(stable, e);
+  }
+
+  ASSERT_EQ(0, v.size());
+
+
 }
 
 #endif

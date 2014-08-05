@@ -1,6 +1,13 @@
 #include <glog/logging.h>
 #include <core/real_core_helper.h>
+#include <util.h>
 #include <transport/listen_tcp_socket.h>
+
+namespace {
+
+const float k_snapshot_interval = 5;
+
+}
 
 void detach_thread(std::function<void()> fn) {
   std::thread t(fn);
@@ -14,8 +21,8 @@ std::shared_ptr<core_interface> make_real_core(const config conf) {
 
 }
 
-inline void incoming_event(const std::vector<unsigned char> raw_msg,
-                           std::shared_ptr<streams> streams)
+inline void incoming_event(const std::vector<unsigned char> & raw_msg,
+                           streams & streams)
 {
     Msg msg;
 
@@ -24,23 +31,34 @@ inline void incoming_event(const std::vector<unsigned char> raw_msg,
       return;
     }
 
-    streams->process_message(msg);
+    if (msg.has_query()) {
+      VLOG(1) << "query messages are not supported yet";
+      return;
+
+    }
+
+    streams.process_message(msg);
 }
 
 std::unique_ptr<riemann_tcp_pool> init_tcp_server(
     const config & conf,
     main_async_loop_interface & loop,
-    std::shared_ptr<streams> streams)
+    streams & streams,
+    executor_thread_pool & executor_pool,
+    instrumentation & instr
+    )
 {
 
-  auto income_tcp_event = [=](const std::vector<unsigned char> raw_msg)
+  auto income_tcp_event = [&](const std::vector<unsigned char> & raw_msg)
   {
-    incoming_event(raw_msg, streams);
+    executor_pool.add_task(
+      [=, &streams]() { incoming_event(raw_msg, streams); });
   };
 
   std::unique_ptr<riemann_tcp_pool> tcp_server(new riemann_tcp_pool(
       conf.riemann_tcp_pool_size,
-      income_tcp_event
+      income_tcp_event,
+      instr
   ));
 
   auto ptr_server = tcp_server.get();
@@ -58,7 +76,7 @@ std::unique_ptr<riemann_udp_pool> init_udp_server(
 
   auto income_udp_event = [=](const std::vector<unsigned char> raw_msg)
   {
-    incoming_event(raw_msg, streams);
+    incoming_event(raw_msg, *streams);
   };
 
   return std::unique_ptr<riemann_udp_pool>(
@@ -81,3 +99,24 @@ std::unique_ptr<websocket_pool> init_ws_server(
 
   return ws_server;
 }
+
+void snapshot(instrumentation & inst, streams & streams) {
+
+  for (const auto & event : inst.snapshot()) {
+    streams.push_event(event);
+  }
+
+}
+
+
+void start_instrumentation(scheduler_interface & sched,
+                           instrumentation & instrumentation,
+                           streams & streams)
+{
+  sched.add_periodic_task(
+      [&]() { snapshot(instrumentation, streams); },
+      k_snapshot_interval
+  );
+}
+
+

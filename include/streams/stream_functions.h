@@ -9,6 +9,7 @@
 #include <proto.pb.h>
 #include <streams/stream_infra.h>
 #include <index/index.h>
+#include <instrumentation/instrumentation.h>
 
 typedef const Event& e_t;
 typedef std::vector<Event> events_t;
@@ -17,11 +18,12 @@ typedef std::vector<Event> events_t;
 #define TR(EXP) [](Event & e) {(EXP); }
 #define BY(EXP) [=]() { return (EXP); }
 #define NE(EXP) [=](const Event & event) { Event e(event); (EXP); return e;  }
+#define sdo(...) svec({__VA_ARGS__})
 
 
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::function<void(Event &)> smap_fn_t;
-typedef std::function<Event(const events_t)> fold_fn_t;
+typedef std::function<Event(const events_t &)> fold_fn_t;
 typedef std::vector<predicate_t> predicates_t;
 typedef std::pair<const predicate_t, const streams_t> split_pair_t;
 typedef boost::variant<std::string, int, double> change_value_t;
@@ -45,9 +47,13 @@ streams_t service_like_any(const std::vector<std::string> patterns);
 
 streams_t state(const std::string state);
 
+streams_t state_any(const std::vector<std::string> states);
+
 streams_t set_state(const std::string state);
 
 streams_t set_metric(const double metric);
+
+streams_t set_description(const std::string description);
 
 streams_t with(const with_changes_t& changes);
 
@@ -101,7 +107,7 @@ streams_t without(double a, double b);
 
 streams_t scale(double s);
 
-streams_t sdo();
+streams_t svec(std::vector<streams_t> streams);
 
 streams_t counter();
 
@@ -109,11 +115,22 @@ streams_t expired();
 
 streams_t tag(tags_t tags);
 
+streams_t ddt();
+
 streams_t send_index();
 
 streams_t send_graphite(const std::string host, const int port);
 
 streams_t forward(const std::string host, const int port);
+
+streams_t email(const std::string server, const std::string from,
+                const std::string to);
+
+streams_t pagerduty_resolve(const std::string key);
+
+streams_t pagerduty_acknowledge(const std::string key);
+
+streams_t pagerduty_trigger(const std::string key);
 
 predicate_t above_eq_pred(const double value);
 
@@ -167,13 +184,17 @@ bool match_like_(e_t e, const std::string key, const std::string value);
 
 class streams {
 public:
-  streams();
+  streams(instrumentation &);
   void add_stream(streams_t stream);
   void process_message(const Msg& message);
   void push_event(const Event& e);
   void stop();
 
 private:
+  instrumentation & instrumentation_;
+  int rate_id_;
+  int latency_id_;
+  int in_latency_id_;
   std::vector<streams_t> streams_;
   bool stop_;
 };

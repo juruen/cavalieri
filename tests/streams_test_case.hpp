@@ -9,18 +9,19 @@
 #include <iostream>
 
 streams_t create_c_stream(const std::string c) {
-  return create_stream([=](forward_fn_t forward, const Event & e)
+  return create_stream([=](const Event & e) -> next_events_t
       {
         Event ne(e);
         ne.set_host(ne.host() + c);
-        forward(ne);
+        return {ne};
       });
 }
 
 streams_t sink(std::vector<Event> & v) {
-  return create_stream([&](forward_fn_t, const Event & e)
+  return create_stream([&](const Event & e) -> next_events_t
       {
         v.push_back(e);
+        return {};
       });
 }
 
@@ -69,17 +70,17 @@ TEST(streams_test_case, test)
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (sink(v), f, g), e);
+  push_event(a >>  b >> c >> d >> svec({sink(v), f, g}), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (f, sink(v),  g), e);
+  push_event(a >>  b >> c >> d >> svec({f, sink(v),  g}), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> (f, g, sink(v)), e);
+  push_event(a >>  b >> c >> d >> svec({f, g, sink(v)}), e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
@@ -243,12 +244,12 @@ TEST(split_streams_test_case, test)
 
   split_clauses_t clauses_stream =
   {
-    {PRED(e.host() == "host1"),       sdo()},
-    {PRED(metric_to_double(e) > 3.3), sdo()}
+    {PRED(e.host() == "host1"),       sink(v3)},
+    {PRED(metric_to_double(e) > 3.3), sink(v3)}
   };
 
   e.set_host("host1");
-  push_event(split(clauses_stream) >> sink(v3), e);
+  push_event(split(clauses_stream), e);
   ASSERT_EQ(0, v1.size());
   ASSERT_EQ(0, v2.size());
   ASSERT_EQ(1, v3.size());
@@ -283,9 +284,10 @@ TEST(by_streams_test_case, test)
   {
     v.resize(++i);
 
-    return create_stream([=,&v](forward_fn_t, const Event & e)
+    return create_stream([=,&v](const Event & e) -> next_events_t
         {
           v[i - 1].push_back(e);
+          return {};
         });
   };
 
@@ -681,6 +683,7 @@ TEST(expired_streams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
+#ifdef ENABLE_RATE
 TEST(rate_streams_test_case, test)
 {
   std::vector<Event> v;
@@ -691,7 +694,6 @@ TEST(rate_streams_test_case, test)
   auto rate_stream = rate(5) >>  sink(v);
 
   // Check that we send a 0-valued metric if no event is received
-  push_event(rate_stream, e1);
   g_core->sched().set_time(5);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ(0, v[0].metric_d());
@@ -726,6 +728,7 @@ TEST(rate_streams_test_case, test)
 
   g_core->sched().clear();
 }
+#endif
 
 TEST(coalesce_streams_test_case, test)
 {
@@ -972,10 +975,6 @@ TEST(moving_time_window_streams_test_case, test)
   ASSERT_EQ(1, v.size());
   v.clear();
 
-  e.clear_time();
-  push_event(moving_stream, e);
-  ASSERT_EQ(1, v.size());
-  v.clear();
 }
 
 TEST(fixed_time_window_streams_test_case, test)
@@ -1194,6 +1193,40 @@ TEST(state_streams_test_case, test)
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("foo", v[0].state());
 }
+
+TEST(ddt_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  auto ddt_stream = ddt() >>  sink(v);
+
+  Event e;
+
+  e.set_metric_sint64(1);
+  e.set_time(1);
+
+  push_event(ddt_stream, e);
+
+  ASSERT_EQ(0, v.size());
+
+  e.set_metric_sint64(5);
+  e.set_time(1);
+
+  push_event(ddt_stream, e);
+
+  ASSERT_EQ(0, v.size());
+
+
+  e.set_metric_sint64(9);
+  e.set_time(3);
+
+  push_event(ddt_stream, e);
+
+  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(2, v[0].metric_d());
+
+}
+
 
 
 #endif
