@@ -20,7 +20,7 @@ def encoded_events(n):
     return msg.raw
 
 
-def send(n):
+def send(n, msgs):
     raw = encoded_events(n)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,16 +28,15 @@ def send(n):
 
     buff = struct.pack('!I', len(raw)) + raw
 
-    sock.sendall(buff[0:200])
-    time.sleep(0.1)
-    sock.sendall(buff[200:10000])
-    time.sleep(0.3)
-    sock.sendall(buff[10000:15000])
-    time.sleep(0.5)
-    sock.sendall(buff[15000:len(buff)])
+    for i in range(0, msgs):
+        sock.sendall(buff)
 
-    rxlen = struct.unpack('!I', sock.recv(4))[0]
-    msg = bernhard.Message(raw=sock.recv(rxlen, socket.MSG_WAITALL))
-    assert(msg.ok)
+    received = 0
+    for i in range(0, msgs):
+        rxlen = struct.unpack('!I', sock.recv(4, socket.MSG_WAITALL))[0]
+        msg = bernhard.Message(raw=sock.recv(rxlen, socket.MSG_WAITALL))
+        assert(msg.ok)
+        received += 1
+        print "ok: %i" % received
 
-send(5000)
+send(1, 170000)
