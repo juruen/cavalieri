@@ -53,6 +53,8 @@ streams_t set_state(const std::string state);
 
 streams_t set_metric(const double metric);
 
+streams_t set_description(const std::string description);
+
 streams_t with(const with_changes_t& changes);
 
 streams_t default_to(const with_changes_t& changes);

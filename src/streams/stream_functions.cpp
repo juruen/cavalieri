@@ -122,6 +122,10 @@ streams_t set_metric(const double metric) {
   return with({{"metric", metric}});
 }
 
+streams_t set_description(const std::string description) {
+  return with({{"description", description}});
+}
+
 streams_t with(const with_changes_t & changes, const bool & replace)
 {
   return create_stream(
