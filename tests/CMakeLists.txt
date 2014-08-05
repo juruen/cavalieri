@@ -54,6 +54,7 @@ INCLUDE_DIRECTORIES(
     ${LibEv_INCLUDE_DIR}
     ${PYTHON_INCLUDE_DIRS}
     ${ThirdParty_INCLUDE_DIRS}
+    ${JsonCpp_INCLUDE_DIRS}
   )
 
 ADD_EXECUTABLE(
@@ -89,6 +90,7 @@ TARGET_LINK_LIBRARIES(
     ${LibEv_LIBRARIES}
     ${Glog_LIBRARIES}
     ${PYTHON_LIBRARIES}
+    ${JsonCpp_LIBRARIES}
     ssl
     crypto
     curl
