@@ -12,7 +12,7 @@ It implements the original [riemann.io](http://riemann.io) protocol. That means
 you can leverage the existing *riemann* clients and tools. It also tries to
 mimic its stream API where possible.
 
-Cavalieri's current version *0.0.5* is considered to be  in **alpha** state.
+Cavalieri's current version *0.0.6* is considered to be  in **alpha** state.
 We expect to release a beta version in the following weeks.
 
 Current benchmarks show that it can process more than one million events per
