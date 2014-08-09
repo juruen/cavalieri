@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <glog/logging.h>
 #include <transport/tcp_connection.h>
-#include <os_functions.h>
+#include <os/os_functions.h>
 
 namespace {
 

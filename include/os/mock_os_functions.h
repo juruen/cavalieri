@@ -2,7 +2,7 @@
 #define MOCK_OS_FUNCTIONS_H
 
 #include <vector>
-#include <os_functions.h>
+#include <os/os_functions.h>
 
 class mock_os_functions : public os_functions_interface {
 public:

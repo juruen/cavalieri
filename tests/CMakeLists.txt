@@ -11,8 +11,8 @@ SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/core/mock_core.cpp
     ${CMAKE_SOURCE_DIR}/src/index/mock_index.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
-    ${CMAKE_SOURCE_DIR}/src/mock_os_functions.cpp
-    ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/os/mock_os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/os/os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
