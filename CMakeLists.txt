@@ -210,13 +210,6 @@ install(
 install(PROGRAMS ${libcds_LIBS} DESTINATION lib)
 
 install(
-  FILES
-  ${CMAKE_SOURCE_DIR}/src/python/mailer.py
-  ${CMAKE_SOURCE_DIR}/src/python/pagerduty.py
-  DESTINATION share/${CMAKE_PROJECT_NAME}/python
-)
-
-install(
   DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/
   DESTINATION include/${CMAKE_PROJECT_NAME}
