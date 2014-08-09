@@ -1,5 +1,5 @@
-#ifndef REAL_OS_FUNCTIONS_H
-#define REAL_OS_FUNCTIONS_H
+#ifndef CAVALIERI_REAL_OS_FUNCTIONS_H
+#define CAVALIERI_REAL_OS_FUNCTIONS_H
 
 #include <os/os_functions.h>
 

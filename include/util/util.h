@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef CAVALIERI_UTIL_H
+#define CAVALIERI_UTIL_H
 
 #include <proto.pb.h>
 #include <ev++.h>

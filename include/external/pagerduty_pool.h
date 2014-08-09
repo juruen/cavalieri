@@ -1,5 +1,5 @@
-#ifndef PAGERDUTY_POOL_H
-#define PAGERDUTY_POOL_H
+#ifndef CAVALIERI_PAGERDUTY_POOL_H
+#define CAVALIERI_PAGERDUTY_POOL_H
 
 #include <transport/curl_pool.h>
 

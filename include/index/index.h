@@ -1,5 +1,5 @@
-#ifndef INDEX_INDEX_H
-#define INDEX_INDEX_H
+#ifndef CAVALIERI_INDEX_INDEX_H
+#define CAVALIERI_INDEX_INDEX_H
 
 #include <proto.pb.h>
 #include <functional>

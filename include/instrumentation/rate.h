@@ -1,5 +1,5 @@
-#ifndef INSTRUMENTATION_RATE_H
-#define INSTRUMENTATION_RATE_H
+#ifndef CAVALIERI_INSTRUMENTATION_RATE_H
+#define CAVALIERI_INSTRUMENTATION_RATE_H
 
 #include <atomic>
 #include <chrono>

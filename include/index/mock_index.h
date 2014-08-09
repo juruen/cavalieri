@@ -1,5 +1,5 @@
-#ifndef INDEX_MOCK_INDEX_H
-#define INDEX_MOCK_INDEX_H
+#ifndef CAVALIERI_INDEX_MOCK_INDEX_H
+#define CAVALIERI_INDEX_MOCK_INDEX_H
 
 #include <index/index.h>
 #include <unordered_map>

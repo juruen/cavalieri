@@ -1,5 +1,5 @@
-#ifndef EXTERNAL_REAL_EXTERNAL_H
-#define EXTERNAL_REAL_EXTERNAL_H
+#ifndef CAVALIERI_EXTERNAL_REAL_EXTERNAL_H
+#define CAVALIERI_EXTERNAL_REAL_EXTERNAL_H
 
 #include <config/config.h>
 #include <external/external.h>

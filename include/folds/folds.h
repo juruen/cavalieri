@@ -1,5 +1,5 @@
-#ifndef FOLDS_H
-#define FOLDS_H
+#ifndef CAVALIERI_FOLDS_H
+#define CAVALIERI_FOLDS_H
 
 #include <proto.pb.h>
 

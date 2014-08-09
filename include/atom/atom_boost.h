@@ -1,5 +1,5 @@
-#ifndef ATOM_BOOST_H
-#define ATOM_BOOST_H
+#ifndef CAVALIERI_ATOM_BOOST_H
+#define CAVALIERI_ATOM_BOOST_H
 
 #include <functional>
 #include <boost/shared_ptr.hpp>

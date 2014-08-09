@@ -1,5 +1,5 @@
-#ifndef TCP_CLIENT_POOL_H
-#define TCP_CLIENT_POOL_H
+#ifndef CAVALIERI_TCP_CLIENT_POOL_H
+#define CAVALIERI_TCP_CLIENT_POOL_H
 
 #include <tbb/concurrent_queue.h>
 #include <functional>

@@ -1,5 +1,5 @@
-#ifndef OS_FUNCTIONS_H
-#define OS_FUNCTIONS_H
+#ifndef CAVALIERI_OS_FUNCTIONS_H
+#define CAVALIERI_OS_FUNCTIONS_H
 
 #include <sys/types.h>
 

@@ -1,5 +1,5 @@
-#ifndef QUERY_DRIVER_H
-#define QUERY_DRIVER_H
+#ifndef CAVALIERI_QUERY_DRIVER_H
+#define CAVALIERI_QUERY_DRIVER_H
 
 #include <string>
 #include <vector>

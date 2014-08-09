@@ -1,5 +1,5 @@
-#ifndef ATOM_CDS_H
-#define ATOM_CDS_H
+#ifndef CAVALIERI_ATOM_CDS_H
+#define CAVALIERI_ATOM_CDS_H
 
 #include <unordered_map>
 #include <memory>

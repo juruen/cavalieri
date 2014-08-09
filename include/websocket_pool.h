@@ -1,5 +1,5 @@
-#ifndef WEBSOCKET_POOL
-#define WEBSOCKET_POOL
+#ifndef CAVALIERI_WEBSOCKET_POOL
+#define CAVALIERI_WEBSOCKET_POOL
 
 #include <tbb/concurrent_queue.h>
 #include <functional>

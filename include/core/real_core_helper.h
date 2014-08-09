@@ -1,5 +1,5 @@
-#ifndef CORE_REAL_CORE_HELPER_H
-#define CORE_REAL_CORE_HELPER_H
+#ifndef CAVALIERI_CORE_REAL_CORE_HELPER_H
+#define CAVALIERI_CORE_REAL_CORE_HELPER_H
 
 #include <functional>
 #include <core/real_core.h>

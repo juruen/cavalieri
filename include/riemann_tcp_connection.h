@@ -1,5 +1,5 @@
-#ifndef RIEMANN_TCP_CONNECTION_H
-#define RIEMANN_TCP_CONNECTION_H
+#ifndef CAVALIERI_RIEMANN_TCP_CONNECTION_H
+#define CAVALIERI_RIEMANN_TCP_CONNECTION_H
 
 #include <functional>
 #include <vector>

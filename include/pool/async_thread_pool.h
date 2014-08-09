@@ -1,5 +1,5 @@
-#ifndef POOL_THREAD_POOL_H
-#define POOL_THREAD_POOL_H
+#ifndef CAVALIERI_POOL_THREAD_POOL_H
+#define CAVALIERI_POOL_THREAD_POOL_H
 
 #include <thread>
 #include <vector>

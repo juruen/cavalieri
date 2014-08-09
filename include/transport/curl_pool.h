@@ -1,5 +1,5 @@
-#ifndef TRANSPORT_CURL_POOL_H
-#define TRANSPORT_CURL_POOL_H
+#ifndef CAVALIERI_TRANSPORT_CURL_POOL_H
+#define CAVALIERI_TRANSPORT_CURL_POOL_H
 
 #include <tbb/concurrent_queue.h>
 #include <functional>

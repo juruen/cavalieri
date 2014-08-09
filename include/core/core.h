@@ -1,5 +1,5 @@
-#ifndef CORE_CORE_H
-#define CORE_CORE_H
+#ifndef CAVALIERI_CORE_CORE_H
+#define CAVALIERI_CORE_CORE_H
 
 #include <streams/stream_functions.h>
 #include <index/index.h>

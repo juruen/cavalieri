@@ -1,5 +1,5 @@
-#ifndef PUB_SUB_H
-#define PUB_SUB_H
+#ifndef CAVALIERI_PUB_SUB_H
+#define CAVALIERI_PUB_SUB_H
 
 #include <unordered_map>
 #include <functional>

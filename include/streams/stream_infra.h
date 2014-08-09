@@ -1,5 +1,5 @@
-#ifndef STREAMS_STREAM_INFRA_H
-#define STREAMS_STREAM_INFRA_H
+#ifndef CAVALIERI_STREAMS_STREAM_INFRA_H
+#define CAVALIERI_STREAMS_STREAM_INFRA_H
 
 #include <functional>
 #include <list>

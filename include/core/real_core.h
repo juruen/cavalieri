@@ -1,5 +1,5 @@
-#ifndef CORE_REAL_CORE_H
-#define CORE_REAL_CORE_H
+#ifndef CAVALIERI_CORE_REAL_CORE_H
+#define CAVALIERI_CORE_REAL_CORE_H
 
 #include <core/core.h>
 #include <instrumentation/instrumentation.h>

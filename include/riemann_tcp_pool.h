@@ -1,5 +1,5 @@
-#ifndef RIEMANN_TCP_POOL
-#define RIEMANN_TCP_POOL
+#ifndef CAVALIERI_RIEMANN_TCP_POOL
+#define CAVALIERI_RIEMANN_TCP_POOL
 
 #include <transport/tcp_pool.h>
 #include <instrumentation/instrumentation.h>

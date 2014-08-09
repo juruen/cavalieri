@@ -1,5 +1,5 @@
-#ifndef QUERY_EXPRESSION_H
-#define QUERY_EXPRESSION_H
+#ifndef CAVALIERI_QUERY_EXPRESSION_H
+#define CAVALIERI_QUERY_EXPRESSION_H
 
 #include <vector>
 #include <ostream>

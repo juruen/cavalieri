@@ -1,5 +1,5 @@
-#ifndef ASYNC_REAL_ASYNC_LOOP_H
-#define ASYNC_REAL_ASYNC_LOOP_H
+#ifndef CAVALIERI_ASYNC_REAL_ASYNC_LOOP_H
+#define CAVALIERI_ASYNC_REAL_ASYNC_LOOP_H
 
 #include <async/async_loop.h>
 #include <ev++.h>

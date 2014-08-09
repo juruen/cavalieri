@@ -1,5 +1,5 @@
-#ifndef TRANSPORT_TCP_POOL_H
-#define TRANSPORT_TCP_POOL_H
+#ifndef CAVALIERI_TRANSPORT_TCP_POOL_H
+#define CAVALIERI_TRANSPORT_TCP_POOL_H
 
 #include <map>
 #include <queue>

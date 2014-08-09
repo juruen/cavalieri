@@ -1,5 +1,5 @@
-#ifndef EXTERNAL_GRAPHITE_H
-#define EXTERNAL_GRAPHITE_H
+#ifndef CAVALIERI_EXTERNAL_GRAPHITE_H
+#define CAVALIERI_EXTERNAL_GRAPHITE_H
 
 #include <proto.pb.h>
 #include <mutex>

@@ -1,5 +1,5 @@
-#ifndef EXTERNAL_MOCK_EXTERNAL_H
-#define EXTERNAL_MOCK_EXTERNAL_H
+#ifndef CAVALIERI_EXTERNAL_MOCK_EXTERNAL_H
+#define CAVALIERI_EXTERNAL_MOCK_EXTERNAL_H
 
 #include <external/external.h>
 #include <external/external_event.h>

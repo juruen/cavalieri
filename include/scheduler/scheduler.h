@@ -1,5 +1,5 @@
-#ifndef SCHEDULER_SCHEDULER_H
-#define SCHEDULER_SCHEDULER_H
+#ifndef CAVALIERI_SCHEDULER_SCHEDULER_H
+#define CAVALIERI_SCHEDULER_SCHEDULER_H
 
 #include <functional>
 #include <memory>

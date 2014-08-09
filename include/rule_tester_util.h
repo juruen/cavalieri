@@ -1,5 +1,5 @@
-#ifndef RULE_TESTER_UTIL_H
-#define RULE_TESTER_UTIL_H
+#ifndef CAVALIERI_RULE_TESTER_UTIL_H
+#define CAVALIERI_RULE_TESTER_UTIL_H
 
 #include <vector>
 #include <proto.pb.h>

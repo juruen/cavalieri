@@ -1,5 +1,5 @@
-#ifndef STREAM_FUNCTIONS_H
-#define STREAM_FUNCTIONS_H
+#ifndef CAVALIERI_STREAM_FUNCTIONS_H
+#define CAVALIERI_STREAM_FUNCTIONS_H
 
 #include <vector>
 #include <list>

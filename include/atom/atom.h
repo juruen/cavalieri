@@ -1,5 +1,5 @@
-#ifndef ATOM_H
-#define ATOM_H
+#ifndef CAVALIERI_ATOM_H
+#define CAVALIERI_ATOM_H
 
 #include <unordered_map>
 #include <memory>

@@ -1,5 +1,5 @@
-#ifndef MAILER_H
-#define MAILER_H
+#ifndef CAVALIERI_MAILER_H
+#define CAVALIERI_MAILER_H
 
 #include <streams/stream_infra.h>
 

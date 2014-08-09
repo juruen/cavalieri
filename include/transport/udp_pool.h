@@ -1,5 +1,5 @@
-#ifndef TRANSPORT_UDP_POOL_H
-#define TRANSPORT_UDP_POOL_H
+#ifndef CAVALIERI_TRANSPORT_UDP_POOL_H
+#define CAVALIERI_TRANSPORT_UDP_POOL_H
 
 #include <vector>
 #include <pool/async_thread_pool.h>

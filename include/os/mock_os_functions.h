@@ -1,5 +1,5 @@
-#ifndef MOCK_OS_FUNCTIONS_H
-#define MOCK_OS_FUNCTIONS_H
+#ifndef CAVALIERI_MOCK_OS_FUNCTIONS_H
+#define CAVALIERI_MOCK_OS_FUNCTIONS_H
 
 #include <vector>
 #include <os/os_functions.h>

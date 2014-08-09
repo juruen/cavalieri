@@ -1,5 +1,5 @@
-#ifndef EXTERNAL_EXTERNAL_H
-#define EXTERNAL_EXTERNAL_H
+#ifndef CAVALIERI_EXTERNAL_EXTERNAL_H
+#define CAVALIERI_EXTERNAL_EXTERNAL_H
 
 #include <memory>
 #include <proto.pb.h>
