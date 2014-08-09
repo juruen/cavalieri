@@ -1,6 +1,6 @@
 #include <glog/logging.h>
 #include <jsoncpp/json/json.h>
-#include <util.h>
+#include <util/util.h>
 #include <pagerduty_pool.h>
 
 using namespace std::placeholders;

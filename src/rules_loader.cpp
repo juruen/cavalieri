@@ -3,7 +3,7 @@
 #include <regex>
 #include <dlfcn.h>
 #include <iostream>
-#include <util.h>
+#include <util/util.h>
 #include <core/core.h>
 #include <rules_loader.h>
 

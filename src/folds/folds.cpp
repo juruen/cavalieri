@@ -1,8 +1,8 @@
 #include <glog/logging.h>
 #include <folds/folds.h>
-#include <util.h>
+#include <util/util.h>
 #include <functional>
-#include <util.h>
+#include <util/util.h>
 
 namespace {
 

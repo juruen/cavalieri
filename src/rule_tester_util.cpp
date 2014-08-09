@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <jsoncpp/json/json.h>
 #include "rule_tester_util.h"
-#include <util.h>
+#include <util/util.h>
 
 namespace {
   bool compare_time_events(const Event & left, const Event & right) {

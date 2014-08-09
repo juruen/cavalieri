@@ -1,6 +1,6 @@
 #include <atomic>
 #include <folds/folds.h>
-#include <util.h>
+#include <util/util.h>
 #include <algorithm>
 #include <streams/stream_functions.h>
 #include <rules/common.h>

@@ -7,7 +7,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <regex>
 #include <curl/curl.h>
-#include <util.h>
+#include <util/util.h>
 
 std::string metric_to_string(const Event& e) {
   std::ostringstream ss;

@@ -1,5 +1,5 @@
 #include <glog/logging.h>
-#include <util.h>
+#include <util/util.h>
 #include <mailer_pool.h>
 
 using namespace std::placeholders;

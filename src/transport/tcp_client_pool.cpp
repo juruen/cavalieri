@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
-#include <util.h>
+#include <util/util.h>
 #include <transport/tcp_connection.h>
 #include <transport/tcp_client_pool.h>
 

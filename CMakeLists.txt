@@ -29,7 +29,7 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
     #${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
     ${CMAKE_SOURCE_DIR}/src/folds/folds.cpp
-    ${CMAKE_SOURCE_DIR}/src/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/async/real_async_loop.cpp
     ${CMAKE_SOURCE_DIR}/src/index/real_index.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
@@ -96,7 +96,7 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/index/mock_index.cpp
-    ${CMAKE_SOURCE_DIR}/src/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
   )
 

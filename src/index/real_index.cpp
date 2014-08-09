@@ -1,7 +1,7 @@
 #include <thread>
 #include <queue>
 #include <glog/logging.h>
-#include <util.h>
+#include <util/util.h>
 #include <atom/atom.h>
 #include <core/core.h>
 #include <index/real_index.h>

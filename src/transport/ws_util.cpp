@@ -5,7 +5,7 @@
 #include <boost/algorithm/string.hpp>
 #include <glog/logging.h>
 #include <transport/ws_util.h>
-#include <util.h>
+#include <util/util.h>
 
 namespace {
 

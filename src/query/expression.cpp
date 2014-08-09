@@ -1,7 +1,7 @@
 #include <boost/variant/get.hpp>
 #include <glog/logging.h>
 #include <expression.h>
-#include <util.h>
+#include <util/util.h>
 
 
 query_node::~query_node() {};

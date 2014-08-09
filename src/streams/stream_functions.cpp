@@ -4,7 +4,7 @@
 #include <atomic>
 #include <chrono>
 #include <atom/atom.h>
-#include <util.h>
+#include <util/util.h>
 #include <core/core.h>
 #include <scheduler/scheduler.h>
 #include <streams/stream_functions_lock.h>

@@ -1,5 +1,5 @@
 #include <glog/logging.h>
-#include <util.h>
+#include <util/util.h>
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <external/rieman_tcp_client_pool.h>

@@ -1,7 +1,7 @@
 #include <glog/logging.h>
 #include <scheduler/real_scheduler.h>
 #include <async/async_loop.h>
-#include <util.h>
+#include <util/util.h>
 
 real_scheduler::real_scheduler(main_async_loop_interface & main_loop)
   : main_loop_(main_loop)

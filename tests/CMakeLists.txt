@@ -30,7 +30,7 @@ SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/folds/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index/real_index.cpp
     ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
-    ${CMAKE_SOURCE_DIR}/src/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
     ${CMAKE_SOURCE_DIR}/src/query/parser.cpp

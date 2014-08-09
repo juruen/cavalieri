@@ -7,7 +7,7 @@
 #include <core/real_core.h>
 #include <stdlib.h>
 #include <string.h>
-#include <util.h>
+#include <util/util.h>
 #include <unistd.h>
 
 real_core::real_core(const config & conf)

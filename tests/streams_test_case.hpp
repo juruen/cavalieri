@@ -5,7 +5,7 @@
 #include <streams/stream_functions.h>
 #include <scheduler/scheduler.h>
 #include <core/core.h>
-#include <util.h>
+#include <util/util.h>
 #include <iostream>
 
 streams_t create_c_stream(const std::string c) {
