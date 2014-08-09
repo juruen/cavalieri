@@ -52,7 +52,6 @@ INCLUDE_DIRECTORIES(
     ${PROTOBUF_INCLUDE_DIR}
     ${Glog_INCLUDE_DIR}
     ${LibEv_INCLUDE_DIR}
-    ${PYTHON_INCLUDE_DIRS}
     ${ThirdParty_INCLUDE_DIRS}
     ${JsonCpp_INCLUDE_DIRS}
   )
@@ -89,7 +88,6 @@ TARGET_LINK_LIBRARIES(
     ${PROTOBUF_LIBRARY}
     ${LibEv_LIBRARIES}
     ${Glog_LIBRARIES}
-    ${PYTHON_LIBRARIES}
     ${JsonCpp_LIBRARIES}
     ssl
     crypto

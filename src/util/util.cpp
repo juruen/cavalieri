@@ -467,9 +467,6 @@ void ld_environment(char **argv, const std::string dir) {
   std::string ld_path = "LD_LIBRARY_PATH=" + dir;
   putenv(const_cast<char*>(ld_path.c_str()));
 
-  std::string python_path = "PYTHONPATH=" + std::string(PYTHON_MODULES_PATH);
-  putenv(const_cast<char*>(python_path.c_str()));
-
   std::vector<char> binary(1024 * 10, 0);
 
   if (readlink("/proc/self/exe", &binary[0], binary.size()) < 0) {
