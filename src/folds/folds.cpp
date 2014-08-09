@@ -1,5 +1,5 @@
 #include <glog/logging.h>
-#include <folds.h>
+#include <folds/folds.h>
 #include <util.h>
 #include <functional>
 #include <util.h>

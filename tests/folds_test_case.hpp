@@ -1,7 +1,7 @@
 #ifndef FOLDS_TEST_CASE
 #define FOLDS_TEST_CASE
 
-#include <folds.h>
+#include <folds/folds.h>
 
 TEST(sum_test_case, test)
 {

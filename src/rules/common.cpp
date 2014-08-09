@@ -1,5 +1,5 @@
 #include <atomic>
-#include <folds.h>
+#include <folds/folds.h>
 #include <util.h>
 #include <algorithm>
 #include <streams/stream_functions.h>
