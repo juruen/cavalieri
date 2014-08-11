@@ -415,7 +415,7 @@ void curl_pool::async(async_loop & loop) {
 
     curl_conns_[loop_id].insert({easy,
                                 {create_socket_fn, close_socket_fn,
-                                 clean_fn, {}}});
+                                 clean_fn, std::unordered_set<int>()}});
 
 
     auto rc = curl_multi_add_handle(curl_multis_[loop_id].get(), easy);
