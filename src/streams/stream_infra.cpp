@@ -39,10 +39,6 @@ next_events_t push_event(const streams_t & stream, const Event & event) {
 
       next_events = node(event);
 
-      if (next_events.empty()) {
-        return {};
-      }
-
     } else {
 
       const auto aux_next_events(next_events);
@@ -55,10 +51,10 @@ next_events_t push_event(const streams_t & stream, const Event & event) {
 
       }
 
-      if (next_events.empty()) {
-        return {};
-      }
+    }
 
+    if (next_events.empty()) {
+      return {};
     }
 
   }
