@@ -330,7 +330,7 @@ above_stream = set_state("ok") >> prn("metric is above 5");
 where(under_pred(5), above_stream) >> set_state("critical") >> notiy_email(); 
 ```
 
-#### by (const by_keys_t  & keys, const by_stream_t stream)
+#### by (const by_keys_t  & keys, const streams_t stream)
 
 It takes a list of event's fields. When an event enters this function,
 the field(s) are retrieved, for every new value that has not been seen before,
@@ -356,18 +356,30 @@ It helps us  replicate the stream per each host so we can compute the rates
 individually.
 
 ```cpp
-auto rate_stream = BY(set_metric(1)
-                        >> rate(60)
-                          >> prn("exceptions per second:"));
+auto rate_stream = set_metric(1)
+                      >> rate(60)
+                        >> prn("exceptions per second:");
 
 // Use the host field and replicate rate_stream for evey distinct host.
 by({"host"}, rate_stream);
 ```
 
-Note that we need to wrap the stream function that we want to replicate with
-the *BY()* macro.
-
 You can pass several fields to *by()*.
+
+#### by (const by_keys_t  & keys)
+
+This is similar to *by(const by keys_t & keys, const streams_t streams)*. But
+instead of passing the streams to clone for every distinct combinations of
+*keys* as a parameter, it will duplicate the streams that are concatenated
+after it.
+
+Let's see the example of the other *by()* function using this one.
+
+```cpp
+// Use the host field and replicate the stream that is next to it.
+by({"host"}) >> set_metric(1) >> rate(60) >> prn("exceptions per second:");
+```
+
 
 #### rate (const uint32 & dt)
 

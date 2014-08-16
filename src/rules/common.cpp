@@ -138,23 +138,33 @@ streams_t stable_metric(double dt, predicate_t trigger)
 
 streams_t stable_metric(double dt, predicate_t trigger, predicate_t cancel)
 {
-  auto state_ok = std::make_shared<std::atomic<bool>>(true);
 
-  auto is_critical = [=](e_t e) {
+  return create_stream(
+    [=]() -> on_event_fn_t {
 
-    if (trigger(e)) {
-      return true;
-    }
+      auto state_ok = std::make_shared<std::atomic<bool>>(true);
 
-    if (!state_ok->load() && !cancel(e)) {
-      return true;
-    }
+      auto s_stream = stable_stream(dt, state_ok);
+      init_streams(s_stream);
 
-    return false;
-  };
+      return [=](e_t e) -> next_events_t {
 
+          auto ne(e);
 
-  return set_critical_predicate(is_critical) >>  stable_stream(dt, state_ok);
+          if (trigger(e)) {
+            ne.set_state("critical");
+          } else if (!state_ok->load() && !cancel(e)) {
+            ne.set_state("critical");
+          } else {
+            ne.set_state("ok");
+          }
+
+          return push_event(s_stream, ne);
+
+      };
+
+    });
+
 }
 
 
@@ -182,7 +192,7 @@ streams_t per_host_ratio(const std::string a, const std::string b,
                          predicate_t trigger,
                          predicate_t cancel)
 {
-  return by({"host"}, BY(ratio(a, b, default_zero)))
+  return by({"host"}, ratio(a, b, default_zero))
          >> stable_metric(dt, trigger, cancel);
 }
 

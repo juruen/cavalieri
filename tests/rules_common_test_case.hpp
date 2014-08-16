@@ -49,6 +49,7 @@ TEST(stable_metric_above_test_case, test)
   std::vector<Event> v;
 
   auto td_above = stable_metric(5, above_pred(5), under_pred(3)) >> bsink(v);
+  init_streams(td_above);
 
   Event e;
 
@@ -86,6 +87,7 @@ TEST(stable_metric_under_test_case, test)
   std::vector<Event> v;
 
   auto td_under = stable_metric(5, under_pred(5), above_pred(3)) >> bsink(v);
+  init_streams(td_under);
 
   Event e;
 
@@ -124,6 +126,7 @@ TEST(agg_sum_trigger_above_test_case,test)
 
   auto agg =  agg_stable_metric(5, sum, above_eq_pred(5), under_eq_pred(3))
               >> sink(v);
+  init_streams(agg);
 
   g_core->sched().clear();
 
@@ -178,6 +181,7 @@ TEST(max_critical_hosts_test_case,test)
   std::vector<Event> v;
 
   auto max = max_critical_hosts(3) >> changed_state("ok") >> sink(v);
+  init_streams(max);
 
   std::vector<Event> events(5);
 
@@ -221,6 +225,7 @@ TEST(per_host_ratio_test_case,test)
 
   auto ratio = per_host_ratio("a", "b", 1, 300,
                               above_pred(0.7), under_pred(0.5)) >> sink(v);
+  init_streams(ratio);
 
   Event e;
 
@@ -316,6 +321,7 @@ TEST(stable_event_stream_test_case,test)
   std::vector<Event> v;
 
   auto stable = stable_event_stream(3) >> sink(v);
+  init_streams(stable);
 
   Event e;
   e.set_time(0);

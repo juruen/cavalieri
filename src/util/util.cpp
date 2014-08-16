@@ -122,6 +122,11 @@ std::string event_to_json(const Event &e) {
     event["state"] = Json::Value(e.state());
   }
 
+  if (e.has_time()) {
+    event["time"] = Json::Value(Json::UInt64(e.time()));
+  }
+
+
   if (metric_set(e)) {
     event["metric"] = Json::Value(metric_to_double(e));
   }

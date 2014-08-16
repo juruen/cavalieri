@@ -70,17 +70,23 @@ TEST(streams_test_case, test)
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> svec({sink(v), f, g}), e);
+  auto s = a >>  b >> c >> d >> svec({sink(v), f, g});
+  init_streams(s);
+  push_event(s, e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> svec({f, sink(v),  g}), e);
+  s = a >>  b >> c >> d >> svec({f, sink(v),  g});
+  init_streams(s);
+  push_event(s, e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
-  push_event(a >>  b >> c >> d >> svec({f, g, sink(v)}), e);
+  s = a >>  b >> c >> d >> svec({f, g, sink(v)});
+  init_streams(s);
+  push_event(s, e);
   ASSERT_EQ(1, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
@@ -284,16 +290,17 @@ TEST(by_streams_test_case, test)
   {
     v.resize(++i);
 
-    return create_stream([=,&v](const Event & e) -> next_events_t
+    return [=,&v](const Event & e) -> next_events_t
         {
           v[i - 1].push_back(e);
           return {};
-        });
+        };
   };
 
   by_keys_t by_keys = {"host", "service"};
 
-  auto by_stream = by(by_keys, {by_sink});
+  auto by_stream = by(by_keys, create_stream(by_sink));
+  init_streams(by_stream);
 
   Event e1, e2, e3;
   e1.set_host("host1"); e1.set_service("service1");
@@ -319,11 +326,58 @@ TEST(by_streams_test_case, test)
   ASSERT_EQ(2, v[2].size());
 }
 
+TEST(by_fwd_streams_test_case, test)
+{
+  std::vector<std::vector<Event>> v;
+  int i = 0;
+  auto by_sink = [&]()
+  {
+    v.resize(++i);
+
+    return [=,&v](const Event & e) -> next_events_t
+        {
+          v[i - 1].push_back(e);
+          return {};
+        };
+  };
+
+  by_keys_t by_keys = {"host", "service"};
+
+  auto by_stream = by(by_keys) >> create_stream(by_sink);
+  init_streams(by_stream);
+
+  Event e1, e2, e3;
+  e1.set_host("host1"); e1.set_service("service1");
+  e2.set_host("host2"); e2.set_service("service2");
+  e3.set_host("host3"); e3.set_service("service3");
+
+  push_event(by_stream, e1);
+  push_event(by_stream, e2);
+  push_event(by_stream, e3);
+
+  ASSERT_EQ(4, v.size());
+  ASSERT_EQ(1, v[1].size());
+  ASSERT_EQ(1, v[2].size());
+  ASSERT_EQ(1, v[3].size());
+
+  push_event(by_stream, e1);
+  push_event(by_stream, e2);
+  push_event(by_stream, e3);
+
+  ASSERT_EQ(4, v.size());
+  ASSERT_EQ(2, v[1].size());
+  ASSERT_EQ(2, v[2].size());
+  ASSERT_EQ(2, v[3].size());
+}
+
+
+
 TEST(changed_state_streams_test_case, test)
 {
   std::vector<Event> v;
 
   auto changed_stream = changed_state("a") >>  sink(v);
+  init_streams(changed_stream);
 
   Event e;
 
@@ -439,6 +493,7 @@ TEST(stable_streams_test_case, test)
   std::vector<Event> v;
 
   auto stable_stream = stable(3) >>  sink(v);
+  init_streams(stable_stream);
 
   Event e;
 
@@ -505,6 +560,7 @@ TEST(throttle_streams_test_case, test)
   std::vector<Event> v;
 
   auto throttle_stream = throttle(3, 5) >>  sink(v);
+  init_streams(throttle_stream);
 
   Event e;
 
@@ -618,6 +674,7 @@ TEST(counter_streams_test_case, test)
   std::vector<Event> v;
 
   auto counter_stream = counter() >> sink(v);
+  init_streams(counter_stream);
 
   Event e;
 
@@ -683,7 +740,6 @@ TEST(expired_streams_test_case, test)
   ASSERT_EQ(1, v.size());
 }
 
-#ifdef ENABLE_RATE
 TEST(rate_streams_test_case, test)
 {
   std::vector<Event> v;
@@ -692,6 +748,7 @@ TEST(rate_streams_test_case, test)
   Event e1, e2, e3;
 
   auto rate_stream = rate(5) >>  sink(v);
+  init_streams(rate_stream);
 
   // Check that we send a 0-valued metric if no event is received
   g_core->sched().set_time(5);
@@ -728,7 +785,6 @@ TEST(rate_streams_test_case, test)
 
   g_core->sched().clear();
 }
-#endif
 
 TEST(coalesce_streams_test_case, test)
 {
@@ -737,6 +793,7 @@ TEST(coalesce_streams_test_case, test)
   g_core->sched().clear();
 
   auto coalesce_stream = coalesce(msink(v));
+  init_streams(coalesce_stream);
 
   Event e;
 
@@ -802,6 +859,7 @@ TEST(project_streams_test_case, test)
   auto m3 = PRED(e.host() == "c");
 
   auto project_stream = project({m1, m2, m3}, msink(v));
+  init_streams(project_stream);
 
   Event e;
 
@@ -861,6 +919,7 @@ TEST(moving_event_window_streams_test_case, test)
   std::vector<Event> v;
 
   auto moving_stream = moving_event_window(3, msink(v));
+  init_streams(moving_stream);
 
   Event e;
 
@@ -894,6 +953,7 @@ TEST(fixed_event_window_streams_test_case, test)
   std::vector<Event> v;
 
   auto moving_stream = fixed_event_window(3, msink(v));
+  init_streams(moving_stream);
 
   Event e;
 
@@ -933,6 +993,7 @@ TEST(moving_time_window_streams_test_case, test)
   std::vector<Event> v;
 
   auto moving_stream = moving_time_window(3, msink(v));
+  init_streams(moving_stream);
 
   Event e;
 
@@ -982,6 +1043,7 @@ TEST(fixed_time_window_streams_test_case, test)
   std::vector<Event> v;
 
   auto moving_stream = fixed_time_window(3, msink(v));
+  init_streams(moving_stream);
 
   Event e;
 
@@ -1199,6 +1261,7 @@ TEST(ddt_streams_test_case, test)
   std::vector<Event> v;
 
   auto ddt_stream = ddt() >>  sink(v);
+  init_streams(ddt_stream);
 
   Event e;
 
