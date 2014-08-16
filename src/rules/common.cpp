@@ -182,7 +182,7 @@ streams_t per_host_ratio(const std::string a, const std::string b,
                          predicate_t trigger,
                          predicate_t cancel)
 {
-  return by({"host"}, BY(ratio(a, b, default_zero)))
+  return by({"host"}, ratio(a, b, default_zero))
          >> stable_metric(dt, trigger, cancel);
 }
 

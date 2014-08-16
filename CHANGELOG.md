@@ -1,3 +1,9 @@
+0.0.7 TBA
+=========
+  * Change stream data structures and functions
+  * BY() macro is not necessary any more
+  * rate() works again
+
 0.0.6 2014-08-05
 ================
 

@@ -356,16 +356,13 @@ It helps us  replicate the stream per each host so we can compute the rates
 individually.
 
 ```cpp
-auto rate_stream = BY(set_metric(1)
-                        >> rate(60)
-                          >> prn("exceptions per second:"));
+auto rate_stream = set_metric(1)
+                      >> rate(60)
+                        >> prn("exceptions per second:");
 
 // Use the host field and replicate rate_stream for evey distinct host.
 by({"host"}, rate_stream);
 ```
-
-Note that we need to wrap the stream function that we want to replicate with
-the *BY()* macro.
 
 You can pass several fields to *by()*.
 

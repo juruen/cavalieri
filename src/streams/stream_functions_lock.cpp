@@ -9,40 +9,44 @@ typedef struct {
 } by_t;
 
 
-streams_t by_lock(const by_keys_t & keys, const by_stream_t stream) {
+on_event_fn_t by_lock_(const by_keys_t & keys, const streams_t stream) {
 
   auto streams = std::make_shared<by_t>();
 
-  return create_stream(
+  return [=](e_t e) -> next_events_t
+  {
 
-    [=](e_t e)->next_events_t {
+     if (keys.empty()) {
+       return {};
+     }
 
-      if (keys.empty()) {
-        return {};
-      }
+     std::string key;
+     for (const auto & k: keys) {
+       key += event_str_value(e, k) + " ";
+     }
 
-      std::string key;
-      for (const auto & k: keys) {
-        key += event_str_value(e, k) + " ";
-      }
+     streams->mutex.lock();
 
-      streams->mutex.lock();
+     streams_t & s = streams->by_map[key];
 
-      streams_t & s = streams->by_map[key];
+     if (s.empty()) {
 
-      if (s.empty()) {
+       s = stream;
+       init_streams(s);
 
-        s = stream();
+     }
 
-      }
+     streams->mutex.unlock();
 
-      streams->mutex.unlock();
+     return push_event(s, e);
 
-      return push_event(s, e);
-
-     });
+  };
 
 }
+
+streams_t by_lock(const by_keys_t & keys, const streams_t stream) {
+  return create_stream([=](){ return by_lock_(keys, stream); });
+};
 
 typedef struct {
   std::unordered_map<std::string, Event> events;
@@ -106,13 +110,11 @@ typedef struct project {
   std::mutex mutex;
 } project_t;
 
-streams_t project_lock(const predicates_t predicates, fold_fn_t fold) {
+on_event_fn_t project_lock_(const predicates_t predicates, fold_fn_t fold) {
 
   auto project_events = std::make_shared<project_t>(predicates.size());
 
-  return create_stream(
-
-    [=](e_t e) mutable ->next_events_t {
+  return [=](e_t e) -> next_events_t {
 
       int match_index = -1;
       for (size_t i = 0; i < predicates.size(); i++) {
@@ -174,9 +176,14 @@ streams_t project_lock(const predicates_t predicates, fold_fn_t fold) {
       return next_events;
 
 
-    });
+    };
 
 }
+
+streams_t project_lock(const predicates_t predicates, fold_fn_t fold) {
+  return create_stream([=](){ return project_lock_(predicates, fold); });
+}
+
 
 typedef struct {
   std::string state;
@@ -184,12 +191,11 @@ typedef struct {
 } state_t;
 
 
-streams_t changed_state_lock(std::string initial) {
+on_event_fn_t changed_state_lock_(std::string initial) {
   auto prev = std::make_shared<state_t>();
   prev->state = initial;
 
-  return create_stream(
-    [=](e_t e) -> next_events_t {
+  return [=](e_t e) -> next_events_t {
 
       {
         std::lock_guard<std::mutex> guard(prev->mutex);
@@ -202,7 +208,11 @@ streams_t changed_state_lock(std::string initial) {
 
       return {e};
 
-    });
+    };
+}
+
+streams_t changed_state_lock(std::string initial) {
+  return create_stream([=](){ return changed_state_lock_(initial); } );
 }
 
 typedef struct {
@@ -210,12 +220,11 @@ typedef struct {
   std::mutex mutex;
 } moving_event_window_t;
 
-streams_t moving_event_window_lock(size_t n, fold_fn_t fold) {
+on_event_fn_t moving_event_window_lock_(size_t n, fold_fn_t fold) {
 
   auto window = std::make_shared<moving_event_window_t>();
 
-  return create_stream(
-    [=](e_t e)->next_events_t {
+  return [=](e_t e)->next_events_t {
 
       std::list<Event> events;
 
@@ -233,8 +242,11 @@ streams_t moving_event_window_lock(size_t n, fold_fn_t fold) {
 
       return {fold({begin(events), end(events)})};
 
-    }
-   );
+    };
+}
+
+streams_t moving_event_window_lock(size_t n, fold_fn_t fold) {
+  return create_stream([=](){ return moving_event_window_lock_(n, fold); });
 }
 
 typedef struct {
@@ -242,13 +254,11 @@ typedef struct {
   std::mutex mutex;
 } fixed_event_window_t;
 
-streams_t fixed_event_window_lock(size_t n, fold_fn_t fold) {
+on_event_fn_t fixed_event_window_lock_(size_t n, fold_fn_t fold) {
 
   auto window = std::make_shared<fixed_event_window_t>();
 
-  return create_stream(
-
-    [=](e_t e)->next_events_t {
+  return [=](e_t e) -> next_events_t {
 
       std::list<Event> event_list;
 
@@ -276,10 +286,12 @@ streams_t fixed_event_window_lock(size_t n, fold_fn_t fold) {
       } else {
         return {};
       }
-   }
+   };
 
-  );
+}
 
+streams_t fixed_event_window_lock(size_t n, fold_fn_t fold) {
+  return create_stream([=](){ return fixed_event_window_lock_(n, fold); });
 }
 
 struct event_time_cmp
@@ -296,13 +308,11 @@ typedef struct {
   std::mutex mutex;
 } moving_time_window_t;
 
-streams_t moving_time_window_lock(time_t dt, fold_fn_t fold) {
+on_event_fn_t moving_time_window_lock_(time_t dt, fold_fn_t fold) {
 
   auto window = std::make_shared<moving_time_window_t>();
 
-  return create_stream(
-
-    [=](e_t e) -> next_events_t {
+  return [=](e_t e) -> next_events_t {
 
         if (!e.has_time()) {
           return {};
@@ -345,8 +355,11 @@ streams_t moving_time_window_lock(time_t dt, fold_fn_t fold) {
 
        return {fold(events)};
 
-      }
-    );
+      };
+}
+
+streams_t moving_time_window_lock(time_t dt, fold_fn_t fold) {
+  return create_stream([=](){ return moving_time_window_lock_(dt, fold); });
 }
 
 typedef struct {
@@ -357,13 +370,11 @@ typedef struct {
   std::mutex mutex;
 } fixed_time_window_t;
 
-streams_t fixed_time_window_lock(time_t dt, fold_fn_t fold) {
+on_event_fn_t fixed_time_window_lock_(time_t dt, fold_fn_t fold) {
 
   auto window = std::make_shared<fixed_time_window_t>();
 
-  return create_stream(
-
-    [=](e_t e) -> next_events_t {
+  return [=](e_t e) -> next_events_t {
 
       std::vector<Event> flush;
 
@@ -416,8 +427,12 @@ streams_t fixed_time_window_lock(time_t dt, fold_fn_t fold) {
       } else {
         return {};
       }
-  });
+  };
 
+}
+
+streams_t fixed_time_window_lock(time_t dt, fold_fn_t fold) {
+  return create_stream([=]() { return fixed_time_window_lock_(dt, fold); });
 }
 
 
@@ -428,13 +443,11 @@ typedef struct {
   std::mutex mutex;
 } stable_t;
 
-streams_t stable_lock(time_t dt) {
+on_event_fn_t stable_lock_(time_t dt) {
 
   auto stable = std::make_shared<stable_t>();
 
-  return create_stream(
-
-    [=](e_t e)->next_events_t
+  return [=](e_t e)->next_events_t
     {
 
       std::vector<Event> flush;
@@ -468,8 +481,12 @@ streams_t stable_lock(time_t dt) {
 
       return flush;
 
-  });
+  };
 
+}
+
+streams_t stable_lock(time_t dt) {
+  return create_stream([=](){ return stable_lock_(dt); });
 }
 
 typedef struct {
@@ -478,12 +495,11 @@ typedef struct {
   std::mutex mutex;
 } throttle_t;
 
-streams_t throttle_lock(size_t n, time_t dt) {
+on_event_fn_t throttle_lock_(size_t n, time_t dt) {
 
   auto throttled = std::make_shared<throttle_t>();
 
-  return create_stream(
-    [=](e_t e) mutable -> next_events_t {
+  return [=](e_t e) mutable -> next_events_t {
 
       {
         std::lock_guard<std::mutex> guard(throttled->mutex);
@@ -503,8 +519,12 @@ streams_t throttle_lock(size_t n, time_t dt) {
 
       return  {e};
 
-    });
+    };
 
+}
+
+streams_t throttle_lock(size_t n, time_t dt) {
+  return create_stream([=]() { return throttle_lock_(n, dt); });
 }
 
 typedef struct {
@@ -514,11 +534,10 @@ typedef struct {
   std::mutex mutex;
 } ddt_prev_t;
 
-streams_t ddt_lock() {
+on_event_fn_t ddt_lock_() {
   auto prev = std::make_shared<ddt_prev_t>();
 
-  return create_stream(
-    [=](e_t e) -> next_events_t {
+  return [=](e_t e) -> next_events_t {
 
       double metric;
 
@@ -550,7 +569,10 @@ streams_t ddt_lock() {
       set_metric(ne, metric);
       return {ne};
 
-    });
+    };
 }
 
+streams_t ddt_lock() {
+  return create_stream(ddt_lock_);
+}
 
