@@ -219,7 +219,7 @@ streams_t where(const predicate_t & predicate,
 }
 
 
-streams_t by(const by_keys_t & keys, const by_stream_t stream) {
+streams_t by(const by_keys_t & keys, const streams_t stream) {
 
 #ifdef BY_LOCKFREE
   return by_lockfree(keys, stream);
@@ -229,53 +229,64 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
 
 }
 
-streams_t rate(const int interval) {
+streams_t by(const by_keys_t & keys) {
 
-  auto rate = std::make_shared<std::atomic<double>>(0);
+#ifdef BY_LOCKFREE
+  return by_lockfree(keys, stream);
+#else
+  return by_lock(keys);
+#endif
+
+}
+
+
+
+streams_t rate(const int interval) {
 
   return create_stream(
 
-    [=](e_t e) mutable ->next_events_t
+    // on_init_stream
+    [=](fwd_new_stream_fn_t fwd_new_stream) -> on_event_fn_t
     {
 
-      double expected, newval;
+      auto rate = std::make_shared<std::atomic<double>>(0);
+      auto forward = fwd_new_stream();
 
-      do {
+      // Schedule periodic task to report rate
+      g_core->sched().add_periodic_task(
+        [=]()
+        {
+          VLOG(3) << "rate-timer()";
 
-        expected = rate->load();
-        newval = expected + metric_to_double(e);
+          Event event;
 
-      } while (!rate->compare_exchange_strong(expected, newval));
+          event.set_metric_d(rate->exchange(0) / interval);
+          event.set_time(g_core->sched().unix_time());
 
-      return {};
+          forward({event});
+        },
+
+        interval
+        );
+
+      // on_event_fn function that does that counts events
+      return [=](e_t e) -> next_events_t
+      {
+
+        double expected, newval;
+
+        do {
+
+          expected = rate->load();
+          newval = expected + metric_to_double(e);
+
+        } while (!rate->compare_exchange_strong(expected, newval));
+
+        return {};
+
+      };
 
     });
-  /*
-    [=](forward_fn_t forward)
-    {
-
-      g_core->sched().add_periodic_task(
-          [=]() mutable
-          {
-
-            VLOG(3) << "rate-timer()";
-
-            Event event;
-
-            event.set_metric_d(rate->exchange(0) / interval);
-            event.set_time(g_core->sched().unix_time());
-
-            forward(event);
-          },
-
-          interval
-          );
-
-    }
-
-  );
-  */
-
 }
 
 streams_t coalesce(fold_fn_t fold) {
@@ -310,7 +321,7 @@ streams_t changed_state_(std::string initial) {
 
 streams_t changed_state(std::string initial) {
 
-  return by({"host", "service"}, BY(changed_state_(initial)));
+  return by({"host", "service"}, changed_state_(initial));
 
 }
 
@@ -480,37 +491,44 @@ streams_t scale(double s) {
 
 streams_t svec(std::vector<streams_t> streams) {
   return create_stream(
-    [=](e_t e) -> next_events_t {
+    [=]() mutable -> on_event_fn_t {
 
-      if (!streams.empty()) {
+      for (streams_t & s : streams) {
+        init_streams(s);
+      }
 
-        next_events_t next_events;
+      return [=](e_t e) -> next_events_t {
 
-        for (const auto & stream : streams) {
+        if (!streams.empty()) {
 
-          const auto ret = push_event(stream, e);
-          std::copy(begin(ret), end(ret), back_inserter(next_events));
+          next_events_t next_events;
+
+          for (const auto & stream : streams) {
+
+            const auto ret = push_event(stream, e);
+            std::copy(begin(ret), end(ret), back_inserter(next_events));
+
+          }
+
+          return next_events;
+
+        } else {
+
+          return {e};
 
         }
 
-        return next_events;
-
-      } else {
-
-        return {e};
-
-      }
+      };
 
     }
 
     );
 }
 
-streams_t counter() {
+on_event_fn_t counter_() {
    auto counter = std::make_shared<std::atomic<unsigned int>>(0);
 
-  return create_stream(
-    [=](e_t e) mutable -> next_events_t {
+   return [=](e_t e) -> next_events_t {
 
       if (metric_set(e)) {
 
@@ -523,7 +541,11 @@ streams_t counter() {
         return {e};
 
       }
-  });
+    };
+}
+
+streams_t counter() {
+  return create_stream(counter_);
 }
 
 streams_t ddt() {

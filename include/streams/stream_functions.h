@@ -16,7 +16,6 @@ typedef std::vector<Event> events_t;
 
 #define PRED(EXP) [=](e_t e) { return (EXP); }
 #define TR(EXP) [](Event & e) {(EXP); }
-#define BY(EXP) [=]() { return (EXP); }
 #define NE(EXP) [=](const Event & event) { Event e(event); (EXP); return e;  }
 #define sdo(...) svec({__VA_ARGS__})
 
@@ -67,7 +66,9 @@ streams_t where(const predicate_t& predicate, const streams_t else_stream);
 
 streams_t where(const predicate_t& predicate);
 
-streams_t by(const by_keys_t& keys, const by_stream_t stream);
+streams_t by(const by_keys_t& keys, const streams_t stream);
+
+streams_t by(const by_keys_t& keys);
 
 streams_t rate(const int seconds);
 
