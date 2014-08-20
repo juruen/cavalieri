@@ -47,7 +47,7 @@ class tcp_pool {
         hook_fn_t run_fn,
         tcp_create_conn_fn_t create_conn_fn,
         tcp_ready_fn_t tcp_ready_fn_t,
-        const float inteval,
+        const float interval,
         timer_cb_fn_t timer_cb_fn
     );
     tcp_pool(
@@ -55,7 +55,7 @@ class tcp_pool {
         hook_fn_t run_fn,
         tcp_create_conn_fn_t create_conn_fn,
         tcp_ready_fn_t tcp_ready_fn_t,
-        const float inteval,
+        const float interval,
         timer_cb_fn_t timer_cb_fn,
         async_fn_t async_fn
     );

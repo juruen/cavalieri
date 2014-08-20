@@ -16,17 +16,18 @@ public:
              scheduler_interface &  sched,
              instrumentation & instr,
              spwan_thread_fn_t spwan_thread_fn);
-  ~real_index();
+  std::vector<Event> query_index(const match_fn_t, const size_t max_matches);
   void add_event(const Event& e);
+  ~real_index();
 
 private:
   void timer_cb();
   void expire_events();
-  std::vector<std::shared_ptr<Event>> all_events();
 
 private:
-  typedef std::unordered_map<std::string, std::shared_ptr<Event>> real_index_t;
+  using real_index_t = std::unordered_map<std::string, Event>;
 
+private:
   pub_sub & pubsub_;
   instrumentation & instrumentation_;
   std::pair<instrumentation::id_t, instrumentation::id_t> instr_ids_;

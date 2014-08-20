@@ -37,7 +37,7 @@ real_core::real_core(const config & conf)
 
     udp_server_(init_udp_server(conf, streams_)),
 
-    ws_server_(init_ws_server(conf, *main_loop_, *pubsub_))
+    ws_server_(init_ws_server(conf, *main_loop_, *pubsub_, *index_))
 {
 
   if (conf.enable_internal_metrics) {

@@ -23,7 +23,8 @@ std::unique_ptr<riemann_udp_pool> init_udp_server(
 std::unique_ptr<websocket_pool> init_ws_server(
     const config & conf,
     main_async_loop_interface & loop,
-    pub_sub & pubsub);
+    pub_sub & pubsub,
+    real_index & index);
 
 void start_instrumentation(scheduler_interface & sched,
                            instrumentation & instrumentation,
