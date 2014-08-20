@@ -7,8 +7,9 @@
 #include <scheduler/scheduler.h>
 #include <pub_sub/pub_sub.h>
 
-typedef std::function<void(const Event &)> push_event_fn_t;
-typedef std::function<void(std::function<void()>)> spwan_thread_fn_t;
+using push_event_fn_t = std::function<void(const Event &)>;
+using match_fn_t = std::function<bool(const Event &)>;
+using spwan_thread_fn_t = std::function<void(std::function<void()>)>;
 
 class index_interface {
 public:

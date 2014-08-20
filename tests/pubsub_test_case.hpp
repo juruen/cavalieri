@@ -7,54 +7,28 @@ TEST(pubsub_test_case, test)
 {
   pub_sub pubsub;
 
-  auto queue1 = std::make_shared<tbb::concurrent_bounded_queue<Event>>();
-  auto queue2 = std::make_shared<tbb::concurrent_bounded_queue<Event>>();
+  pubsub.add_publisher("topic1");
+  pubsub.add_publisher("topic2");
 
-  pubsub.add_publisher("topic1",
-      []()->std::vector<std::shared_ptr<Event>>
-      {
-        Event e;
-        e.set_host("topic1 1");
-        return {std::make_shared<Event>(e)};
-      });
+  std::vector<Event> vec1;
+  std::vector<Event> vec2;
 
-  pubsub.add_publisher("topic2",
-      []()->std::vector<std::shared_ptr<Event>>
-      {
-        Event e;
-        e.set_host("topic2 1");
-        return {std::make_shared<Event>(e)};
-      });
-
-  auto all_1_fn = pubsub.subscribe("topic1", queue1);
-  auto all_2_fn = pubsub.subscribe("topic2", queue2);
-
-  auto evs1 = all_1_fn();
-  auto evs2 = all_2_fn();
-
-  ASSERT_EQ(1, evs1.size());
-  ASSERT_EQ(1, evs2.size());
-
-  ASSERT_EQ("topic1 1", evs1[0]->host());
-  ASSERT_EQ("topic2 1", evs2[0]->host());
+  pubsub.subscribe("topic1", [&](const Event & e){ vec1.push_back(e); });
+  pubsub.subscribe("topic2", [&](const Event & e){ vec2.push_back(e); });
 
   Event e;
-  e.set_host("topic1 2");
 
+  e.set_host("topic1 1");
   pubsub.publish("topic1", e);
 
-  e.set_host("topic2 2");
-
+  e.set_host("topic2 1");
   pubsub.publish("topic2", e);
 
-  ASSERT_EQ(1, queue1->size());
-  ASSERT_EQ(1, queue2->size());
+  ASSERT_EQ(1, vec1.size());
+  ASSERT_EQ(1, vec2.size());
 
-  ASSERT_TRUE(queue1->try_pop(e));
-  ASSERT_EQ("topic1 2", e.host());
-
-  ASSERT_TRUE(queue2->try_pop(e));
-  ASSERT_EQ("topic2 2", e.host());
+  ASSERT_EQ("topic1 1", vec1[0].host());
+  ASSERT_EQ("topic2 1", vec2[0].host());
 
 }
 

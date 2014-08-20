@@ -86,11 +86,12 @@ std::unique_ptr<riemann_udp_pool> init_udp_server(
 std::unique_ptr<websocket_pool> init_ws_server(
     const config & conf,
     main_async_loop_interface & loop,
-    pub_sub & pubsub)
+    pub_sub & pubsub,
+    real_index & index)
 {
 
   std::unique_ptr<websocket_pool> ws_server(new websocket_pool(
-        conf.ws_pool_size, pubsub));
+        conf.ws_pool_size, pubsub, index));
 
   auto ptr_server = ws_server.get();
 

@@ -9,22 +9,19 @@
 #include <tbb/concurrent_queue.h>
 #include <memory>
 
-typedef std::function<std::vector<std::shared_ptr<Event>>()> all_events_fn_t;
-typedef std::shared_ptr<tbb::concurrent_bounded_queue<Event>> notify_queue_t;
-typedef std::pair<all_events_fn_t, std::vector<notify_queue_t>> publisher_data_t;
-typedef std::unordered_map<std::string, publisher_data_t> publishers_t;
+typedef std::function<void(const Event &)> notify_event_fn_t;
+typedef std::unordered_map<std::string, notify_event_fn_t> publishers_t;
 
 
 class pub_sub {
 public:
 
-  void add_publisher(const std::string & topic,
-                     const all_events_fn_t & all_events_fn);
+  void add_publisher(const std::string & topic);
 
   void publish(const std::string & topic, const Event & event);
 
-  all_events_fn_t subscribe(const std::string & topic,
-                            notify_queue_t notify_queue);
+  void subscribe(const std::string & topic,
+                 const notify_event_fn_t notify_event);
 
 private:
   publishers_t publishers_;

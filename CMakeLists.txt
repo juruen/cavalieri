@@ -18,7 +18,6 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_udp_pool.cpp
-    ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/os/os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/config/config.cpp
@@ -62,6 +61,9 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/external/riemann_tcp_client.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/real_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket/websocket_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket/worker_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket/worker_threads.cpp
   )
 
 SET(CAVALIERI_HDRS

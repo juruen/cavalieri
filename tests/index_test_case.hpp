@@ -10,7 +10,6 @@
 TEST(index_test_case, test)
 {
   g_core->sched().clear();
-  return; // XXX
 
   std::vector<Event> s;
 
@@ -24,6 +23,9 @@ TEST(index_test_case, test)
   real_index index(pubsub, [&](const Event & pe) {  s.push_back(pe); },
                    60, g_core->sched(), instr, no_thread);
 
+  std::vector<Event> vec;
+  pubsub.subscribe("index", [&](const Event&e) { vec.push_back(e); });
+
   Event e;
   e.set_host("foo");
   e.set_service("bar");
@@ -32,23 +34,22 @@ TEST(index_test_case, test)
 
   index.add_event(e);
 
-  auto queue = std::make_shared<tbb::concurrent_bounded_queue<Event>>();
-  auto all_events_fn = pubsub.subscribe("index", queue);
-
-  auto all_events = all_events_fn();
+  auto all_events = index.query_index([=](const Event&) { return true; }, 10);
   ASSERT_EQ(1, all_events.size());
-  ASSERT_EQ("foo", all_events[0]->host());
-  ASSERT_EQ("bar", all_events[0]->service());
+  ASSERT_EQ("foo", all_events[0].host());
+  ASSERT_EQ("bar", all_events[0].service());
+
+  vec.clear();
+
 
   e.set_host("baz");
   e.set_time(100);
   e.set_ttl(120);
   index.add_event(e);
 
-  Event c;
-  ASSERT_TRUE(queue->try_pop(c));
-  ASSERT_EQ("baz", c.host());
-  ASSERT_EQ("bar", c.service());
+  ASSERT_EQ(1, vec.size());
+  ASSERT_EQ("baz", vec[0].host());
+  ASSERT_EQ("bar", vec[0].service());
 
   g_core->sched().set_time(180);
   ASSERT_EQ(1, s.size());

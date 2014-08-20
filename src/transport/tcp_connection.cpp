@@ -9,7 +9,7 @@
 
 namespace {
 
-const size_t k_default_buffer_size = 1024 * 1024;
+const size_t k_default_buffer_size = 1024 * (1024 + 512);
 
 bool read_from_fd(boost::circular_buffer<unsigned char> & buffer,
                   const int & fd)
