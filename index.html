@@ -1,0 +1,813 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Cavalieri by juruen</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Cavalieri</h1>
+        <p class="header">A C++ event  stream processing tool to monitor and alert</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/juruen/cavalieri/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/juruen/cavalieri/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/juruen/cavalieri">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/juruen">juruen</a></p>
+
+
+      </header>
+      <section>
+        <h1>
+<a name="cavalieri-" class="anchor" href="#cavalieri-"><span class="octicon octicon-link"></span></a>Cavalieri <a href="https://drone.io/github.com/juruen/cavalieri/latest"><img src="https://drone.io/github.com/juruen/cavalieri/status.png" alt="Build Status"></a>
+</h1>
+
+<h2>
+<a name="introduction" class="anchor" href="#introduction"><span class="octicon octicon-link"></span></a>Introduction</h2>
+
+<p><em>Cavalieri</em> is a C++ event stream processing tool inspired by the
+awesome <a href="http://riemann.io">riemann.io</a> project.</p>
+
+<p>It implements the original <a href="http://riemann.io">riemann.io</a> protocol. That means
+you can leverage the existing <em>riemann</em> clients and tools. It also tries to
+mimic its stream API where possible.</p>
+
+<p>Cavalieri's current version <em>0.0.6</em> is considered to be  in <strong>alpha</strong> state.
+We expect to release a beta version in the following weeks.</p>
+
+<p>Current benchmarks show that it can process more than one million events per
+second with simple streams.</p>
+
+<h2>
+<a name="install" class="anchor" href="#install"><span class="octicon octicon-link"></span></a>Install</h2>
+
+<h4>
+<a name="ubuntu-packages" class="anchor" href="#ubuntu-packages"><span class="octicon octicon-link"></span></a>Ubuntu packages</h4>
+
+<p>You can install a deb package for Ubuntu 13.10 and 14.04 by adding this ppa:</p>
+
+<pre><code>sudo add-apt-repository ppa:juruen/cavalieri
+sudo apt-get update
+sudo apt-get install cavalieri
+</code></pre>
+
+<h4>
+<a name="debian" class="anchor" href="#debian"><span class="octicon octicon-link"></span></a>Debian</h4>
+
+<p>Packges coming soon!</p>
+
+<h4>
+<a name="build-from-source" class="anchor" href="#build-from-source"><span class="octicon octicon-link"></span></a>Build from source</h4>
+
+<p>Have a look at the build dependencies extracted from the deb package:</p>
+
+<pre><code>cmake, subversion, protobuf-compiler,libprotobuf-dev, libev-dev, libgflags-dev, 
+libgoogle-glog-dev, libpython-dev,libcurl4-openssl-dev, libssl-dev, libtbb-dev,
+libjsoncpp-dev, lcov, flex, bison, libgoogle-glog-dev, libboost-filesystem-dev,
+libboost-system-dev
+
+</code></pre>
+
+<p>You will also need a C++11 enabled compiler. GCC &gt;= 4.7 or an equivalent Clang.</p>
+
+<p>Once the depencies are met. To build and install, do the following:</p>
+
+<pre><code>mkdir build
+cd build
+cmake ..
+make install
+</code></pre>
+
+<h2>
+<a name="create-your-rules" class="anchor" href="#create-your-rules"><span class="octicon octicon-link"></span></a>Create your rules</h2>
+
+<p>Clone <em>cavalieri-rules</em>, a template project to create your own rules.</p>
+
+<div class="highlight highlight-sh"><pre>git clone https://github.com/juruen/cavalieri-rules.git
+<span class="nb">cd </span>cavalieri-rules
+</pre></div>
+
+<p>Open <em>rules.cpp</em> and add your rules. The default rule will send an email
+containing a critical event when a metric from <em>requests_rate</em>
+service is above 40.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="cp">#include &lt;rules.h&gt;</span>
+<span class="cp">#include &lt;external/pagerduty.h&gt;</span>
+<span class="cp">#include &lt;external/email.h&gt;</span>
+
+<span class="kt">streams_t</span> <span class="nf">rules</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="k">auto</span> <span class="n">mail_stream</span> <span class="o">=</span> <span class="n">email</span><span class="p">(</span><span class="s">"localhost"</span><span class="p">,</span> <span class="s">"cavalieri@localhost"</span><span class="p">,</span>
+                           <span class="s">"devops@localhost"</span><span class="p">);</span>
+
+  <span class="k">auto</span> <span class="n">s</span> <span class="o">=</span>  <span class="n">service</span><span class="p">(</span><span class="s">"requests_rate"</span><span class="p">)</span>
+               <span class="o">&gt;&gt;</span> <span class="n">above</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
+                 <span class="o">&gt;&gt;</span> <span class="n">set_state</span><span class="p">(</span><span class="s">"critical"</span><span class="p">)</span>
+                   <span class="o">&gt;&gt;</span> <span class="n">changed_state</span><span class="p">(</span><span class="s">"ok"</span><span class="p">)</span>
+                     <span class="o">&gt;&gt;</span>  <span class="n">mail_stream</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">s</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">EXPORT_RULES</span><span class="p">(</span><span class="n">rules</span><span class="p">)</span>
+</pre></div>
+
+<p>Build a plugin containing your rules that will be loaded by <em>cavalieri</em>.</p>
+
+<div class="highlight highlight-sh"><pre>mkdir build
+<span class="nb">cd </span>build
+cmake ..
+make
+</pre></div>
+
+<p>The above step generates a <em>librules.so</em> file that <em>cavalieri</em> will load.</p>
+
+<p>Execute cavalieri in the build directory or use the <strong>-rules_directory</strong>
+flag to specifify where the plugin is.</p>
+
+<pre><code>$ cavalieri
+I0403 23:15:44 config.cpp:36] config:
+I0403 23:15:44 config.cpp:37]      events_port: 5555
+I0403 23:15:44 config.cpp:38]      rimeann_tcp_pool_size:: 1
+I0403 23:15:44 config.cpp:39]      ws_port: 5556
+I0403 23:15:44 config.cpp:40]      ws_pool_size: 1
+I0403 23:15:44 config.cpp:41]      index_expire_interval: 60
+I0403 23:15:44 config.cpp:42]      rules_directory: .
+I0403 23:15:44 config.cpp:43] --
+I0403 23:15:44 rules_loader.cpp:60] rules loaded succesfully from librules.so
+
+</code></pre>
+
+<h2>
+<a name="test-your-rules" class="anchor" href="#test-your-rules"><span class="octicon octicon-link"></span></a>Test your rules</h2>
+
+<p>You can easily test your rules without putting them in production.</p>
+
+<p>In the root directory of <em>cavalieri-template</em> there is a Python script that will
+help you to find out whether your rules are doing what you expect or not.</p>
+
+<p>The way it works is pretty simple. Open <em>test_rules.py</em> and add the events that 
+are supposed to trigger your alerts.  By default, you already have some events
+that will trigger an alert for the default rules:</p>
+
+<div class="highlight highlight-python"><pre><span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">{</span><span class="s">'host'</span><span class="p">:</span> <span class="s">'foo.org'</span><span class="p">,</span> <span class="s">'service'</span><span class="p">:</span> <span class="s">'requests_rate'</span><span class="p">,</span> <span class="s">'metric'</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s">'time'</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">'host'</span><span class="p">:</span> <span class="s">'foo.org'</span><span class="p">,</span> <span class="s">'service'</span><span class="p">:</span> <span class="s">'requests_rate'</span><span class="p">,</span> <span class="s">'metric'</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s">'time'</span><span class="p">:</span> <span class="mi">60</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">'host'</span><span class="p">:</span> <span class="s">'foo.org'</span><span class="p">,</span> <span class="s">'service'</span><span class="p">:</span> <span class="s">'requests_rate'</span><span class="p">,</span> <span class="s">'metric'</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span> <span class="s">'time'</span><span class="p">:</span> <span class="mi">120</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">'host'</span><span class="p">:</span> <span class="s">'foo.org'</span><span class="p">,</span> <span class="s">'service'</span><span class="p">:</span> <span class="s">'requests_rate'</span><span class="p">,</span> <span class="s">'metric'</span><span class="p">:</span> <span class="mi">45</span><span class="p">,</span> <span class="s">'time'</span><span class="p">:</span> <span class="mi">180</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">'host'</span><span class="p">:</span> <span class="s">'foo.org'</span><span class="p">,</span> <span class="s">'service'</span><span class="p">:</span> <span class="s">'requests_rate'</span><span class="p">,</span> <span class="s">'metric'</span><span class="p">:</span> <span class="mi">45</span><span class="p">,</span> <span class="s">'time'</span><span class="p">:</span> <span class="mi">240</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">'host'</span><span class="p">:</span> <span class="s">'foo.org'</span><span class="p">,</span> <span class="s">'service'</span><span class="p">:</span> <span class="s">'requests_rate'</span><span class="p">,</span> <span class="s">'metric'</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s">'time'</span><span class="p">:</span> <span class="mi">300</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">'host'</span><span class="p">:</span> <span class="s">'foo.org'</span><span class="p">,</span> <span class="s">'service'</span><span class="p">:</span> <span class="s">'requests_rate'</span><span class="p">,</span> <span class="s">'metric'</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s">'time'</span><span class="p">:</span> <span class="mi">360</span><span class="p">}]</span>
+</pre></div>
+
+<p>Let's have a look at the default rules again:</p>
+
+<div class="highlight highlight-cpp"><pre>
+<span class="p">[...]</span>
+
+<span class="k">auto</span> <span class="n">s</span> <span class="o">=</span>  <span class="n">service</span><span class="p">(</span><span class="s">"requests_rate"</span><span class="p">)</span>
+           <span class="o">&gt;&gt;</span> <span class="n">above</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
+             <span class="o">&gt;&gt;</span> <span class="n">set_state</span><span class="p">(</span><span class="s">"critical"</span><span class="p">)</span>
+               <span class="o">&gt;&gt;</span> <span class="n">changed_state</span><span class="p">(</span><span class="s">"ok"</span><span class="p">)</span>
+                 <span class="o">&gt;&gt;</span>  <span class="n">mail_stream</span><span class="p">;</span>
+
+<span class="p">[...]</span>
+
+</pre></div>
+
+<p>As you can see, the events defined in <em>test_rules.py</em> will trigger an alert
+when the metric is above 40. This happens for the event that is sent
+at time <em>180</em>.</p>
+
+<p>You can execute <em>test_rules.py</em> from the root directory of
+<em>cavalieri-template</em>. And you will magically see what happens to your
+rules when those events are passed through them:</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+   <span class="nt">"index"</span> <span class="p">:</span> <span class="p">[],</span>
+   <span class="nt">"reports"</span> <span class="p">:</span> <span class="p">[</span>
+      <span class="p">[</span>
+         <span class="s2">"email"</span><span class="p">,</span>
+         <span class="p">{</span>
+            <span class="nt">"event"</span> <span class="p">:</span> <span class="p">{</span>
+               <span class="nt">"description"</span> <span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+               <span class="nt">"host"</span> <span class="p">:</span> <span class="s2">"foo.org"</span><span class="p">,</span>
+               <span class="nt">"metric"</span> <span class="p">:</span> <span class="mf">45.0</span><span class="p">,</span>
+               <span class="nt">"service"</span> <span class="p">:</span> <span class="s2">"requests_rate"</span><span class="p">,</span>
+               <span class="nt">"state"</span> <span class="p">:</span> <span class="s2">"critical"</span><span class="p">,</span>
+               <span class="nt">"tags"</span> <span class="p">:</span> <span class="p">[],</span>
+               <span class="nt">"time"</span> <span class="p">:</span> <span class="mi">180</span>
+            <span class="p">},</span>
+            <span class="nt">"extra"</span> <span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="nt">"message"</span> <span class="p">:</span> <span class="s2">"send email from: cavalieri@localhost to: devops@localhost"</span><span class="p">,</span>
+            <span class="nt">"time"</span> <span class="p">:</span> <span class="mi">180</span>
+         <span class="p">}</span>
+      <span class="p">]</span>
+   <span class="p">]</span>
+<span class="p">}</span>
+
+</pre></div>
+
+<p>As you can see in the above output, <em>test_rules.py</em> is reporting that an email
+would have been sent at time <em>180</em> to report that the <em>requests_rate</em> service
+is critical.</p>
+
+<p><em>test_rules.py</em> makes use of <em>cavalieri_tester</em>, a binary that is capable of
+loading your rules and send events to them.</p>
+
+<p>However, it does so in an special environment,  where all the external calls
+such as email or pagerduty are mocked.  It also mocks the scheduler, that means
+you can test months worth of events in just a few seconds.</p>
+
+<p>This feature allows you to easily add your alert rules to your
+continous integration process.</p>
+
+<h2>
+<a name="sending-events" class="anchor" href="#sending-events"><span class="octicon octicon-link"></span></a>Sending events</h2>
+
+<p>You can use any of the existing <a href="http://riemann.io/clients.html">riemann.io</a>
+clients. Just make them send events to a host running <em>cavalieri</em>.</p>
+
+<h2>
+<a name="streams-api" class="anchor" href="#streams-api"><span class="octicon octicon-link"></span></a>Streams API</h2>
+
+<h3>
+<a name="stream-functions" class="anchor" href="#stream-functions"><span class="octicon octicon-link"></span></a>Stream functions</h3>
+
+<h4>
+<a name="what-is-a-stream-function" class="anchor" href="#what-is-a-stream-function"><span class="octicon octicon-link"></span></a>What is a stream function?</h4>
+
+<h4>
+<a name="prn" class="anchor" href="#prn"><span class="octicon octicon-link"></span></a>prn()</h4>
+
+<p>It prints events that pass through it.</p>
+
+<h4>
+<a name="prn-const-stdstring--str" class="anchor" href="#prn-const-stdstring--str"><span class="octicon octicon-link"></span></a>prn (const std::string  str)</h4>
+
+<p>It prints events that pass through it and also the string that takes as an argument.</p>
+
+<h4>
+<a name="service-const-stdstring-service" class="anchor" href="#service-const-stdstring-service"><span class="octicon octicon-link"></span></a>service (const std::string service)</h4>
+
+<p>It forwards events that contain the given service.</p>
+
+<h4>
+<a name="service_any-const-stdvectorstdstring-services" class="anchor" href="#service_any-const-stdvectorstdstring-services"><span class="octicon octicon-link"></span></a>service_any (const std::vector&lt;std::string&gt; services)</h4>
+
+<p>It forwards events that contain any of the given services. This
+behaves just like <em>service</em> but it takes a list of services instead of
+a single one.</p>
+
+<h4>
+<a name="service_like-const-stdstring-pattern" class="anchor" href="#service_like-const-stdstring-pattern"><span class="octicon octicon-link"></span></a>service_like (const std::string pattern)</h4>
+
+<p>It forards events which services match the given pattern.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">service_like</span><span class="p">(</span><span class="s">"foo%"</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">prn</span><span class="p">(</span><span class="s">"service starting with foo"</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="service_like_any-const-stdvectorstdstring-patterns" class="anchor" href="#service_like_any-const-stdvectorstdstring-patterns"><span class="octicon octicon-link"></span></a>service_like_any (const std::vector&lt;std::string&gt; patterns)</h4>
+
+<p>It forwards events which services match any of the given pattern. This
+behaves just like <em>service_like</em> but it takes a list of patterns instead of
+a single one.</p>
+
+<h4>
+<a name="set_state-const-stdstring-state" class="anchor" href="#set_state-const-stdstring-state"><span class="octicon octicon-link"></span></a>set_state (const std::string state)</h4>
+
+<p>It sets the events state to <em>state</em> and forwards them.</p>
+
+<h4>
+<a name="set_metric-const-double-value" class="anchor" href="#set_metric-const-double-value"><span class="octicon octicon-link"></span></a>set_metric (const double value);</h4>
+
+<p>It sets the events metric to <em>value</em> and forwards them.</p>
+
+<h4>
+<a name="with-const-with_changes_t--changes" class="anchor" href="#with-const-with_changes_t--changes"><span class="octicon octicon-link"></span></a>with (const with_changes_t &amp; changes)</h4>
+
+<p>Modifies the event. It takes a map that contains the keys to be modified
+and their corresponding new value.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="c1">// Change host field and description</span>
+<span class="n">with</span><span class="p">({{</span><span class="s">"host"</span><span class="p">,</span> <span class="s">"cluster-001"</span><span class="p">},</span> <span class="p">{</span><span class="s">"description"</span><span class="p">,</span> <span class="s">"aggregated master metrics"</span><span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="default_to-const-with_changes_t--changes" class="anchor" href="#default_to-const-with_changes_t--changes"><span class="octicon octicon-link"></span></a>default_to (const with_changes_t &amp; changes)</h4>
+
+<p>It takes a map that contains key-value pairs to be added to the event, but only
+in case the key is not set in the event already.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="c1">// Default ttl to 120. Only events with the ttl field not set are modified.</span>
+<span class="n">default_to</span><span class="p">({</span><span class="s">"ttl"</span><span class="p">,</span> <span class="mi">120</span><span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="split-const-split_clauses_t-clauses" class="anchor" href="#split-const-split_clauses_t-clauses"><span class="octicon octicon-link"></span></a>split (const split_clauses_t clauses)</h4>
+
+<p>It takes a list of pairs. Each pair contains a predicate function and a stream.
+When an event is received, the event is passed to the first stream which
+predicate returns true.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">split</span><span class="p">({</span><span class="n">above_pred</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">set_state</span><span class="p">(</span><span class="s">"ok"</span><span class="p">)},</span>
+      <span class="p">{</span><span class="n">under_pred</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>  <span class="n">set_state</span><span class="p">(</span><span class="s">"critical"</span><span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="split-const-split_clauses_t-clauses-const-streams_t-default_stream" class="anchor" href="#split-const-split_clauses_t-clauses-const-streams_t-default_stream"><span class="octicon octicon-link"></span></a>split (const split_clauses_t clauses, const streams_t default_stream)</h4>
+
+<p>It takes a list of pairs and a default stream. Each pair contains a predicate
+function and a stream.  When an event is received, the event is passed to the
+first stream which predicate returns true. If none of the predicates match,
+the event is passed to the default stream.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">split</span><span class="p">({</span><span class="n">above_pred</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">set_state</span><span class="p">(</span><span class="s">"ok"</span><span class="p">)},</span>
+      <span class="p">{</span><span class="n">under_pred</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>  <span class="n">set_state</span><span class="p">(</span><span class="s">"critical"</span><span class="p">)},</span>
+      <span class="n">set_state</span><span class="p">(</span><span class="s">"warning"</span><span class="p">));</span>
+</pre></div>
+
+<h4>
+<a name="where-const-predicate_t--predicate" class="anchor" href="#where-const-predicate_t--predicate"><span class="octicon octicon-link"></span></a>where (const predicate_t &amp; predicate)</h4>
+
+<p>It passes events that make the predicate function return true.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">where</span><span class="p">(</span><span class="n">under_pred</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">&gt;&gt;</span> <span class="n">set_state</span><span class="p">(</span><span class="s">"critical"</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">notiy_email</span><span class="p">();</span>
+</pre></div>
+
+<h4>
+<a name="where-const-predicate_t--predicate-const-streams_t-else_stream" class="anchor" href="#where-const-predicate_t--predicate-const-streams_t-else_stream"><span class="octicon octicon-link"></span></a>where (const predicate_t &amp; predicate, const streams_t else_stream)</h4>
+
+<p>It passes events that make the predicate function return true.
+Otherwise, events are passed to <em>else_stream</em>.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">above_stream</span> <span class="o">=</span> <span class="n">set_state</span><span class="p">(</span><span class="s">"ok"</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">prn</span><span class="p">(</span><span class="s">"metric is above 5"</span><span class="p">);</span>
+
+<span class="n">where</span><span class="p">(</span><span class="n">under_pred</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="n">above_stream</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">set_state</span><span class="p">(</span><span class="s">"critical"</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">notiy_email</span><span class="p">();</span> 
+</pre></div>
+
+<h4>
+<a name="by-const-by_keys_t---keys-const-streams_t-stream" class="anchor" href="#by-const-by_keys_t---keys-const-streams_t-stream"><span class="octicon octicon-link"></span></a>by (const by_keys_t  &amp; keys, const streams_t stream)</h4>
+
+<p>It takes a list of event's fields. When an event enters this function,
+the field(s) are retrieved, for every new value that has not been seen before,
+it will create a copy of <em>stream</em> and the event will be passed to it.
+If the value was seen before, it will pass the event to the previously
+created stream.</p>
+
+<p>Let's see this in action. We are going to use a stream function called <em>rate</em>
+which simply sums the event metrics that receives during <em>dt</em> seconds and
+divides the result by <em>dt</em>. Let's assume our servers send an event called
+<em>backend_exception</em> every time a request can't be handled and we would
+like to see the exception rate per server.</p>
+
+<p>Note that if we just do what is below, we wouldn't get a per host rate,
+we would get a global rate.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="k">auto</span> <span class="n">rate_stream</span> <span class="o">=</span> <span class="n">set_metric</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">rate</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">prn</span><span class="p">(</span><span class="s">"exceptions per second:"</span><span class="p">);</span>
+</pre></div>
+
+<p>If we want to compute the rate per host, that's when <em>by()</em> comes in handy.
+It helps us  replicate the stream per each host so we can compute the rates
+individually.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="k">auto</span> <span class="n">rate_stream</span> <span class="o">=</span> <span class="n">set_metric</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                      <span class="o">&gt;&gt;</span> <span class="n">rate</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+                        <span class="o">&gt;&gt;</span> <span class="n">prn</span><span class="p">(</span><span class="s">"exceptions per second:"</span><span class="p">);</span>
+
+<span class="c1">// Use the host field and replicate rate_stream for evey distinct host.</span>
+<span class="n">by</span><span class="p">({</span><span class="s">"host"</span><span class="p">},</span> <span class="n">rate_stream</span><span class="p">);</span>
+</pre></div>
+
+<p>You can pass several fields to <em>by()</em>.</p>
+
+<h4>
+<a name="by-const-by_keys_t---keys" class="anchor" href="#by-const-by_keys_t---keys"><span class="octicon octicon-link"></span></a>by (const by_keys_t  &amp; keys)</h4>
+
+<p>This is similar to <em>by(const by keys_t &amp; keys, const streams_t streams)</em>. But
+instead of passing the streams to clone for every distinct combinations of
+<em>keys</em> as a parameter, it will duplicate the streams that are concatenated
+after it.</p>
+
+<p>Let's see the example of the other <em>by()</em> function using this one.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="c1">// Use the host field and replicate the stream that is next to it.</span>
+<span class="n">by</span><span class="p">({</span><span class="s">"host"</span><span class="p">})</span> <span class="o">&gt;&gt;</span> <span class="n">set_metric</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">rate</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">prn</span><span class="p">(</span><span class="s">"exceptions per second:"</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="rate-const-uint32--dt" class="anchor" href="#rate-const-uint32--dt"><span class="octicon octicon-link"></span></a>rate (const uint32 &amp; dt)</h4>
+
+<p>It sums the metrics of the received events for <em>dt</em> seconds. After that period,
+an event is forwarded and its metric contains the accumulated value divided
+by <em>dt</em>.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="c1">// An easy way to count the rate of events that go through this stream</span>
+<span class="n">with</span><span class="p">({</span><span class="s">"metric"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">rate</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">prn</span><span class="p">(</span><span class="s">"events per second"</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="coalesce-const-fold_fn_t--fold_fn" class="anchor" href="#coalesce-const-fold_fn_t--fold_fn"><span class="octicon octicon-link"></span></a>coalesce (const fold_fn_t &amp; fold_fn)</h4>
+
+<p>It keeps a map with the receivied events. Events are inserted in the map by
+using the combination of ttheir host and service as a key.</p>
+
+<p>Every time a new event is received, the map is updated and all the events in it
+are forwarded to the fold function.</p>
+
+<p>This function is useful to aggregate metrics from different hosts.</p>
+
+<h4>
+<a name="project-const-predicates_t-predicates-const-fold_fn_t--fold_fn" class="anchor" href="#project-const-predicates_t-predicates-const-fold_fn_t--fold_fn"><span class="octicon octicon-link"></span></a>project (const predicates_t predicates, const fold_fn_t &amp; fold_fn)</h4>
+
+<p>Similar to <em>coalesce</em> and more suitable when you just need a few events.</p>
+
+<p>It takes a list of predicates.  For every predicate, the last event that
+matches is stored. Whenever a new event arrives and matches
+any of the predicates, all the stored events are forwared to <em>fold_fn</em>.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="c1">// Create a new event metric that is the sum of foo and bar</span>
+<span class="n">project</span><span class="p">({</span><span class="n">service_pred</span><span class="p">(</span><span class="s">"foo"</span><span class="p">),</span> <span class="n">service_pred</span><span class="p">(</span><span class="s">"bar"</span><span class="p">),</span> <span class="n">sum</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">prn</span><span class="p">(</span><span class="s">"foo + bar"</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="changed_state-const-stdstring--initial" class="anchor" href="#changed_state-const-stdstring--initial"><span class="octicon octicon-link"></span></a>changed_state (const std::string &amp; initial)</h4>
+
+<p>It only forwards events if there is a state change for every host and service.
+It assummes <em>initial</em> as the first state.</p>
+
+<p>If you are sending emails, this is useful to not spam yourself and only send
+emails when something goes from <em>ok</em> to <em>critical</em> and viceversa.</p>
+
+<h4>
+<a name="tagged_any-const-tags_t--tags" class="anchor" href="#tagged_any-const-tags_t--tags"><span class="octicon octicon-link"></span></a>tagged_any (const tags_t &amp; tags)</h4>
+
+<p>It forwards events only if they contain any of the given <em>tags</em>.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">tagged_any</span><span class="p">({</span><span class="s">"debian"</span><span class="p">,</span> <span class="s">"ubuntu"</span><span class="p">})</span> <span class="o">&gt;&gt;</span> <span class="n">above</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">email</span><span class="p">();</span>
+</pre></div>
+
+<h4>
+<a name="tagged_all-const-tags_t--tags" class="anchor" href="#tagged_all-const-tags_t--tags"><span class="octicon octicon-link"></span></a>tagged_all (const tags_t &amp; tags)</h4>
+
+<p>It forwards events only if they contain all the given <em>tags</em>.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">tagged_any</span><span class="p">({</span><span class="s">"production"</span><span class="p">,</span> <span class="s">"london"</span><span class="p">})</span> <span class="o">&gt;&gt;</span> <span class="n">above</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">email</span><span class="p">();</span>
+</pre></div>
+
+<h4>
+<a name="tagged-const-stdstring-tag" class="anchor" href="#tagged-const-stdstring-tag"><span class="octicon octicon-link"></span></a>tagged (const std::string tag)</h4>
+
+<p>It forwards events only if they contain the given <em>tag</em>.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">tagged</span><span class="p">(</span><span class="s">"production"</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">above</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">email</span><span class="p">();</span>
+</pre></div>
+
+<h4>
+<a name="smap-const-smap_fn_t-fn" class="anchor" href="#smap-const-smap_fn_t-fn"><span class="octicon octicon-link"></span></a>smap (const smap_fn_t fn)</h4>
+
+<p>Events are recevied and passed to <em>fn</em> which returns a new event.
+This new event is forwarded.</p>
+
+<p>Use this when you need to modify events dynamically, as in opposed to
+statically, use <em>with()</em> for the latter.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="c1">// Function that takes and event and returns a new event which service</span>
+<span class="c1">// has the host appended.</span>
+<span class="n">Event</span> <span class="nf">host_service</span><span class="p">(</span><span class="kt">e_t</span> <span class="n">e</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">auto</span> <span class="n">ne</span><span class="p">(</span><span class="n">e</span><span class="p">);</span>
+  <span class="n">ne</span><span class="p">.</span><span class="n">set_service</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">service</span><span class="p">()</span> <span class="o">+</span> <span class="s">"-"</span> <span class="o">+</span> <span class="n">e</span><span class="p">.</span><span class="n">host</span><span class="p">());</span>
+  <span class="k">return</span> <span class="n">ne</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">smap</span><span class="p">(</span><span class="n">host_service</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">prn</span><span class="p">(</span><span class="s">"new shiny service string"</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="moving_event_window-const-size_t-n-const-fold_fn_t-fn" class="anchor" href="#moving_event_window-const-size_t-n-const-fold_fn_t-fn"><span class="octicon octicon-link"></span></a>moving_event_window (const size_t n, const fold_fn_t fn)</h4>
+
+<p>Every time an event is received, the last <em>n</em> events are passed to <em>fn</em> which
+returns a new event that is forwarded.</p>
+
+<h4>
+<a name="fixed_event_window-const-size_t-n-const-fold_fn_t-fn" class="anchor" href="#fixed_event_window-const-size_t-n-const-fold_fn_t-fn"><span class="octicon octicon-link"></span></a>fixed_event_window (const size_t n, const fold_fn_t fn)</h4>
+
+<p>It passes non-overlapping windows of <em>n</em> events to <em>fn</em> which returns
+a new event that is forwarded.</p>
+
+<h4>
+<a name="moving_event_window-const-size_t-dt-const-fold_fn_t-fn" class="anchor" href="#moving_event_window-const-size_t-dt-const-fold_fn_t-fn"><span class="octicon octicon-link"></span></a>moving_event_window (const size_t dt, const fold_fn_t fn)</h4>
+
+<p>Every time an event is received, the last events within a <em>dt</em> window are
+passed to <em>fn</em> which returns a new event that is forwarded.</p>
+
+<h4>
+<a name="fixed_time_window-const-size_t-dt-const-fold_fn_t-fn" class="anchor" href="#fixed_time_window-const-size_t-dt-const-fold_fn_t-fn"><span class="octicon octicon-link"></span></a>fixed_time_window (const size_t dt, const fold_fn_t fn)</h4>
+
+<p>It passes non-overlapping windows of the events received within a <em>dt</em> window
+to <em>fn</em> which returns a new event that is forwarded.</p>
+
+<h4>
+<a name="stable-const-time_t-dt" class="anchor" href="#stable-const-time_t-dt"><span class="octicon octicon-link"></span></a>stable (const time_t dt)</h4>
+
+<p>It forwards events only when their state is the same for <em>dt</em> seconds.
+This is useful to avoid spikes.</p>
+
+<h4>
+<a name="throttle-size_t-n-time_t-dt" class="anchor" href="#throttle-size_t-n-time_t-dt"><span class="octicon octicon-link"></span></a>throttle (size_t n, time_t dt)</h4>
+
+<p>It only forwards a maximum of <em>n</em> events during <em>dt</em> seconds.</p>
+
+<h4>
+<a name="above-double-k" class="anchor" href="#above-double-k"><span class="octicon octicon-link"></span></a>above (double k)</h4>
+
+<p>It forwards events with metrics above <em>k</em>.</p>
+
+<h4>
+<a name="under-double-k" class="anchor" href="#under-double-k"><span class="octicon octicon-link"></span></a>under (double k)</h4>
+
+<p>It forwards events with metrics under <em>k</em>.</p>
+
+<h4>
+<a name="within-double-a-double-b" class="anchor" href="#within-double-a-double-b"><span class="octicon octicon-link"></span></a>within (double a, double b)</h4>
+
+<p>It forwards events with metrics between <em>a</em> and <em>b</em>.</p>
+
+<h4>
+<a name="without-double-a-double-b" class="anchor" href="#without-double-a-double-b"><span class="octicon octicon-link"></span></a>without (double a, double b)</h4>
+
+<p>It forwards events with metrics not in the  (<em>a</em>, <em>b</em>) interval.</p>
+
+<h4>
+<a name="scale-double-s" class="anchor" href="#scale-double-s"><span class="octicon octicon-link"></span></a>scale (double s)</h4>
+
+<p>It scales events' metric by  <em>s</em> and forwards them.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="c1">// Transform bytes in bits</span>
+<span class="n">service</span><span class="p">(</span><span class="s">"eth0_incoming"</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">scale</span><span class="p">(</span><span class="mi">8</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="sdo-" class="anchor" href="#sdo-"><span class="octicon octicon-link"></span></a>sdo ()</h4>
+
+<p>It just forwards events.</p>
+
+<h4>
+<a name="counter-" class="anchor" href="#counter-"><span class="octicon octicon-link"></span></a>counter ()</h4>
+
+<p>It counts the number of events that pass through it.</p>
+
+<h4>
+<a name="expired-" class="anchor" href="#expired-"><span class="octicon octicon-link"></span></a>expired ()</h4>
+
+<p>It forwards events that are expired.</p>
+
+<h4>
+<a name="tags-tags_t-tags" class="anchor" href="#tags-tags_t-tags"><span class="octicon octicon-link"></span></a>tags (tags_t tags)</h4>
+
+<p>It adds the list of passed <em>tags</em> to events and forwards them.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">tags</span><span class="p">({</span><span class="s">"processed"</span><span class="p">})</span> <span class="o">&gt;&gt;</span> <span class="n">prn</span><span class="p">(</span><span class="s">"tag added"</span><span class="p">)</span>
+</pre></div>
+
+<h4>
+<a name="ddt-" class="anchor" href="#ddt-"><span class="octicon octicon-link"></span></a>ddt ()</h4>
+
+<p>It differenciates two subsequent events. The metric of the forwarded
+event is (metric_current - metric_previous) / (time_current - time_previous).</p>
+
+<h4>
+<a name="send_index" class="anchor" href="#send_index"><span class="octicon octicon-link"></span></a>send_index()</h4>
+
+<p>It indexes the receivied events. Indexed events can be queried through
+the websocket.</p>
+
+<p>This is usful to know the current state of an event from a dashboard.</p>
+
+<h4>
+<a name="send_graphiteconst-stdstring-host-const-int-port" class="anchor" href="#send_graphiteconst-stdstring-host-const-int-port"><span class="octicon octicon-link"></span></a>send_graphite(const std::string host, const int port)</h4>
+
+<p>It forwards the received events to a graphite server using new line carbon
+TCP protocol.</p>
+
+<p>This is an <em>external</em> function, meaning that cavalieri will talk to an external
+service, in this case, a graphite server.</p>
+
+<h4>
+<a name="forwardconst-stdstring-host-const-int-port" class="anchor" href="#forwardconst-stdstring-host-const-int-port"><span class="octicon octicon-link"></span></a>forward(const std::string host, const int port)</h4>
+
+<p>It forwards the received events to a cavalieri or riemann server using
+TCP.</p>
+
+<p>This is an <em>external</em> function, meaning that cavalieri will talk to an external
+service, in this case, a cavalieri or riemann server.</p>
+
+<h4>
+<a name="emailconst-stdstring-server-const-stdstring-from-const-stdstring-to" class="anchor" href="#emailconst-stdstring-server-const-stdstring-from-const-stdstring-to"><span class="octicon octicon-link"></span></a>email(const std::string server, const std::string from, const std::string to)</h4>
+
+<p>It emails the received events with <em>from</em> sender to <em>to</em> recipient using
+the specified SMTP <em>server</em>.</p>
+
+<p>This is an <em>external</em> function, meaning that cavalieri will talk to an external
+service, in this case, an SMTP server.</p>
+
+<h4>
+<a name="pagerduty_triggerconst-stdstring-pd_key" class="anchor" href="#pagerduty_triggerconst-stdstring-pd_key"><span class="octicon octicon-link"></span></a>pagerduty_trigger(const std::string pd_key)</h4>
+
+<p>It triggers a Pager Duty incident based on the received event and using
+<em>pd_key</em> as the API key. Note that service key will be event's host and
+service.</p>
+
+<p>This is an <em>external</em> function, meaning that cavalieri will talk to an external
+service, in this case, Pager Duty.</p>
+
+<h4>
+<a name="pagerduty_acknowoledgeconst-stdstring-pd_key" class="anchor" href="#pagerduty_acknowoledgeconst-stdstring-pd_key"><span class="octicon octicon-link"></span></a>pagerduty_acknowoledge(const std::string pd_key)</h4>
+
+<p>It acknowledges a Pager Duty incident based on the received event and using
+<em>pd_key</em> as the API key. Note that service key will be event's host and
+service.</p>
+
+<p>This is an <em>external</em> function, meaning that cavalieri will talk to an external
+service, in this case, Pager Duty.</p>
+
+<h4>
+<a name="pagerduty_resolveconst-stdstring-pd_key" class="anchor" href="#pagerduty_resolveconst-stdstring-pd_key"><span class="octicon octicon-link"></span></a>pagerduty_resolve(const std::string pd_key)</h4>
+
+<p>It resolves a Pager Duty incident based on the received event and using
+<em>pd_key</em> as the API key. Note that service key will be event's host and
+service.</p>
+
+<p>This is an <em>external</em> function, meaning that cavalieri will talk to an external
+service, in this case, Pager Duty.</p>
+
+<h3>
+<a name="fold-functions" class="anchor" href="#fold-functions"><span class="octicon octicon-link"></span></a>Fold functions</h3>
+
+<p>Fold functions are functions that take a list of events, do some processing
+with them such as reducing and return an event with the result.</p>
+
+<p>These functions are mostly meant to be used with stream functions that forward
+a list of events.</p>
+
+<h4>
+<a name="sumconst-stdvector-events" class="anchor" href="#sumconst-stdvector-events"><span class="octicon octicon-link"></span></a>sum(const std::vector events)</h4>
+
+<p>It returns an event that contains the sum of the metrics of <em>events</em>.</p>
+
+<h4>
+<a name="productconst-stdvector-events" class="anchor" href="#productconst-stdvector-events"><span class="octicon octicon-link"></span></a>product(const std::vector events)</h4>
+
+<p>It returns an event that contains the product of the metrics of <em>events</em>.</p>
+
+<h4>
+<a name="differenceconst-stdvector-events" class="anchor" href="#differenceconst-stdvector-events"><span class="octicon octicon-link"></span></a>difference(const std::vector events)</h4>
+
+<p>It returns an event that contains the difference of the metrics of <em>events</em>.</p>
+
+<h4>
+<a name="meanconst-stdvector-events" class="anchor" href="#meanconst-stdvector-events"><span class="octicon octicon-link"></span></a>mean(const std::vector events)</h4>
+
+<p>It returns an event that contains the mean of the metrics of <em>events</em>.</p>
+
+<h4>
+<a name="minimumconst-stdvector-events" class="anchor" href="#minimumconst-stdvector-events"><span class="octicon octicon-link"></span></a>minimum(const std::vector events)</h4>
+
+<p>It returns an event that contains the minimum value of the metrics of <em>events</em>.</p>
+
+<h4>
+<a name="maximumconst-stdvector-events" class="anchor" href="#maximumconst-stdvector-events"><span class="octicon octicon-link"></span></a>maximum(const std::vector events)</h4>
+
+<p>It returns an event that contains the maximum of the metrics of <em>events</em>.</p>
+
+<h3>
+<a name="common-rules" class="anchor" href="#common-rules"><span class="octicon octicon-link"></span></a>Common Rules</h3>
+
+<p>These rules are based on the above stream functions, but they are more
+high-level and more opinionated.</p>
+
+<p>They asumme that two states <em>critical</em> and <em>ok</em> are enough. Events coming
+out from these function have their state set to any of them.</p>
+
+<h4>
+<a name="critical_above-double-value" class="anchor" href="#critical_above-double-value"><span class="octicon octicon-link"></span></a>critical_above (double value)</h4>
+
+<p>It sets state to critical if metric is above <em>value</em>. Otherwise, it sets it to
+ok.</p>
+
+<h4>
+<a name="critical_under-double-value" class="anchor" href="#critical_under-double-value"><span class="octicon octicon-link"></span></a>critical_under (double value)</h4>
+
+<p>It sets state to ok if metric is under <em>value</em>. Otherwise, it sets it to
+critical.</p>
+
+<h4>
+<a name="stable_metric-double-dt-predicate_t-trigger" class="anchor" href="#stable_metric-double-dt-predicate_t-trigger"><span class="octicon octicon-link"></span></a>stable_metric (double dt, predicate_t trigger)</h4>
+
+<p>It takes <em>trigger</em> as a function predicate to check events. It sets the state
+to critical when <em>trigger</em> has returned <em>true</em> for more than <em>dt</em> seconds.</p>
+
+<p>It sets it back to critical when <em>trigger</em> has returned <em>false</em> for more than
+<em>dt</em> seconds.</p>
+
+<p>This is useful to avoid spikes.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">stable_metric</span><span class="p">(</span> <span class="cm">/* seconds */</span> <span class="mi">300</span><span class="p">,</span> <span class="n">above_pred</span><span class="p">(</span><span class="mi">200</span><span class="p">))</span>
+  <span class="o">&gt;&gt;</span> <span class="n">changed_state</span><span class="p">(</span><span class="s">"ok"</span><span class="p">)</span>
+    <span class="o">&gt;&gt;</span>  <span class="n">email</span><span class="p">();</span>
+</pre></div>
+
+<h4>
+<a name="stable_metric-double-dt-predicate_t-trigger-predicate_t-cancel" class="anchor" href="#stable_metric-double-dt-predicate_t-trigger-predicate_t-cancel"><span class="octicon octicon-link"></span></a>stable_metric (double dt, predicate_t trigger, predicate_t cancel)</h4>
+
+<p>Similar to the above function but taking an extra predicate <em>cancel</em> that is
+used as a threshold to set it back to ok.</p>
+
+<p>It sets the state to critical when <em>trigger</em> has return <em>true</em> for more than
+<em>dt</em> seconds.</p>
+
+<p>It sets it back to critical when <em>cancel</em> has returned <em>true</em> for more than
+<em>dt</em> seconds.</p>
+
+<p>This is useful to avoid spikes.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">stable_metric</span><span class="p">(</span> <span class="cm">/* seconds */</span> <span class="mi">300</span><span class="p">,</span> <span class="n">above_pred</span><span class="p">(</span><span class="mi">200</span><span class="p">))</span>
+  <span class="o">&gt;&gt;</span> <span class="n">changed_state</span><span class="p">(</span><span class="s">"ok"</span><span class="p">)</span>
+    <span class="o">&gt;&gt;</span>  <span class="n">email</span><span class="p">();</span>
+</pre></div>
+
+<h4>
+<a name="agg_stable_metric-double-dt-fold_fn_t-fold_fn-predicate_t-trigger-predicate_t-cancel" class="anchor" href="#agg_stable_metric-double-dt-fold_fn_t-fold_fn-predicate_t-trigger-predicate_t-cancel"><span class="octicon octicon-link"></span></a>agg_stable_metric (double dt, fold_fn_t fold_fn, predicate_t trigger, predicate_t cancel)</h4>
+
+<p>This function aggregates metrics of events that are received using
+<em>fold_fn</em> (See fold functions). The event that results is passed to a
+<em>stable_metric</em> stream using <em>dt</em>, <em>trigger</em> and <em>cancel</em>.</p>
+
+<p>Let's see an example. Say we have a bunch of web servers in our London data
+center. Those servers are reporting a metric called <em>failed_requests_rate</em>. We
+would like to create another metric that is the aggregated sum of all the
+servers and trigger an alert when that value is above a given value for
+more than <em>dt</em> seconds.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">service</span><span class="p">(</span><span class="s">"failed_requests_rate"</span><span class="p">)</span>
+  <span class="o">&gt;&gt;</span> <span class="n">tagged</span><span class="p">(</span><span class="s">"datacenter::london"</span><span class="p">)</span>
+    <span class="o">&gt;&gt;</span> <span class="n">agg_stable_metric</span><span class="p">(</span><span class="cm">/* secs */</span> <span class="mi">300</span><span class="p">,</span> <span class="n">sum</span><span class="p">,</span> <span class="n">above_pred</span><span class="p">(</span><span class="mi">200</span><span class="p">),</span> <span class="n">under_pred</span><span class="p">(</span><span class="mi">50</span><span class="p">))</span>
+      <span class="o">&gt;&gt;</span> <span class="n">changed_state</span><span class="p">(</span><span class="s">"ok"</span><span class="p">)</span>
+        <span class="o">&gt;&gt;</span> <span class="n">email</span><span class="p">();</span>
+</pre></div>
+
+<h4>
+<a name="max_critical_hostssize_t-n" class="anchor" href="#max_critical_hostssize_t-n"><span class="octicon octicon-link"></span></a>max_critical_hosts(size_t n)</h4>
+
+<p>This function sets the state of the events to critical when it receives
+more than <em>n</em> different critical events.</p>
+
+<p>In the example below, we trigger an alert when more than 20 servers
+report a puppet failure in a DC.</p>
+
+<div class="highlight highlight-cpp"><pre><span class="n">service</span><span class="p">(</span><span class="s">"puppet"</span><span class="p">)</span>
+  <span class="o">&gt;&gt;</span> <span class="n">tagged</span><span class="p">(</span><span class="s">"datacenter::paris"</span><span class="p">)</span>
+    <span class="o">&gt;&gt;</span> <span class="n">max_critial_hosts</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+      <span class="o">&gt;&gt;</span> <span class="n">changed_state</span><span class="p">(</span><span class="s">"ok"</span><span class="p">)</span>
+        <span class="o">&gt;&gt;</span> <span class="n">set_host</span><span class="p">(</span><span class="s">"datacenter::paris"</span><span class="p">)</span>
+          <span class="o">&gt;&gt;</span> <span class="n">set_service</span><span class="p">(</span><span class="s">"too many puppet failures"</span><span class="p">)</span>
+            <span class="o">&gt;&gt;</span> <span class="n">email</span><span class="p">();</span>
+</pre></div>
+
+<h3>
+<a name="predicate-functions" class="anchor" href="#predicate-functions"><span class="octicon octicon-link"></span></a>Predicate functions</h3>
+
+<h3>
+<a name="some-utility-functions" class="anchor" href="#some-utility-functions"><span class="octicon octicon-link"></span></a>Some utility functions</h3>
+
+<h3>
+<a name="some-typedefs" class="anchor" href="#some-typedefs"><span class="octicon octicon-link"></span></a>Some typedefs</h3>
+
+<h2>
+<a name="dashboard" class="anchor" href="#dashboard"><span class="octicon octicon-link"></span></a>Dashboard</h2>
+
+<p>You can use the standard <a href="http://riemann.io/dashboard.html">riemann.io dahsboard</a>
+to query and visualize the state of the index.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
