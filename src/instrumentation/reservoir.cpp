@@ -30,7 +30,7 @@ reservoir::reservoir(const size_t size)
 void reservoir::add_sample(const double sample)
 {
 
-  VLOG(1) << "add_sample";
+  VLOG(3) << "add_sample";
 
   if (uint64_t i= n_.fetch_add(1) < reservoir_size_) {
 
