@@ -14,7 +14,7 @@ namespace {
 
 const size_t k_queue_capacity = 10000;
 const float k_initial_interval_secs = 2;
-const size_t k_max_concurrent_conns = 10;
+const size_t k_max_concurrent_conns = 50;
 
 char error_[CURL_ERROR_SIZE];
 
