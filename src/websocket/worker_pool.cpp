@@ -84,7 +84,16 @@ void worker_pool::update_filters(const size_t id,
   {
     std::lock_guard<std::mutex> lock(mutex_);
     filters_[id] = filters;
-    has_clients_ = (!filters.empty());
+
+    bool any_client = false;
+    for (const auto & kv : filters_) {
+      if (!kv.second.empty()) {
+        any_client = true;
+        break;
+      }
+    }
+
+    has_clients_ = any_client;
   }
 
   VLOG(3) << "has_clients_ " << has_clients_;
