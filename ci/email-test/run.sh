@@ -22,7 +22,7 @@ cd ../..
 
 sleep 5
 
-./send-events.py 800 &
+./send-events.py 500 &
 
 for i in $(seq 0 120); do
 
@@ -30,7 +30,7 @@ for i in $(seq 0 120); do
 
   echo "EMAILS: ${EMAILS}"
 
-  if [ "$EMAILS" == "800" ]; then
+  if [ "$EMAILS" == "500" ]; then
     cleanup
     exit 0
   fi
