@@ -44,7 +44,6 @@ public:
   real_async_loop();
   void set_id(size_t id);
   void set_async_cb(async_cb_fn_t async_cb);
-  void set_timer(const float interval, timer_cb_fn_t timer_cb_fn);
   size_t id() const;
   void start();
   void stop();
@@ -53,29 +52,42 @@ public:
               fd_cb_fn_t fd_cb_fn);
   void remove_fd(const int fd);
   void set_fd_mode(const int fd, const async_fd::mode mode);
-  void set_timer_interval(const float t);
   ev::dynamic_loop & loop();
+  timer_id_t add_once_task(const timer_cb_fn_t, const float t);
+  timer_id_t add_periodic_task(const timer_cb_fn_t, const float t);
+  void set_task_interval(const timer_id_t, const float t);
+  bool remove_task(const timer_id_t);
+
+private:
+  using timer_ctx_t =  struct {
+    const std::shared_ptr<ev::timer> timer;
+    const std::shared_ptr<task_cb_fn_t> task;
+    real_async_loop & async_loop;
+    const timer_id_t id;
+    const bool once;
+  };
+  using timers_t = std::map<uint64_t, std::shared_ptr<timer_ctx_t>>;
+  using fd_ctx_t = std::map<int, std::shared_ptr<real_async_fd>>;
 
 private:
   void async_callback(ev::async &, int);
-  void timer_callback(ev::timer &, int);
+  static void timer_callback(ev::timer &, int);
+  timer_id_t add_timer(const timer_cb_fn_t, bool, float);
 
 private:
   bool stop_;
   size_t id_;
   async_cb_fn_t async_cb_fn_;
-  timer_cb_fn_t timer_cb_fn_;
   ev::dynamic_loop loop_;
   ev::async async_;
-  std::map<int, std::shared_ptr<real_async_fd>> fds_;
-  ev::timer timer_;
+  fd_ctx_t fds_;
+  timers_t timers_;
+  uint64_t next_timer_id_;
 };
 
 class real_async_events : public async_events_interface {
 public:
   real_async_events(size_t num_loops, async_cb_fn_t cb_fn);
-  real_async_events(size_t num_loops, async_cb_fn_t cb_fn,
-                    const float interval, timer_cb_fn_t timer_cb_fn);
   void start_loop(const size_t loop_id);
   void signal_loop(const size_t loop_id);
   void stop_all_loops();

@@ -58,7 +58,7 @@ void multi_delete(CURLM *curlm) {
   }
 }
 
-void easy_delete(CURL* curl) { }
+void easy_delete(CURL*) { }
 
 size_t write_cb(void *ptr, size_t size, size_t nmemb, void *) {
   std::string buffer((char*)ptr, (char*)ptr + (size * nmemb));
@@ -126,8 +126,6 @@ curl_pool::curl_pool(const size_t thread_num,
     {},
     {},
     std::bind(&curl_pool::on_ready, this, _1, _2),
-    k_initial_interval_secs,
-    std::bind(&curl_pool::timer, this, _1),
     std::bind(&curl_pool::async, this, _1)
   ),
   curl_event_fn_(curl_event_fn),
@@ -137,7 +135,7 @@ curl_pool::curl_pool(const size_t thread_num,
   next_thread_(0)
 {
 
-  VLOG(3) << "curl_pool()";
+  VLOG(3) << "curl_pool() thread_num: " << thread_num;
 
   for (size_t i = 0; i < thread_num; i++) {
 
@@ -167,21 +165,27 @@ curl_pool::curl_pool(const size_t thread_num,
     curl_multi_setopt(curl_multis_[i].get(), CURLMOPT_TIMERDATA,
                       set_timer_cbs_[i].get());
 
-   // Set socket
+    // Set socket
     auto sock_cb = [=](const int fd, const int mode, const bool initialized)
     {
       multi_socket(i, fd, mode, initialized);
     };
 
-    multi_socket_cbs_.push_back(
-        std::unique_ptr<multi_socket_cb_t>(new multi_socket_cb_t(sock_cb)));
+     multi_socket_cbs_.push_back(
+         std::unique_ptr<multi_socket_cb_t>(new multi_socket_cb_t(sock_cb)));
 
 
-   curl_multi_setopt(curl_multis_[i].get(), CURLMOPT_SOCKETFUNCTION,
+    curl_multi_setopt(curl_multis_[i].get(), CURLMOPT_SOCKETFUNCTION,
                       multi_sock_cb);
 
-   curl_multi_setopt(curl_multis_[i].get(), CURLMOPT_SOCKETDATA,
+    curl_multi_setopt(curl_multis_[i].get(), CURLMOPT_SOCKETDATA,
                      multi_socket_cbs_[i].get());
+
+    VLOG(3) << "Initializing timer: " << i;
+
+    loop_timers_.push_back(tcp_pool_.loop(i).add_periodic_task(
+          std::bind(&curl_pool::timer, this, _1), k_initial_interval_secs));
+
 
   }
 
@@ -223,7 +227,7 @@ void curl_pool::set_fd(const size_t loop_id, const int fd,
   tcp_pool_.loop(loop_id).set_fd_mode(fd, mode);
 }
 
-void curl_pool::on_ready(async_fd & async, tcp_connection & tcp_conn) {
+void curl_pool::on_ready(async_fd & async, tcp_connection &) {
 
   VLOG(3) << "on_ready()++";
 
@@ -438,13 +442,19 @@ void curl_pool::async(async_loop & loop) {
 
 }
 
-void curl_pool::timer(async_loop & loop) {
+void curl_pool::timer(const size_t id) {
 
-  cleanup_conns(loop.id());
+  VLOG(3) << "curl_pool timer()++";
+  VLOG(3) << "loop_id: " << id;
 
-  tcp_pool_.loop(loop.id()).set_timer_interval(k_initial_interval_secs);
+  cleanup_conns(id);
 
-  multi_socket_action(loop.id());
+  tcp_pool_.loop(id).set_task_interval(loop_timers_[id],
+                                       k_initial_interval_secs);
+
+  multi_socket_action(id);
+
+  VLOG(3) << "curl_pool timer()--";
 }
 
 void curl_pool::check_multi_info(const size_t loop_id) {
@@ -482,7 +492,7 @@ void curl_pool::multi_timer(const size_t loop_id, const long ms) {
   if (ms > 0 && ms < 5000) {
 
     float t = ms / 1000;
-    tcp_pool_.loop(loop_id).set_timer_interval(t);
+    tcp_pool_.loop(loop_id).set_task_interval(loop_timers_[loop_id], t);
 
   } else {
 
@@ -513,7 +523,7 @@ void curl_pool::multi_socket_action(const size_t loop_id) {
 }
 
 void curl_pool::multi_socket(const size_t loop_id, const int fd,
-                             const int mode, const bool initialized)
+                             const int mode, const bool)
 {
 
   VLOG(3) << "multi_socket() " << fd;

@@ -38,7 +38,6 @@ private:
   void on_new_cnx(int fd, async_loop & loop, tcp_connection & cnx);
   void on_fd_ready(async_fd & async, tcp_connection & cnx);
   void on_async_signal(async_loop & loop);
-  void on_timer(async_loop & loop);
 
   bool pending_ws_init(fd_ctx_t & fd_ctx);
   bool handle_ws_init(async_fd & async, fd_ctx_t & fd_ctx);

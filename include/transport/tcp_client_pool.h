@@ -32,7 +32,8 @@ class tcp_client_pool {
     void create_conn(int fd, async_loop & loop, tcp_connection & conn);
     void data_ready(async_fd & async, tcp_connection & conn);
     void async(async_loop & loop);
-    void timer(async_loop & loop);
+    void signal_batch_flush(const size_t loop_id);
+    void connect_clients(const size_t loop_id);
 
   private:
     typedef tbb::concurrent_bounded_queue<Event> event_queue_t;

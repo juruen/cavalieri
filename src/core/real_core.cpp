@@ -20,7 +20,7 @@ real_core::real_core(const config & conf)
 
     main_loop_(make_main_async_loop()),
 
-    scheduler_(new real_scheduler(*main_loop_)),
+    scheduler_(new real_scheduler()),
 
     externals_(new real_external(conf, instrumentation_)),
 
@@ -60,6 +60,7 @@ void real_core::start() {
 
   VLOG(3) << "Stopping services";
 
+  scheduler_->stop();
   executor_pool_.stop();
   streams_->stop();
   tcp_server_->stop();

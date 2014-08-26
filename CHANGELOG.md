@@ -5,6 +5,8 @@
   * Add support to replicate streams after by()
   * rate() works again
   * Make websockets more robust
+  * Scheduler has its own thread pool for timers
+  * Timers revamp
 
 0.0.6 2014-08-05
 ================

@@ -25,6 +25,6 @@ def create_event(i):
         'attributes' : { 'foo' : 'bar'}
     }
 
-c = BatchClient(host='localhost')
+c = BatchClient(host='hw3578.spotify.net',port=15555)
 
 c.send([create_event(i) for i in range(batch_size)])

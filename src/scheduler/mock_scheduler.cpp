@@ -7,14 +7,20 @@ mock_scheduler::mock_scheduler()
 {
 }
 
-void mock_scheduler::add_periodic_task(task_fn_t task, float interval) {
+remove_task_future_t mock_scheduler::add_periodic_task(task_fn_t task,
+                                                       float interval)
+{
   auto p = static_cast<time_t>(interval);
   tasks_.push(std::make_tuple(unix_time_ + p, p, task));
+
+  return {};
 }
 
-void mock_scheduler::add_once_task(task_fn_t task, float dt) {
+remove_task_future_t mock_scheduler::add_once_task(task_fn_t task, float dt) {
   auto p = static_cast<time_t>(dt);
   tasks_.push(std::make_tuple(unix_time_ + p, 0, task));
+
+  return {};
 }
 
 time_t mock_scheduler::unix_time() {

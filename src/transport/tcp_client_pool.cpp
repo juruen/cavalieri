@@ -88,8 +88,6 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
     {},
     std::bind(&tcp_client_pool::create_conn, this, _1, _2, _3),
     std::bind(&tcp_client_pool::data_ready, this, _1, _2),
-    k_reconnect_interval_secs,
-    std::bind(&tcp_client_pool::timer, this, _1),
     std::bind(&tcp_client_pool::async, this, _1)
   ),
   host_(host),
@@ -118,8 +116,6 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
     {},
     std::bind(&tcp_client_pool::create_conn, this, _1, _2, _3),
     std::bind(&tcp_client_pool::data_ready, this, _1, _2),
-    k_reconnect_interval_secs,
-    std::bind(&tcp_client_pool::timer, this, _1),
     std::bind(&tcp_client_pool::async, this, _1)
   ),
   host_(host),
@@ -140,6 +136,14 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
     queue->set_capacity(k_queue_capacity);
 
     thread_event_queues_.push_back(queue);
+
+    tcp_pool_.loop(i).add_periodic_task(
+        std::bind(&tcp_client_pool::connect_clients, this, _1),
+        k_reconnect_interval_secs);
+
+    tcp_pool_.loop(i).add_periodic_task(
+        std::bind(&tcp_client_pool::signal_batch_flush, this, _1),
+        k_reconnect_interval_secs);
 
   }
 
@@ -310,12 +314,14 @@ void tcp_client_pool::async(async_loop & loop) {
 
 }
 
-void tcp_client_pool::timer(async_loop & loop) {
-
-  size_t loop_id =  loop.id();
+void tcp_client_pool::signal_batch_flush(const size_t loop_id) {
 
   flush_batch_[loop_id] = 1;
   tcp_pool_.signal_thread(loop_id);
+
+}
+
+void tcp_client_pool::connect_clients(const size_t loop_id) {
 
   if (!fd_event_queues_[loop_id].empty()) {
     return;

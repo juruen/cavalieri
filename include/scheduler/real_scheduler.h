@@ -1,30 +1,48 @@
 #ifndef CAVALIERI_SCHEDULER_REAL_SCHEDULER_H
 #define CAVALIERI_SCHEDULER_REAL_SCHEDULER_H
 
-#include <unordered_map>
 #include <vector>
-#include <memory>
-#include <ev++.h>
+#include <tbb/concurrent_queue.h>
+#include <future>
 #include <scheduler/scheduler.h>
-#include <async/async_loop.h>
+#include <pool/async_thread_pool.h>
+
+
 
 class real_scheduler : public scheduler_interface {
 public:
-  real_scheduler(main_async_loop_interface & main_loop);
-  void add_periodic_task(task_fn_t task, float interval);
-  void add_once_task(task_fn_t task, float dt);
-  time_t unix_time();
-  void set_time(const time_t t);
-  void clear();
+  real_scheduler();
+  remove_task_future_t add_periodic_task(task_fn_t task,
+                                          float interval) override;
+  remove_task_future_t add_once_task(task_fn_t task, float dt) override;
+  time_t unix_time() override;
+  void set_time(const time_t t) override;
+  void clear() override;
+  void stop();
 
 private:
-  void timer_callback(ev::timer & timer, int revents);
+  void async_callback(async_loop & loop);
+  std::future<remove_task_fn_t> add_task(task_fn_t task,
+                                         float interval, bool once);
 
 private:
-  typedef std::pair<task_fn_t, bool> sched_task_t;
+  using promise_shared_t = std::shared_ptr<std::promise<remove_task_fn_t>>;
 
-  main_async_loop_interface & main_loop_;
+  using task_promise_t  = struct {
+                                  promise_shared_t promise;
+                                  task_cb_fn_t task;
+                                  float interval;
+                                  bool once;
+                                 };
+  using promise_queue_t =
+   tbb::concurrent_bounded_queue<task_promise_t>;
 
+  using remove_task_queue_t = tbb::concurrent_bounded_queue<timer_id_t>;
+
+private:
+  async_thread_pool threads_;
+  std::vector<promise_queue_t> task_promises_;
+  std::vector<remove_task_queue_t> remove_tasks_;
 
 };
 

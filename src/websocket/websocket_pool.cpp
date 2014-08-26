@@ -65,8 +65,6 @@ websocket_pool::websocket_pool(size_t thread_num, pub_sub & pubsub,
             {},
             std::bind(&websocket_pool::on_new_cnx, this, _1, _2, _3),
             std::bind(&websocket_pool::on_fd_ready, this, _1, _2),
-            k_ws_interval,
-            std::bind(&websocket_pool::on_timer, this, _1),
             std::bind(&websocket_pool::on_async_signal, this, _1)),
   fd_ctxes_(thread_num),
   event_queues_(thread_num)
@@ -133,9 +131,6 @@ void websocket_pool::on_fd_ready(async_fd & async, tcp_connection & tcp_conn) {
     }
   }
 
-}
-
-void websocket_pool::on_timer(async_loop&) {
 }
 
 void websocket_pool::on_async_signal(async_loop & loop) {

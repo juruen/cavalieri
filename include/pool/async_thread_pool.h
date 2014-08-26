@@ -12,10 +12,6 @@ typedef std::function<void(async_loop&)> hook_fn_t;
 class async_thread_pool {
   public:
      async_thread_pool(size_t thread_num);
-     async_thread_pool(size_t thread_num,
-                 const float interval,
-                 timer_cb_fn_t timer_cb
-      );
      void set_run_hook(hook_fn_t);
      void set_async_hook(hook_fn_t);
      void start_threads();
