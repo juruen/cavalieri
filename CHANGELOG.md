@@ -9,6 +9,7 @@
   * Timers revamp
   * Add percentiles() stream function
   * Add has_attribute() stream function
+  * Make prn() return the same event
 
 0.0.6 2014-08-05
 ================

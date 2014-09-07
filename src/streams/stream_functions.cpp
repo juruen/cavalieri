@@ -68,7 +68,7 @@ streams_t  prn() {
     {
       LOG(INFO) << "prn() " <<  event_to_json(e);
 
-      return {};
+      return {e};
     });
 }
 
@@ -78,7 +78,7 @@ streams_t  prn(const std::string prefix) {
     {
       LOG(INFO) << "prn() " << prefix <<  event_to_json(e);
 
-      return {};
+      return {e};
     });
 }
 
