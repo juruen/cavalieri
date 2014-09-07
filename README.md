@@ -501,6 +501,24 @@ This is useful to avoid spikes.
 
 It only forwards a maximum of *n* events during *dt* seconds.
 
+#### percentiles (time_t interval, const std::vector<double> percentiles)
+
+It creates a reservoir that represents a distribution of the metrics received.
+Every *interval* seconds, it will emit a list of events with the given
+*percentiles*.
+
+The corresponding percentile will be added to the service name of the emitted
+events.
+
+```cpp
+// This will create a distrbution of the request_time metrics, and every
+// 2 seconds it will emit events containing percentils: 0th, 50th, 90th, 95th
+// and 100th
+service("request_time") >> percentiles(2, {0.0, 0.5, 0.90, 0.95, 1});
+```
+
+
+
 #### above (double k)
 
 It forwards events with metrics above *k*.

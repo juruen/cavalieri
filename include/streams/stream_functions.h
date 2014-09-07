@@ -98,6 +98,8 @@ streams_t stable(time_t dt);
 
 streams_t throttle(size_t n, time_t dt);
 
+streams_t percentiles(time_t interval, std::vector<double> percentiles);
+
 streams_t above(double m);
 
 streams_t under(double m);

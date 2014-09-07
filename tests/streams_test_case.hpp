@@ -6,7 +6,6 @@
 #include <scheduler/scheduler.h>
 #include <core/core.h>
 #include <util/util.h>
-#include <iostream>
 
 streams_t create_c_stream(const std::string c) {
   return create_stream([=](const Event & e) -> next_events_t
@@ -582,6 +581,48 @@ TEST(throttle_streams_test_case, test)
     v.clear();
   }
 }
+
+TEST(percentiles_streams_test_case, test)
+{
+  std::vector<Event> v;
+
+  g_core->sched().clear();
+
+  auto percentiles_stream = percentiles(2, {0.0, 0.5, 1.0}) >>  sink(v);
+  init_streams(percentiles_stream);
+
+  Event e;
+  e.set_service("foo");
+
+  for (auto i = 0; i < 1000; i++) {
+    e.set_time(1);
+    e.set_metric_d(i);
+    push_event(percentiles_stream, e);
+  }
+
+  ASSERT_EQ(0, v.size());
+
+  g_core->sched().set_time(2);
+
+  ASSERT_EQ(3, v.size());
+
+  ASSERT_EQ(0, v[0].metric_d());
+  ASSERT_EQ(500, v[1].metric_d());
+  ASSERT_EQ(999, v[2].metric_d());
+
+  v.clear();
+
+  g_core->sched().set_time(4);
+
+  ASSERT_EQ(3, v.size());
+
+  ASSERT_EQ(0, v[0].metric_d());
+  ASSERT_EQ(0, v[1].metric_d());
+  ASSERT_EQ(0, v[2].metric_d());
+
+}
+
+
 
 TEST(above_streams_test_case, test)
 {

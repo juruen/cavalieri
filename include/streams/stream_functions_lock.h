@@ -25,6 +25,8 @@ streams_t stable_lock(time_t dt);
 
 streams_t throttle_lock(size_t n, time_t dt);
 
+streams_t percentiles_lock(time_t interval, std::vector<double> percentiles);
+
 streams_t ddt_lock();
 
 #endif

@@ -13,7 +13,7 @@
 class instrumentation {
 public:
 
-  typedef unsigned int id_t;
+  using id_t = unsigned int;
 
   instrumentation(const config conf);
 
@@ -21,8 +21,12 @@ public:
   void update_rate(const id_t id,const unsigned int ticks);
 
   id_t add_latency(const std::string service, const std::string description,
-                  std::vector<double> percentiles);
+                   std::vector<double> percentiles);
   void update_latency(const unsigned int id, const double value);
+
+  static std::vector<Event> reservoir_to_events(reservoir & reservoir,
+                                                std::vector<double> percentiles,
+                                                const Event event_base);
 
   id_t add_gauge(const std::string service, const std::string description);
   void update_gauge(const id_t id, unsigned int value);

@@ -188,27 +188,14 @@ void instrumentation::set_latencies(std::vector<Event> & events, Event event) {
 
   for (int i = 0; i < latencies_id_.load(); i++) {
 
-    auto samples = latencies_[i].reservoir.snapshot();
+    event.set_service(latencies_[i].service);
+    event.set_service(latencies_[i].description);
 
-    if (samples.empty()) {
-      continue;
-    }
+    auto new_events = reservoir_to_events(latencies_[i].reservoir,
+                                          latencies_[i].percentiles,
+                                          event);
 
-    std::stable_sort(begin(samples), end(samples));
-
-    auto n = samples.size();
-    for (const auto & p : latencies_[i].percentiles) {
-
-      auto index = p == 1 ? n - 1 : static_cast<int>(n * p);
-
-      event.set_service(latencies_[i].service + " " + std::to_string(p));
-      event.set_description(latencies_[i].description);
-      event.set_metric_d(samples[index]);
-
-      events.push_back(event);
-
-    }
-
+    std::copy(begin(new_events), end(new_events), back_inserter(events));
   }
 
 }
@@ -225,7 +212,38 @@ void instrumentation::set_gauges(std::vector<Event> & events, Event event)
     events.push_back(event);
   }
 
-
 }
 
+
+std::vector<Event> instrumentation::reservoir_to_events(
+    reservoir & reservoir,
+    std::vector<double> percentiles,
+    const Event event_base)
+{
+
+  auto samples = reservoir.snapshot();
+
+  if (samples.empty()) {
+    return {};
+  }
+
+  std::stable_sort(begin(samples), end(samples));
+
+  std::vector<Event> events;
+
+  auto n = samples.size();
+  for (const auto & p : percentiles) {
+
+    auto event(event_base);
+    auto index = p == 1 ? n - 1 : static_cast<int>(n * p);
+
+    event.set_service(event.service() + " " + std::to_string(p));
+    event.set_metric_d(samples[index]);
+
+    events.push_back(event);
+
+  }
+
+  return events;
+}
 

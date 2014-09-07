@@ -428,6 +428,17 @@ streams_t throttle(size_t n, time_t dt) {
 
 }
 
+streams_t percentiles(time_t interval, std::vector<double> percentiles) {
+
+#ifdef PERCENTILES_LOCKFREE
+  return percentiles_lockfree(interval, percentiles);
+#else
+  return percentiles_lock(interval, percentiles);
+#endif
+
+
+}
+
 streams_t above(double m) {
   return create_stream(
    [=](e_t e) -> next_events_t {

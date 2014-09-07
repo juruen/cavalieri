@@ -7,6 +7,7 @@
   * Make websockets more robust
   * Scheduler has its own thread pool for timers
   * Timers revamp
+  * Add percentiles() stream function
 
 0.0.6 2014-08-05
 ================

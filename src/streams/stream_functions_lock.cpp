@@ -1,5 +1,7 @@
 #include <util/util.h>
 #include <queue>
+#include <core/core.h>
+#include <instrumentation/reservoir.h>
 #include <streams/stream_functions.h>
 
 
@@ -581,6 +583,64 @@ on_event_fn_t throttle_lock_(size_t n, time_t dt) {
 
 streams_t throttle_lock(size_t n, time_t dt) {
   return create_stream([=]() { return throttle_lock_(n, dt); });
+}
+
+struct percentiles_data_t {
+  percentiles_data_t(std::vector<double> p) : percentiles(p) {}
+  std::vector<double> percentiles;
+  reservoir reserv;
+  Event event;
+  std::atomic<bool> initialized{false};
+};
+
+void push_percentiles_(percentiles_data_t & percentiles, forward_fn_t forward) {
+
+  if (!percentiles.initialized) {
+    return;
+  }
+
+  forward(instrumentation::reservoir_to_events(percentiles.reserv,
+                                               percentiles.percentiles,
+                                               percentiles.event));
+}
+
+void update_percentiles_(e_t e, percentiles_data_t &  percentiles) {
+
+  if (!metric_set(e)) {
+    return;
+  }
+
+  percentiles.reserv.add_sample(metric_to_double(e));
+
+  if (!percentiles.initialized.exchange(true)) {
+    percentiles.event = e;
+  }
+
+}
+
+streams_t percentiles_lock(time_t interval, std::vector<double> p) {
+
+  return create_stream(
+
+    // on_init_stream
+    [=](fwd_new_stream_fn_t fwd_new_stream) -> on_event_fn_t
+    {
+
+      auto percentiles = std::make_shared<percentiles_data_t>(p);
+      auto forward = fwd_new_stream();
+
+      // Schedule periodic task to report percentiles
+      g_core->sched().add_periodic_task(
+        [=]() { push_percentiles_(*percentiles, forward); }, interval);
+
+      // on_event_fn function that does that counts events
+      return [=](e_t e) -> next_events_t
+      {
+         update_percentiles_(e, *percentiles);
+         return {};
+      };
+
+    });
 }
 
 typedef struct {
