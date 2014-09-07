@@ -8,6 +8,7 @@
   * Scheduler has its own thread pool for timers
   * Timers revamp
   * Add percentiles() stream function
+  * Add has_attribute() stream function
 
 0.0.6 2014-08-05
 ================

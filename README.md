@@ -256,6 +256,10 @@ It forwards events which services match any of the given pattern. This
 behaves just like *service_like* but it takes a list of patterns instead of
 a single one.
 
+#### has_attribute (const std::string attribute)
+
+It fowards events that have a set *attribute*.
+
 #### set_state (const std::string state)
 
 It sets the events state to *state* and forwards them.

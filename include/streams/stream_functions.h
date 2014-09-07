@@ -44,6 +44,8 @@ streams_t service_like(const std::string pattern);
 
 streams_t service_like_any(const std::vector<std::string> patterns);
 
+streams_t has_attribute(const std::string attribute);
+
 streams_t state(const std::string state);
 
 streams_t state_any(const std::vector<std::string> states);
