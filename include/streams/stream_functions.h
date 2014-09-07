@@ -36,6 +36,8 @@ streams_t prn();
 
 streams_t prn(const std::string prefix);
 
+streams_t null();
+
 streams_t service(const std::string service);
 
 streams_t service_any(const std::vector<std::string> services);

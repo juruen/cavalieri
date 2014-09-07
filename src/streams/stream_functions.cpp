@@ -82,6 +82,10 @@ streams_t  prn(const std::string prefix) {
     });
 }
 
+streams_t null() {
+  return create_stream([=](e_t) -> next_events_t { return {}; });
+}
+
 streams_t service(const std::string service) {
   return where(match_pred("service", service));
 }

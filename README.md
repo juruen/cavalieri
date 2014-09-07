@@ -223,13 +223,17 @@ Streams API
 
 #### What is a stream function?
 
-#### prn()
+#### prn ()
 
 It prints events that pass through it.
 
 #### prn (const std::string  str)
 
 It prints events that pass through it and also the string that takes as an argument.
+
+#### null ()
+
+This can be used a as a sink that doesn't forward events.
 
 #### service (const std::string service)
 
