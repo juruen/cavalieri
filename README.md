@@ -767,6 +767,114 @@ service("puppet")
 
 ### Predicate functions
 
+These functions are used to filter events. Its main purpose is to evaluate
+events and return *true* or *false* based on what is being checked.
+
+There are two types of predicate functions. Those returning *predicate_t*,
+which can be used as arguments for *where()* and *split*. And those returning
+*bool*, which can be returned to build your own *predicate_t* functions, or
+within your own stream functions.
+
+#### predicate_t above_eq (const double value)
+
+Check if the event metric is greater than or equal  to *value*.
+
+#### predicate_t above(const double value)
+
+Check if the event metric is greater than *value*.
+
+#### predicate_t under_eq(const double value)
+
+Check if the event metric is less than or equal  to *value*.
+
+#### predicate_t under(const double value)
+
+Check if the event metric is less than *value*.
+
+#### predicate_t state(const std::string state)
+
+Check if the event state is equal to *state*.
+
+#### predicate_t service(const std::string service)
+
+Check if the event service is equal to *service*.
+
+#### predicate_t match(const std::string key, const std::string value)
+
+Check if the field *key* in the event is equal to *value*.
+
+#### predicate_t match_any(const std::string key, const std::vector<std::string> values)
+
+Check if the field *key* in the event is equal to any of the *values*.
+
+#### predicate_t match_re(const std::string key, const std::string regex)
+
+Check if the field *key* in the event matches the regular expression in
+*regex*.
+
+*regex* is a string containing a valid
+[ECMAScript](http://www.cplusplus.com/reference/regex/ECMAScript/) regular
+expression.
+
+#### predicate_t match_re_any(const std::string key, const std::vector<std::string> regexes)
+
+Check if the field *key* in the event matches any of the regular expression in
+*regexes*.
+
+#### predicate_t match_like(const std::string key, const std::string like)
+
+Check if the field *key* in the event matches a *SQL like* string that uses
+'%' to search for patterns.
+
+#### predicate_t match_like_any(const std::string key, const std::vector<std::string> likes)
+
+Check if the field *key* in the event matches any of the  *SQL like* strings.
+
+#### predicate_t default_true()
+
+This function always returns true.
+
+#### bool tagged_any(e_t event, const tags_t& tags)
+
+Check if any of the *tags* is present in *event*.
+
+#### bool tagged_all(e_t event, const tags_t& tags)
+
+Check if all *tags* are present in *event*.
+
+#### bool expired(e_t event)
+
+Check if *event* is expired.
+
+#### bool above_eq(e_t event, const double value)
+
+Check if metric in *event* is greater than or equal *value*.
+
+#### bool above(e_t event, const double value)
+
+Check if metric in *event* is greater than *value*.
+
+#### bool under_eq(e_t event, const double value)
+
+Check if metric in *event* is less than or equal to *value*.
+
+#### bool under(e_t event, const double value)
+
+Check if metric in*event* is less than *value*.
+
+#### bool match(e_t event, const std::string key, const std::string value)
+
+Check if the field *key* in *event* is equal to *value*.
+
+#### bool match_re(e_t event, const std::string key, const std::string regex)
+
+Check if the field *key* in *event* matches the *regex*.
+
+#### bool match_like(e_t event, const std::string key, const std::string like)
+
+Check if the field *key* in *event* matches the *SQL like* string that uses
+'%' to search for patterns.
+
 ### Some utility functions
 
 ### Some typedefs
