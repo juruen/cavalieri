@@ -301,8 +301,8 @@ When an event is received, the event is passed to the first stream which
 predicate returns true.
 
 ```cpp
-split({above_pred(10), set_state("ok")},
-      {under_pred(5),  set_state("critical"});
+split({p::above(10), set_state("ok")},
+      {p::under(5),  set_state("critical"});
 ```
 
 #### split (const split_clauses_t clauses, const streams_t default_stream)
@@ -313,8 +313,8 @@ first stream which predicate returns true. If none of the predicates match,
 the event is passed to the default stream.
 
 ```cpp
-split({above_pred(10), set_state("ok")},
-      {under_pred(5),  set_state("critical")},
+split({p::above(10), set_state("ok")},
+      {p::under(5),  set_state("critical")},
       set_state("warning"));
 ```
 
@@ -323,7 +323,7 @@ split({above_pred(10), set_state("ok")},
 It passes events that make the predicate function return true.
 
 ```cpp
-where(under_pred(5)) >> set_state("critical") >> notiy_email();
+where(p::under(5)) >> set_state("critical") >> notiy_email();
 ```
 
 #### where (const predicate_t & predicate, const streams_t else_stream)
@@ -334,7 +334,7 @@ Otherwise, events are passed to *else_stream*.
 ```cpp
 above_stream = set_state("ok") >> prn("metric is above 5");
 
-where(under_pred(5), above_stream) >> set_state("critical") >> notiy_email(); 
+where(p::under(5), above_stream) >> set_state("critical") >> notiy_email(); 
 ```
 
 #### by (const by_keys_t  & keys, const streams_t stream)
@@ -422,7 +422,7 @@ any of the predicates, all the stored events are forwared to *fold_fn*.
 
 ```cpp
 // Create a new event metric that is the sum of foo and bar
-project({service_pred("foo"), service_pred("bar"), sum) >> prn("foo + bar");
+project({p::serviced("foo"), p::service("bar"), sum) >> prn("foo + bar");
 ```
 
 #### changed_state (const std::string & initial)
@@ -699,7 +699,7 @@ It sets it back to critical when *trigger* has returned *false* for more than
 This is useful to avoid spikes.
 
 ```cpp
-stable_metric( /* seconds */ 300, above_pred(200))
+stable_metric( /* seconds */ 300, p::above(200))
   >> changed_state("ok")
     >>  email();
 ```
@@ -719,7 +719,7 @@ It sets it back to critical when *cancel* has returned *true* for more than
 This is useful to avoid spikes.
 
 ```cpp
-stable_metric( /* seconds */ 300, above_pred(200))
+stable_metric( /* seconds */ 300, p::above(200))
   >> changed_state("ok")
     >>  email();
 ```
@@ -740,7 +740,7 @@ more than *dt* seconds.
 ```cpp
 service("failed_requests_rate")
   >> tagged("datacenter::london")
-    >> agg_stable_metric(/* secs */ 300, sum, above_pred(200), under_pred(50))
+    >> agg_stable_metric(/* secs */ 300, sum, p::above(200), p::under(50))
       >> changed_state("ok")
         >> email();
 ```

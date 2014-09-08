@@ -7,12 +7,11 @@
 #include <util/util.h>
 #include <core/core.h>
 #include <scheduler/scheduler.h>
+#include <predicates/predicates.h>
 #include <streams/stream_functions_lock.h>
 #include <streams/stream_functions.h>
 
 namespace {
-
-const unsigned int k_default_ttl = 60;
 
 const std::string k_rate_service = "cavalieri stream rate";
 const std::string k_rate_desc = "events per second in streams";
@@ -62,6 +61,8 @@ void update_in_latency(instrumentation & inst, const int id,
 
 }
 
+namespace pred = predicates;
+
 streams_t  prn() {
   return create_stream(
     [](e_t e) -> next_events_t
@@ -87,19 +88,19 @@ streams_t null() {
 }
 
 streams_t service(const std::string service) {
-  return where(match_pred("service", service));
+  return where(pred::match("service", service));
 }
 
 streams_t service_any(const std::vector<std::string> services) {
-  return where(match_any_pred("service", services));
+  return where(pred::match_any("service", services));
 }
 
 streams_t service_like(const std::string pattern) {
-  return where(match_like_pred("service", pattern));
+  return where(pred::match_like("service", pattern));
 }
 
 streams_t service_like_any(const std::vector<std::string> patterns) {
-  return where(match_like_any_pred("service", patterns));
+  return where(pred::match_like_any("service", patterns));
 }
 
 streams_t has_attribute(const std::string attribute) {
@@ -107,7 +108,7 @@ streams_t has_attribute(const std::string attribute) {
 }
 
 streams_t state(const std::string state) {
-  return where(match_pred("state", state));
+  return where(pred::match("state", state));
 }
 
 streams_t state_any(const std::vector<std::string> states) {
@@ -338,7 +339,7 @@ streams_t tagged_any(const tags_t& tags) {
     [=](e_t e) -> next_events_t
     {
 
-      if (tagged_any_(e, tags)) {
+      if (pred::tagged_any(e, tags)) {
         return {e};
       } else {
         return {};
@@ -351,7 +352,7 @@ streams_t tagged_all(const tags_t& tags) {
   return create_stream(
     [=](e_t e) -> next_events_t
     {
-      if (tagged_all_(e, tags)) {
+      if (pred::tagged_all(e, tags)) {
         return {e};
       } else {
         return {};
@@ -451,7 +452,7 @@ streams_t above(double m) {
   return create_stream(
    [=](e_t e) -> next_events_t {
 
-      if (above_(e, m)) {
+      if (pred::above(e, m)) {
         return {e};
       } else {
         return {};
@@ -464,7 +465,7 @@ streams_t under(double m) {
   return create_stream(
    [=](e_t e) -> next_events_t {
 
-      if (under_(e, m)) {
+      if (pred::under(e, m)) {
         return {e};
       } else {
         return {};
@@ -477,7 +478,7 @@ streams_t within(double a, double b) {
   return create_stream(
     [=](e_t e) -> next_events_t {
 
-    if (above_eq_(e,a) && under_eq_(e, b)) {
+    if (pred::above_eq(e,a) && pred::under_eq(e, b)) {
       return {e};
     } else {
       return {};
@@ -490,7 +491,7 @@ streams_t without(double a, double b) {
   return create_stream(
     [=](e_t e) -> next_events_t {
 
-    if (under_(e,a) || above_(e, b)) {
+    if (pred::under(e,a) || pred::above(e, b)) {
       return {e};
     } else {
       return {};
@@ -581,7 +582,7 @@ streams_t ddt() {
 streams_t expired() {
   return create_stream(
     [=](e_t e) -> next_events_t {
-      if (expired_(e)) {
+      if (pred::expired(e)) {
         return {e};
       } else {
         return {};
@@ -608,7 +609,7 @@ streams_t send_index() {
   return create_stream(
     [=](e_t e) -> next_events_t {
 
-      if (!expired_(e)) {
+      if (!pred::expired(e)) {
 
         g_core->idx().add_event(e);
 
@@ -692,157 +693,6 @@ streams_t pagerduty_trigger(const std::string key) {
 
     }
   );
-}
-
-predicate_t above_eq_pred(const double value) {
-  return PRED(above_eq_(e, value));
-}
-
-predicate_t above_pred(const double value) {
-  return PRED(above_(e, value));
-}
-
-predicate_t under_eq_pred(const double value) {
-  return PRED(under_eq_(e, value));
-}
-
-predicate_t under_pred(const double value) {
-  return PRED(under_(e, value));
-}
-
-predicate_t state_pred(const std::string state) {
-  return PRED(e.state() == state);
-}
-
-predicate_t service_pred(const std::string service) {
-  return PRED(e.service() == service);
-}
-
-predicate_t match_pred(const std::string key, const std::string value) {
-  return PRED(match_(e, key, value));
-}
-
-predicate_t match_any_pred(const std::string key,
-                           const std::vector<std::string> values)
-{
-  return PRED(
-      std::find(values.begin(), values.end(), event_str_value(e, key))
-      != values.end()
-  );
-}
-
-predicate_t match_re_pred(const std::string key, const std::string value) {
-  return PRED(match_re_(e, key, value));
-}
-
-predicate_t match_re_any_pred(const std::string key,
-                              const std::vector<std::string> values)
-{
-  return [=](e_t e) {
-
-    for (const auto & val : values) {
-      if (match_re_(e, key, val)) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-}
-
-predicate_t match_like_pred(const std::string key, const std::string value) {
-  return PRED(match_like_(e, key, value));
-}
-
-predicate_t match_like_any_pred(const std::string key,
-                              const std::vector<std::string> values)
-{
-  return [=](e_t e) {
-
-    for (const auto & val : values) {
-      if (match_like_(e, key, val)) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-}
-
-predicate_t default_pred() {
-  return [](e_t){ return true; };
-}
-
-bool tagged_any_(e_t e, const tags_t& tags) {
-  for (auto &tag: tags) {
-    if (tag_exists(e, tag)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool tagged_all_(e_t e, const tags_t& tags) {
-  for (auto &tag: tags) {
-    if (!tag_exists(e, tag)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool expired_(e_t e) {
-  auto ttl = e.has_ttl() ? e.ttl() : k_default_ttl;
-
-  if (e.state() == "expired") {
-    return true;
-  }
-
-  if (g_core->sched().unix_time() < e.time()) {
-    return false;
-  }
-
-  return (g_core->sched().unix_time() - e.time() > ttl);
-}
-
-bool above_eq_(e_t e, const double value) {
-  return (metric_to_double(e) >= value);
-}
-
-bool above_(e_t e, const double value) {
-  return (metric_to_double(e) > value);
-}
-
-bool under_eq_(e_t e, const double value) {
-  return (metric_to_double(e) <= value);
-}
-
-bool under_(e_t e, const double value) {
-  return (metric_to_double(e) < value);
-}
-
-bool match_(e_t e, const std::string key, const std::string value) {
-
-  const std::string ev_val(event_str_value(e, key));
-
-  return ev_val == value;
-
-}
-
-bool match_re_(e_t e, const std::string key, const std::string value) {
-
-  const std::string ev_val(event_str_value(e, key));
-
-  return match_regex(ev_val, value);
-
-}
-
-bool match_like_(e_t e, const std::string key, const std::string value) {
-
-  const std::string ev_val(event_str_value(e, key));
-
-  return match_like(ev_val, value);
-
 }
 
 streams::streams(instrumentation & instrumentation)

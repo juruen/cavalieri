@@ -14,7 +14,7 @@
 typedef const Event& e_t;
 typedef std::vector<Event> events_t;
 
-#define PRED(EXP) [=](e_t e) { return (EXP); }
+
 #define TR(EXP) [](Event & e) {(EXP); }
 #define NE(EXP) [=](const Event & event) { Event e(event); (EXP); return e;  }
 #define sdo(...) svec({__VA_ARGS__})
@@ -138,55 +138,6 @@ streams_t pagerduty_resolve(const std::string key);
 streams_t pagerduty_acknowledge(const std::string key);
 
 streams_t pagerduty_trigger(const std::string key);
-
-predicate_t above_eq_pred(const double value);
-
-predicate_t above_pred(const double value);
-
-predicate_t under_eq_pred(const double value);
-
-predicate_t under_pred(const double value);
-
-predicate_t state_pred(const std::string state);
-
-predicate_t service_pred(const std::string state);
-
-predicate_t match_pred(const std::string key, const std::string value);
-
-predicate_t match_any_pred(const std::string key,
-                          const std::vector<std::string> values);
-
-predicate_t match_re_pred(const std::string key, const std::string value);
-
-predicate_t match_re_any_pred(const std::string key,
-                              const std::vector<std::string> values);
-
-predicate_t match_like_pred(const std::string key, const std::string value);
-
-predicate_t match_like_any_pred(const std::string key,
-                              const std::vector<std::string> values);
-
-predicate_t default_pred();
-
-bool tagged_any_(e_t e, const tags_t& tags);
-
-bool tagged_all_(e_t e, const tags_t& tags);
-
-bool expired_(e_t e);
-
-bool above_eq_(e_t e, const double value);
-
-bool above_(e_t e, const double value);
-
-bool under_eq_(e_t e, const double value);
-
-bool under_(e_t e, const double value);
-
-bool match_(e_t e, const std::string key, const std::string value);
-
-bool match_re_(e_t e, const std::string key, const std::string value);
-
-bool match_like_(e_t e, const std::string key, const std::string value);
 
 
 class streams {

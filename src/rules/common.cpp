@@ -3,6 +3,7 @@
 #include <util/util.h>
 #include <algorithm>
 #include <streams/stream_functions.h>
+#include <predicates/predicates.h>
 #include <rules/common.h>
 
 namespace {
@@ -123,12 +124,14 @@ streams_t no_expire() {
 
 }
 
+namespace pred = predicates;
+
 streams_t critical_above(double value) {
-  return set_critical_predicate(above_pred(value));
+  return set_critical_predicate(pred::above(value));
 }
 
 streams_t critical_under(double value) {
-  return set_critical_predicate(under_pred(value));
+  return set_critical_predicate(pred::under(value));
 }
 
 streams_t stable_metric(double dt, predicate_t trigger)
@@ -183,7 +186,7 @@ streams_t max_critical_hosts(size_t n) {
 streams_t ratio(const std::string a, const std::string b,
                 const double default_zero)
 {
-  return project({service_pred(a), service_pred(b)}, fold_ratio(default_zero))
+  return project({pred::service(a), pred::service(b)}, fold_ratio(default_zero))
          >> where(PRED(metric_set(e)));
 }
 

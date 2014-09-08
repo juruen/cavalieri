@@ -2,6 +2,7 @@
 #define RULES_COMMON_TEST_CASE
 
 #include <rules/common.h>
+#include <predicates/predicates.h>
 
 streams_t bsink(std::vector<Event> & v) {
   return create_stream([&](e_t e) -> next_events_t
@@ -48,7 +49,8 @@ TEST(stable_metric_above_test_case, test)
 {
   std::vector<Event> v;
 
-  auto td_above = stable_metric(5, above_pred(5), under_pred(3)) >> bsink(v);
+  auto td_above = stable_metric(5, predicates::above(5), predicates::under(3))
+                    >> bsink(v);
   init_streams(td_above);
 
   Event e;
@@ -86,7 +88,8 @@ TEST(stable_metric_under_test_case, test)
 {
   std::vector<Event> v;
 
-  auto td_under = stable_metric(5, under_pred(5), above_pred(3)) >> bsink(v);
+  auto td_under = stable_metric(5, predicates::under(5), predicates::above(3))
+                    >> bsink(v);
   init_streams(td_under);
 
   Event e;
@@ -124,8 +127,8 @@ TEST(agg_sum_trigger_above_test_case,test)
 {
   std::vector<Event> v;
 
-  auto agg =  agg_stable_metric(5, sum, above_eq_pred(5), under_eq_pred(3))
-              >> sink(v);
+  auto agg =  agg_stable_metric(5, sum, predicates::above_eq(5),
+                                predicates::under_eq(3)) >> sink(v);
   init_streams(agg);
 
   g_core->sched().clear();
@@ -224,7 +227,8 @@ TEST(per_host_ratio_test_case,test)
   std::vector<Event> v;
 
   auto ratio = per_host_ratio("a", "b", 1, 300,
-                              above_pred(0.7), under_pred(0.5)) >> sink(v);
+                              predicates::above(0.7), predicates::under(0.5))
+               >> sink(v);
   init_streams(ratio);
 
   Event e;

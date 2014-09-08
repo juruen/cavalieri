@@ -17,6 +17,7 @@ SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
+    ${CMAKE_SOURCE_DIR}/src/predicates/predicates.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp

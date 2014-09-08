@@ -3,6 +3,7 @@
 
 #include <streams/stream_infra.h>
 #include <streams/stream_functions.h>
+#include <predicates/predicates.h>
 #include <scheduler/scheduler.h>
 #include <core/core.h>
 #include <util/util.h>
@@ -745,7 +746,7 @@ TEST(tag_streams_test_case, test)
   Event e;
   push_event(tag_stream, e);
   ASSERT_EQ(1, v.size());
-  ASSERT_TRUE(tagged_all_(v[0], {"foo", "bar"}));
+  ASSERT_TRUE(predicates::tagged_all(v[0], {"foo", "bar"}));
 }
 
 TEST(expired_streams_test_case, test)

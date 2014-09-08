@@ -2,8 +2,10 @@
 #include <queue>
 #include <core/core.h>
 #include <instrumentation/reservoir.h>
+#include <predicates/predicates.h>
 #include <streams/stream_functions.h>
 
+namespace pred = predicates;
 
 typedef struct {
   std::unordered_map<std::string, streams_t> by_map;
@@ -127,7 +129,7 @@ on_event_fn_t coalesce_lock_(fold_fn_t fold) {
 
       for (auto it = coalesce->events.begin(); it != coalesce->events.end();) {
 
-        if (expired_(it->second)) {
+        if (pred::expired(it->second)) {
 
           expired_events.push_back(it->second);
           it = coalesce->events.erase(it);
@@ -205,7 +207,7 @@ on_event_fn_t project_lock_(const predicates_t predicates, fold_fn_t fold) {
 
             if (curr_events[i]) {
 
-              if (expired_(*curr_events[i])) {
+              if (pred::expired(*curr_events[i])) {
 
                 expired_events.push_back(*curr_events[i]);
                 curr_events[i].reset();
