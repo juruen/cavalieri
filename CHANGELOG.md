@@ -11,6 +11,7 @@
   * Add has_attribute() stream function
   * Make prn() return the same event
   * Add null() stream function
+  * Move predicates to their own file and namespace
 
 0.0.6 2014-08-05
 ================
