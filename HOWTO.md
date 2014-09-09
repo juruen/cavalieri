@@ -340,3 +340,94 @@ split_clauses_t thresholds = {{p::under(10), set_state("ok")},
 
 split(thresholds) >> send_index();
 ```
+
+#### State changes
+
+Most of the time, when you need to notify via email or Pager Duty, it is useful
+to only do so when there is a state change. You are most certainly instersted
+in state transitions: from *ok* to *critical*, or *critical* to *ok*.
+
+*changed_state()* helps you to implement the above behavior. One thing to note
+is that, this function will handle the pairs of *host* and *service*
+independently.
+
+
+```cpp
+
+change_state() >> email("ops@foobar");
+
+```
+
+*change_state()* assummes that the initial state is *ok*. If you would like to
+change that you can use *change_state("other_initial_state")*.
+
+#### Measue your application latency
+
+Say your application is reporting how long it takes for an individual request
+to be proccessed. And you would like to get a distribution of its latency to
+give you an overall idea of how healthy your system is.
+
+Your clients send something like this:
+
+```json
+{
+  :service "api request"
+  :metric 0.140
+}
+```
+
+To calculate the latency distribution we use
+[percentiles](https://github.com/juruen/cavalieri#percentiles-time_t-interval-const-stdvector-percentiles).
+
+This function takes an *interval* in seconds, and a vector of doubles
+representing the percentiles that you are interested in. Events
+enter the function, and a distribution of its metrics is stored in it. Every
+*interval* seconds, a list of events containing the value of every percentile
+is emitted.
+
+```cpp
+
+auto request_latency = percentiles(5, {0.0, 0.5, 0.9, 0.95, 1});
+
+```
+
+We also want to report the rate of API requests that our system is handling. To
+do that, we use *rate*, which takes an *interval* in seconds. During this
+*interval*, *rate* accumulates the metrics that receives, and at the end of the
+interval, the accumulated value is divided by *interval*. Note that we need
+to set the metric to *1* before entering *rate*. Otherwise, we wouldn't be
+computing the request rate.
+
+```cpp
+
+auto request_rate = set_metric(1) >> rate(5);
+
+```
+
+Finally, we use *request_latency* and *request_rate*. The events that are
+outputed by these two streams are set to state *ok* and get indexed so we
+can nicely see them in green on our dashboard.
+
+```cpp
+
+sdo(request_latency, request_rate) >> set_state("ok") >> send_index;
+
+```
+
+#### Report exceptions
+
+It is easy to report exceptions using Riemann clients from your app.
+
+If that is the case, it is simple to be notified, for example, via email.
+
+```cpp
+
+tagged("exception") >> email("crash@bar.org");
+
+tagged_all("exception", "cassandra") >> email("cassandra@bar.org");
+
+```
+
+#### Throttle events
+
+
