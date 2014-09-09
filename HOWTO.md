@@ -269,7 +269,6 @@ See
 for some examples.
 
 
-
 If the above functions are not enough you can use *where()* with any of the
 [predicate functions](https://github.com/juruen/cavalieri#predicate-functions).
 
@@ -361,7 +360,7 @@ change_state() >> email("ops@foobar");
 *change_state()* assummes that the initial state is *ok*. If you would like to
 change that you can use *change_state("other_initial_state")*.
 
-#### Measue your application latency
+#### Measure your application latency
 
 Say your application is reporting how long it takes for an individual request
 to be proccessed. And you would like to get a distribution of its latency to
@@ -371,8 +370,8 @@ Your clients send something like this:
 
 ```json
 {
-  :service "api request"
-  :metric 0.140
+  "service": "api request",
+  "metric": 0.140
 }
 ```
 
@@ -418,7 +417,8 @@ sdo(request_latency, request_rate) >> set_state("ok") >> send_index;
 
 It is easy to report exceptions using Riemann clients from your app.
 
-If that is the case, it is simple to be notified, for example, via email.
+If that is the case, it is equally simple to be notified, for example, via
+email.
 
 ```cpp
 
@@ -430,4 +430,191 @@ tagged_all("exception", "cassandra") >> email("cassandra@bar.org");
 
 #### Throttle events
 
+Sometimes you may need to limit the number of events that go through a stream.
 
+If you are receiving emails containing exceptions, and at some point, things
+go really wrong, it is possible to get an avalanche of emails.
+
+To handle this sort of cases you can use
+[throttle](https://github.com/juruen/cavalieri#throttle-size_t-n-time_t-dt).
+This function limits the number of events that go through it in a given period.
+
+The rule below sends up to 10 emails every hour. Any other email is discarded.
+
+```cpp
+
+tagged("exception") >> throttle(10, 3600) >> email("crash@bar.org")
+
+```
+
+#### Detect down services
+
+Cavalieri has an index where events can be pushed. You can reason about
+this index like it were a hash map or dictionary where events are stored.
+
+The *key* of the inserted elements is created by composing event's host and
+service.
+
+When an event is added to the index, and its key already exists, it will
+replace the existing event.
+
+Cavalieri has a thread that goes through the index every
+*index_expire_interval* seconds. If checks every event in it, and if its *time*
+plus *ttl* is less than current time, Cavalieri expires the event. This means
+that the event is removed from the index, its state is changed to *expired* and
+it is injected back to the streams just like if it were received from a client.
+
+Note that an event expires when it has not received an update within the
+*ttl* period.
+
+You can use expired events to alert when a host or service is down.
+
+A simple way to detect a service is down is creating or picking an existing
+service that you send to cavalieri and alert if it expires.
+
+The rule below sends an email when a expired event from the *ping* service is
+detected.
+
+*ping* service is something that your machines would send in a fixed interval
+*t*, and its ttl could be something like *2t*. Note that you don't want to set
+the *ttl* to the same interval that you send the event.
+
+
+```cpp
+
+service("ping") >> expired() >> email("ops@foo.org")
+
+```
+
+#### Grouping events by time
+
+There are certian rules where you need to analyze a bunch of events over a
+period of time.
+
+The function belows are specifically tailored for those cases. They accumulate
+events based on time or number of events, and at some point they are passed
+to a [fold function](https://github.com/juruen/cavalieri#fold-functions), which
+processes the list of events and returns one.
+
+##### moving_event_window (const size_t n, const fold_fn_t fn)
+
+Every time an event is received, the last *n* events are passed to *fn* which
+returns a new event that is forwarded.
+
+
+##### fixed_event_window (const size_t n, const fold_fn_t fn)
+
+It passes non-overlapping windows of *n* events to *fn* which returns
+a new event that is forwarded.
+
+##### moving_event_window (const size_t dt, const fold_fn_t fn)
+
+Every time an event is received, the last events within a *dt* window are
+passed to *fn* which returns a new event that is forwarded.
+
+##### fixed_time_window (const size_t dt, const fold_fn_t fn)
+
+It passes non-overlapping windows of the events received within a *dt* window
+to *fn* which returns a new event that is forwarded.
+
+
+#### Change units
+
+You can use *scale* to change units in an event's metric.
+
+```cpp
+
+service("eth0_input") >> prn("bytes/s") >> scale(8) >> prn("bits/s");
+
+```
+
+#### Count total number of hosts
+
+See how we count the total number of hosts that are sending events. First,
+we set the service of the events to *distinct hosts*. Events enter *coalesce*,
+which stores events based on its host and service. That means that we will
+store an event per every host.
+
+*coalesce* sends the stored events to *count*, a fold function, that simply
+calculates the number of events passade to it, and sets the metric of the first
+event  to this value.
+
+The event coming out from coalesce contains the number of hosts. We also change
+the host in that event because otherwise it would contain a random host. And,
+finally, we index the event.
+
+
+```cpp
+
+set_service("distinct hosts")
+  >> coalesce(count)
+    >> set_host("all")
+      >> send_index()
+
+
+```
+
+#### Alerting when a certian percentage of events happen
+
+It is usual sometimes to only alert when a certain percentage of events occur.
+Let's see how to do this through an example.
+
+We have an athorization service that is reporting whether an authorization
+attempt by a user is succesful or not.
+
+```json
+{
+  "host": "auth.foobar.com",
+  "service": "authorize",
+  "state": "error"
+}
+```
+
+We wish to alert when the percentage of failed authorizations is too high.
+First, we need a fold function that will take a list of events and decide
+which state the forwarded event should have.
+
+
+```cpp
+
+#include <algorithm>
+
+Event failed_ratio(const std::vector<Event> events) {
+
+  if (events.empty()) {
+    return {};
+  }
+
+  auto failed = std::count_if(begin(events), end(events),
+                              [](Event e) { return e.state() == "error") });
+
+  auto ratio = static_cast<double>(failed) / event.size();
+
+  Event event(events.front());
+
+  if (ratio > 0.7) {
+    event.set_state("critical");
+  } else if (ratio > 0.3) {
+    event.set_state("warning");
+  } else {
+    event.set_state("ok");
+  }
+
+  event.set_service("authorization failures");
+
+  return event;
+
+}
+
+```
+
+And we can make use of
+[fixed_time_window](https://github.com/juruen/cavalieri#fixed_time_window-const-size_t-dt-const-fold_fn_t-fn),
+to send events to *failed_ratio* every two minutes and decide the proper state
+for the alert.
+
+```cpp
+
+service("authorize") >> coalesce(failed_ratio) >> email("security@bar.org");
+
+```
