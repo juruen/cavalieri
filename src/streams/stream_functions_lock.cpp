@@ -444,7 +444,7 @@ on_event_fn_t fixed_time_window_lock_(time_t dt, fold_fn_t fold) {
         }
 
        {
-          std::lock_guard<std::mutex> guard(std::mutex);
+          std::lock_guard<std::mutex> guard(window->mutex);
 
           if (!window->started) {
             window->started = true;
