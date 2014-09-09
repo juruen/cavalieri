@@ -15,6 +15,7 @@
   * Add changed_state() assuming "ok" as initial state
   * Add not_expired() stream function
   * Add count() fold function
+  * Add set_host() function
 
 0.0.6 2014-08-05
 ================

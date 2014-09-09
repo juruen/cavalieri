@@ -276,6 +276,9 @@ It fowards events that have a set *attribute*.
 
 It sets the events state to *state* and forwards them.
 
+#### set_host (const std::string host)
+
+It sets the events host to *host* and forwards them.
 
 #### set_metric (const double value);
 

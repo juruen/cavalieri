@@ -54,6 +54,8 @@ streams_t state_any(const std::vector<std::string> states);
 
 streams_t set_state(const std::string state);
 
+streams_t set_host(const std::string host);
+
 streams_t set_metric(const double metric);
 
 streams_t set_description(const std::string description);

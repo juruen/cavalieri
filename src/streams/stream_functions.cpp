@@ -127,6 +127,10 @@ streams_t set_state(const std::string state) {
   return with({{"state", state}});
 }
 
+streams_t set_host(const std::string host) {
+  return with({{"host", host}});
+}
+
 streams_t set_metric(const double metric) {
   return with({{"metric", metric}});
 }
