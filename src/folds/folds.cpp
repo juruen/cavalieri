@@ -144,7 +144,7 @@ Event count(const events_t & events) {
   }
 
   Event e(events.front());
-  e.set_metric_d(events.size());
+  set_metric(e, events.size());
   e.set_time(max_time(events));
 
   return e;
