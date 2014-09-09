@@ -82,6 +82,8 @@ streams_t project(const predicates_t predicates, fold_fn_t);
 
 streams_t changed_state(std::string initial);
 
+streams_t changed_state();
+
 streams_t tagged_any(const tags_t& tags);
 
 streams_t tagged_all(const tags_t& tags);

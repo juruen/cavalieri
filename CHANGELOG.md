@@ -12,6 +12,7 @@
   * Make prn() return the same event
   * Add null() stream function
   * Move predicates to their own file and namespace
+  * Add changed_state() assuming "ok" as initial state
 
 0.0.6 2014-08-05
 ================

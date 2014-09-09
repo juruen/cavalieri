@@ -334,6 +334,12 @@ streams_t changed_state(std::string initial) {
 
 }
 
+streams_t changed_state() {
+
+  return changed_state("ok");
+
+}
+
 streams_t tagged_any(const tags_t& tags) {
   return create_stream(
     [=](e_t e) -> next_events_t

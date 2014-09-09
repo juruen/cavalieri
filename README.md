@@ -86,7 +86,7 @@ streams_t rules() {
   return service("requests_rate")
            >> above(40)
              >> set_state("critical")
-               >> changed_state("ok")
+               >> changed_state()
                  >>  mail_stream;
 
 }
@@ -154,7 +154,7 @@ Let's have a look at the default rules again:
 auto s =  service("requests_rate")
            >> above(40)
              >> set_state("critical")
-               >> changed_state("ok")
+               >> changed_state()
                  >>  mail_stream;
 
 [...]
@@ -435,11 +435,22 @@ project({p::serviced("foo"), p::service("bar"), sum) >> prn("foo + bar");
 
 #### changed_state (const std::string & initial)
 
-It only forwards events if there is a state change for every host and service.
-It assummes *initial* as the first state.
+It only forwards events if there is a state change for a host and service.
+It assummes *initial* as the first state. It uses *by({"host", "service"})*
+internally.
 
 If you are sending emails, this is useful to not spam yourself and only send
 emails when something goes from *ok* to *critical* and viceversa.
+
+#### changed_state ()
+
+It only forwards events if there is a state change for a host and service.
+It assummes *ok* as the first state. It uses *by({"host", "service"})*
+internally.
+
+If you are sending emails, this is useful to not spam yourself and only send
+emails when something goes from *ok* to *critical* and viceversa.
+
 
 #### tagged_any (const tags_t & tags)
 
@@ -766,7 +777,7 @@ report a puppet failure in a DC.
 service("puppet")
   >> tagged("datacenter::paris")
     >> max_critial_hosts(20)
-      >> changed_state("ok")
+      >> changed_state()
         >> set_host("datacenter::paris")
           >> set_service("too many puppet failures")
             >> email();
