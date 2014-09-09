@@ -136,3 +136,18 @@ Event maximum(const events_t & events) {
 
   return e;
 }
+
+Event count(const events_t & events) {
+
+  if (events.empty()) {
+    return {};
+  }
+
+  Event e(events.front());
+  e.set_metric_d(events.size());
+  e.set_time(max_time(events));
+
+  return e;
+}
+
+

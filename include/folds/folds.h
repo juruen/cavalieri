@@ -15,4 +15,6 @@ Event minimum(const std::vector<Event> & events);
 
 Event maximum(const std::vector<Event> &  events);
 
+Event count(const std::vector<Event> & events);
+
 #endif

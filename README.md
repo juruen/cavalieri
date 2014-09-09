@@ -693,6 +693,10 @@ It returns an event that contains the minimum value of the metrics of *events*.
 
 It returns an event that contains the maximum of the metrics of *events*.
 
+#### count(const std::vector<Event> events)
+
+It returns an event that contains the number of received *events*.
+
 ### Common Rules
 
 These rules are based on the above stream functions, but they are more
