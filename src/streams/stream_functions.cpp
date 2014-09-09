@@ -596,6 +596,17 @@ streams_t expired() {
   });
 }
 
+streams_t not_expired() {
+  return create_stream(
+    [=](e_t e) -> next_events_t {
+      if (pred::expired(e)) {
+        return {e};
+      } else {
+        return {};
+      }
+  });
+}
+
 streams_t tag(tags_t tags) {
   return create_stream(
     [=](e_t e) -> next_events_t {

@@ -583,6 +583,10 @@ It counts the number of events that pass through it.
 
 It forwards events that are expired.
 
+#### not_expired ()
+
+It forwards events that are not expired.
+
 #### tags (tags_t tags)
 
 It adds the list of passed *tags* to events and forwards them.

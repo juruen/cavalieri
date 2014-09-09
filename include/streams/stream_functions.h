@@ -122,6 +122,8 @@ streams_t counter();
 
 streams_t expired();
 
+streams_t not_expired();
+
 streams_t tag(tags_t tags);
 
 streams_t ddt();
