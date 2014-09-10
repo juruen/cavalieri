@@ -168,7 +168,7 @@ std::vector<Event> instrumentation::snapshot() {
   set_gauges(events, event);
   set_mem_meausres(events, event);
 
-  return events;;
+  return events;
 }
 
 void instrumentation::set_rates(std::vector<Event> & events, Event event) {
@@ -189,13 +189,14 @@ void instrumentation::set_latencies(std::vector<Event> & events, Event event) {
   for (int i = 0; i < latencies_id_.load(); i++) {
 
     event.set_service(latencies_[i].service);
-    event.set_service(latencies_[i].description);
+    event.set_description(latencies_[i].description);
 
     auto new_events = reservoir_to_events(latencies_[i].reservoir,
                                           latencies_[i].percentiles,
                                           event);
 
     std::copy(begin(new_events), end(new_events), back_inserter(events));
+
   }
 
 }
