@@ -19,11 +19,11 @@ streams_t join(const streams_t & left, const streams_t & right) {
 fwd_new_stream_fn_t forward(streams_t::iterator begin, streams_t::iterator end)
 {
 
-  return [=]() -> forward_fn_t
-  {
+  streams_t s;
+  std::copy(begin, end, back_inserter(s));
 
-    streams_t s;
-    std::copy(begin, end, back_inserter(s));
+  return [=]() mutable -> forward_fn_t
+  {
 
     init_streams(s);
 
@@ -66,7 +66,7 @@ void init_streams(streams_t & streams) {
 
     auto & node = streams[i];
 
-    node.on_event = node.on_init(forward(streams.begin() + j, streams.end()));
+    node.on_event = node.on_init(forward(streams.end() - j , streams.end()));
 
   }
 
