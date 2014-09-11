@@ -16,6 +16,7 @@
   * Add not_expired() stream function
   * Add count() fold function
   * Add set_host() function
+  * Add email() signature for multiple receipients
 
 0.0.6 2014-08-05
 ================

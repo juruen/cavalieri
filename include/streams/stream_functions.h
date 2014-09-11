@@ -139,6 +139,9 @@ streams_t forward(const std::string host, const int port);
 streams_t email(const std::string server, const std::string from,
                 const std::string to);
 
+streams_t email(const std::string server, const std::string from,
+                const std::vector<std::string> to);
+
 streams_t pagerduty_resolve(const std::string key);
 
 streams_t pagerduty_acknowledge(const std::string key);

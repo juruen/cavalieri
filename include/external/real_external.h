@@ -18,7 +18,7 @@ public:
   void pager_duty_resolve(const std::string pg_key, const Event event);
   void pager_duty_acknowledge(const std::string pg_key, const Event event);
   void email(const std::string server, const std::string from,
-             const std::string to, const Event event);
+             const std::vector<std::string> to, const Event event);
   void stop();
 
 private:

@@ -79,9 +79,9 @@ void real_external::pager_duty_acknowledge(const std::string pg_key,
 }
 
 void real_external::email(const std::string server, const std::string from,
-                          const std::string to, const Event event)
+                          const std::vector<std::string> to, const Event event)
 {
-  email_.push_event(server, from, {to}, event);
+  email_.push_event(server, from, to, event);
   instrumentation_.update_rate(rates_[k_email_id], 1);
 }
 

@@ -668,7 +668,15 @@ streams_t forward(const std::string host, const int port) {
 }
 
 streams_t email(const std::string server, const std::string from,
-                const std::string to) {
+                const std::string to)
+{
+
+  return email(server, from, std::vector<std::string>{to});
+
+}
+
+streams_t email(const std::string server, const std::string from,
+                const std::vector<std::string> to) {
   return create_stream(
     [=](e_t e) -> next_events_t {
 
@@ -679,6 +687,8 @@ streams_t email(const std::string server, const std::string from,
     }
   );
 }
+
+
 
 streams_t pagerduty_resolve(const std::string key) {
   return create_stream(

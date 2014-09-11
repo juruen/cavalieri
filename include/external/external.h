@@ -25,7 +25,7 @@ public:
 
   // Send email
   virtual void email(const std::string server, const std::string from,
-                     const std::string to, const Event event) = 0;
+                     const std::vector<std::string> to, const Event event) = 0;
 
   virtual ~external_interface() {};
 };
