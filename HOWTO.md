@@ -1,6 +1,10 @@
 Cavalieri How-To
 ================
 
+*Disclaimer: This How-To is heavily inspired by [Riemann's
+HOWTO](http://riemann.io/howto.html). The structure and most of the examples
+are taken from it.*
+
 Debugging
 ---------
 
@@ -31,8 +35,8 @@ Instrumenting your system
 Cavalieri reports internal metrics that are useful to measure its health and
 performance.
 
-They are tagged with *cavalieri::internals*. You can fire up your Riemann
-dashboard and use the query *tagged = "cavalieri::internals"* to see how
+They are tagged with *cavalieri::internal*. You can fire up your Riemann
+dashboard and use the query *tagged = "cavalieri::internal"* to see how
 Cavalieri is doing in real time.
 
 You will find intersting metrics such as the rate of events being processed
@@ -140,16 +144,35 @@ streams.
 The output of the streams is send to the stream function after *sdo()*. This
 effectively allows you to combine multiple streams in one.
 
+We first create a few streams depending on the different environments.
+
 ```cpp
 
 auto production = tagged("production") >> above(10) >> set_state("critical");
+
+```
+
+```cpp
+
 auto testing = tagged("testing") >> above(5) >> set_state("warning");
+
+```
+
+```cpp
+
 auto experimental = tagged("experimental") >> above(5) >> set_state("warning");
 
-/* Events with a "foo" service are sent to production, testing and experimental.
-   The result of going through them is sent to prn(), but only for production
-   and testing. experimental is followed by null() which is used as a sink.
-*/
+```
+
+The rule below makes use of the above streams. We first filter events from
+the *foo* service. These events are sent to *production*, *testing*, and
+*experimental*. Whatever events *production* and *testing* generate are then
+sent to *prn()*. Not that this is not the case with *experimental*, because
+we append *null()* to it, which is a stream that acts as a sink and doesn't
+forward any event that enters into it.
+
+
+```cpp
 service("foo") >> sdo(production, testing, experimental >> null()) >> prn()
 
 ```
@@ -180,8 +203,12 @@ auto service_foo2 = service("foo2")
                         >> above(25)
                           >> set_state("critical");
 
-            [....]
+```
 
+where we would continue up to:
+
+
+```cpp
 auto service_fooN = service("fooN")
                       >> coalesce(sum)
                         >> above(25)
@@ -616,5 +643,91 @@ for the alert.
 ```cpp
 
 service("authorize") >> coalesce(failed_ratio) >> email("security@bar.org");
+
+```
+
+Integrating with other systems
+------------------------------
+
+#### Send mail
+
+You can use the email functions directly.
+
+```cpp
+
+service("nginx")
+  >> state("critical")
+    >> email("localhost", "cavalieri@yourcorp.com", "ops@yourcopr.com")
+
+```
+
+Or if you need to use the same mail configuration in different places,
+you can create a stream to set the *relay host* and *from* address.
+
+```cpp
+
+streams_t mail(const std::string to)
+{
+  return email("localhost", "cavalieri@yourcopr.com", to);
+}
+
+```
+
+And you use it where you need it with arbitrary recipients.
+
+```cpp
+
+service("nginx")
+  >> state("critical")
+    >> mail("ops@yourcopr.com")
+
+```
+
+#### Forward to graphite
+
+You can forward events to graphite. The following rule forwads Cavalieri's
+internal metrics to graphite.
+
+```cpp
+
+tagged("cavalieri::internal)
+  >> send_graphite("your-graphite-server.com", 20003)
+
+```
+
+And again, if you use this in more than one place, to avoid writing the same
+graphite configuration, you con do the following:
+
+```cpp
+
+auto graph = send_graphite("your-graphite-server.com", 20003);
+
+tagged("cavalieri::internal") >> graph;
+
+```
+#### Notify with Pager Duty
+
+There is also a built-in integration with Pager Duty. You need your service
+API key.
+
+```cpp
+
+const std::string YOUR_PD_KEY = "FOOBAR";
+
+auto trigger = pagerduty_trigger(YOUR_PD_KEY);
+auto resolve = pagerduty_resolve(YOUR_PD_KEY);
+
+service("your_important_service") >> split({{state("ok"), resolve}}, trigger)
+
+```
+
+#### Forward to other Rieman or Cavalieri servers
+
+To forward events to other Riemann or Cavalieri servers you just need to do
+the following:
+
+```cpp
+
+service("nginx") >> changed_state() >> forward("cavalieri-a2.foo.org", 5555);
 
 ```
