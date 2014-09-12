@@ -204,6 +204,17 @@ TARGET_LINK_LIBRARIES(
     dl
   )
 
+configure_file(
+    ${CMAKE_SOURCE_DIR}/conf/cavalieri.conf.in
+    ${CMAKE_BINARY_DIR}/cavalieri.conf
+)
+
+install(
+    FILES
+    ${CMAKE_BINARY_DIR}/cavalieri.conf
+    DESTINATION share/doc/${CMAKE_PROJECT_NAME}/examples
+)
+
 install(
   PROGRAMS
   ${CMAKE_BINARY_DIR}/cavalieri

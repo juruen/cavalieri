@@ -1,0 +1,7 @@
+-log_dir=/var/log/cavalieri/
+-v=1
+-rules_directory=${CMAKE_INSTALL_PREFIX}/lib/cavalieri
+-enable_internal_metrics=true
+-index_expire_interval=60
+-events_port=5555
+-ws_port=5556

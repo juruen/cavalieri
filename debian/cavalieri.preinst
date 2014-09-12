@@ -1,0 +1,9 @@
+#!/bin/sh
+# Create cavalieri user and group
+USERNAME="cavalieri"
+GROUPNAME="cavalieri"
+getent group "$GROUPNAME" >/dev/null || groupadd -r "$GROUPNAME"
+getent passwd "$USERNAME" >/dev/null || \
+  useradd -r -g "$GROUPNAME" -d /usr/lib/cavalieri -s /bin/false \
+  -c "Cavalieri monitoring system" "$USERNAME"
+exit 0

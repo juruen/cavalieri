@@ -106,6 +106,7 @@ void start_core(int argc, char **argv) {
 
   FLAGS_stderrthreshold = 0;
   FLAGS_colorlogtostderr = true;
+  FLAGS_logbuflevel = -1;
 
   google::ParseCommandLineFlags(&argc, &argv, true);
 

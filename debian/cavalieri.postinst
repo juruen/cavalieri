@@ -1,0 +1,7 @@
+#!/bin/sh
+# Fakeroot and lein don't get along, so we set ownership after the fact.
+#test -d /var/log/cavalieri || mkdir /var/log/cavalieri
+chown cavalieri:cavalieri /var/log/cavalieri
+chown -R cavalieri:cavalieri /etc/cavalieri
+#test -d /usr/lib/cavalieri || mkdir /usr/lib/cavalieri
+
