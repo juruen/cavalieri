@@ -136,7 +136,8 @@ private:
 
 private:
   ev::default_loop default_loop_;
-  ev::sig sig_;
+  ev::sig sigint_;
+  ev::sig sigterm_;
   ev::async async_;
   std::vector<std::shared_ptr<listen_io>> listen_ios_;
   std::vector<std::shared_ptr<timer_io>> timer_ios_;

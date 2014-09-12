@@ -330,14 +330,18 @@ void timer_io::timer(ev::timer &, int) {
 real_main_async_loop::real_main_async_loop()
 :
   default_loop_(),
-  sig_(default_loop_),
+  sigint_(default_loop_),
+  sigterm_(default_loop_),
   async_(),
   listen_ios_(),
   timer_ios_(),
   new_tasks_()
 {
-  sig_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
-  sig_.start(SIGINT);
+  sigint_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
+  sigint_.start(SIGINT);
+
+  sigterm_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
+  sigterm_.start(SIGTERM);
 
   async_.set<real_main_async_loop, &real_main_async_loop::async_cb>(this);
   async_.start();

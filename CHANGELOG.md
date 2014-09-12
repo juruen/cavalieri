@@ -17,6 +17,7 @@
   * Add count() fold function
   * Add set_host() function
   * Add email() signature for multiple receipients
+  * Catch also SIGTERM
 
 0.0.6 2014-08-05
 ================
