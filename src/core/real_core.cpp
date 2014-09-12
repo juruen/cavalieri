@@ -104,8 +104,8 @@ void start_core(int argc, char **argv) {
   int orig_argc = argc;
   char **orig_argv = copy_args(argc, argv);
 
-  FLAGS_logtostderr = true;
-  FLAGS_v = 1;
+  FLAGS_stderrthreshold = 0;
+  FLAGS_colorlogtostderr = true;
 
   google::ParseCommandLineFlags(&argc, &argv, true);
 
