@@ -1,7 +1,7 @@
 #ifndef CAVALIERI_FOLDS_H
 #define CAVALIERI_FOLDS_H
 
-#include <proto.pb.h>
+#include <common/event.h>
 
 Event sum(const std::vector<Event> & events);
 

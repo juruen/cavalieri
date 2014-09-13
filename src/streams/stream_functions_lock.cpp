@@ -26,7 +26,7 @@ on_event_fn_t by_lock_(const by_keys_t & keys, const streams_t stream) {
 
      std::string key;
      for (const auto & k: keys) {
-       key += event_str_value(e, k) + " ";
+       key += e.value_to_str(k) + " ";
      }
 
      streams->mutex.lock();
@@ -71,7 +71,7 @@ on_event_fn_t by_lock_(const by_keys_t & keys, fwd_new_stream_fn_t fwd_stream) {
 
      std::string key;
      for (const auto & k: keys) {
-       key += event_str_value(e, k) + " ";
+       key += e.value_to_str(k) + " ";
      }
 
      streams->mutex.lock();
@@ -608,11 +608,11 @@ void push_percentiles_(percentiles_data_t & percentiles, forward_fn_t forward) {
 
 void update_percentiles_(e_t e, percentiles_data_t &  percentiles) {
 
-  if (!metric_set(e)) {
+  if (!e.has_metric()) {
     return;
   }
 
-  percentiles.reserv.add_sample(metric_to_double(e));
+  percentiles.reserv.add_sample(e.metric());
 
   if (!percentiles.initialized.exchange(true)) {
     percentiles.event = e;
@@ -665,7 +665,7 @@ on_event_fn_t ddt_lock_() {
         auto tmp_metric = prev->metric;
         auto tmp_time = prev->time;
 
-        prev->metric = metric_to_double(e);
+        prev->metric = e.metric();
         prev->time =  e.time();
 
         if (!prev->initialized) {
@@ -683,9 +683,7 @@ on_event_fn_t ddt_lock_() {
 
       }
 
-      Event ne(e);
-      set_metric(ne, metric);
-      return {ne};
+      return {e.copy().set_metric(metric)};
 
     };
 }
@@ -693,4 +691,3 @@ on_event_fn_t ddt_lock_() {
 streams_t ddt_lock() {
   return create_stream(ddt_lock_);
 }
-

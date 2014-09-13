@@ -49,13 +49,13 @@ std::vector<char> payload_text(const mailer_extra extra, const Event & e) {
   }
 
   std::string subject = e.host() + " " + e.service() + " is " + e.state()
-                        + metric_to_string(e);
+                        + e.metric_to_str();
 
   std::string payload = "To: " + to + "\r\n" +
                         "From: " + extra.from + "\r\n" +
                         "Subject: " + subject + "\r\n" +
                         "\r\n" +
-                        event_to_json(e);
+                        e.json_str();
 
   return std::vector<char>(payload.begin(), payload.end());
 }

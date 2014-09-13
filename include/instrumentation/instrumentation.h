@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <atomic>
-#include <proto.pb.h>
+#include <common/event.h>
 #include <instrumentation/rate.h>
 #include <instrumentation/reservoir.h>
 #include <instrumentation/gauge.h>

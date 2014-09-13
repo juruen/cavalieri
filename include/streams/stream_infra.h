@@ -4,7 +4,7 @@
 #include <functional>
 #include <list>
 #include <boost/optional.hpp>
-#include <proto.pb.h>
+#include <common/event.h>
 
 typedef std::vector<Event> next_events_t;
 

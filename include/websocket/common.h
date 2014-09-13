@@ -3,7 +3,7 @@
 
 #include <functional>
 #include <vector>
-#include <proto.pb.h>
+#include <common/event.h>
 
 using event_filters_t = std::vector<std::function<void(const Event &)>>;
 

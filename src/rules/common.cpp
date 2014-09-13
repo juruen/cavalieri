@@ -79,12 +79,12 @@ fold_fn_t fold_ratio(const double zero_ratio) {
 
   return [=](const std::vector<Event> events)
   {
-    if (events.size() == 2 && metric_set(events[0]) && metric_set(events[1])
+    if (events.size() == 2 && events[0].has_metric() && events[1].has_metric()
         && same_interval(events))
     {
 
-      auto a = metric_to_double(events[0]);
-      auto b = metric_to_double(events[1]);
+      auto a = events[0].metric();
+      auto b = events[1].metric();
 
       double ratio;
       if (b == 0) {
@@ -96,7 +96,7 @@ fold_fn_t fold_ratio(const double zero_ratio) {
       Event e(events[0]);
       e.set_service(events[0].service() + " / " + events[1].service());
 
-      return set_metric(e, ratio);
+      return e.set_metric(ratio);
 
     } else {
       return Event();
@@ -187,7 +187,7 @@ streams_t ratio(const std::string a, const std::string b,
                 const double default_zero)
 {
   return project({pred::service(a), pred::service(b)}, fold_ratio(default_zero))
-         >> where(PRED(metric_set(e)));
+         >> where(PRED(e.has_metric()));
 }
 
 streams_t per_host_ratio(const std::string a, const std::string b,

@@ -1,7 +1,7 @@
 #ifndef CAVALIERI_INDEX_INDEX_H
 #define CAVALIERI_INDEX_INDEX_H
 
-#include <proto.pb.h>
+#include <common/event.h>
 #include <functional>
 #include <memory>
 #include <scheduler/scheduler.h>

@@ -3,14 +3,14 @@
 #include <sys/socket.h>
 #include <glog/logging.h>
 #include <algorithm>
-#include <proto.pb.h>
+#include <common/event.h>
 #include <riemann_tcp_connection.h>
 
 namespace {
 
 std::vector<char>  generate_msg_ok()
 {
-  Msg msg_ok;
+  riemann::Msg msg_ok;
   msg_ok.set_ok(true);
 
   uint32_t nsize = htonl(msg_ok.ByteSize());

@@ -2,7 +2,7 @@
 #define CAVALIERI_EXTERNAL_EXTERNAL_H
 
 #include <memory>
-#include <proto.pb.h>
+#include <common/event.h>
 
 class external_interface {
 public:

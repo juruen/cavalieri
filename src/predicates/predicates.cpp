@@ -40,7 +40,7 @@ predicate_t match_any(const std::string key,
                       const std::vector<std::string> values)
 {
   return PRED(
-      std::find(values.begin(), values.end(), event_str_value(e, key))
+      std::find(values.begin(), values.end(), e.value_to_str(key))
       != values.end()
   );
 }
@@ -89,7 +89,7 @@ predicate_t default_true() {
 
 bool tagged_any(e_t e, const tags_t& tags) {
   for (auto &tag: tags) {
-    if (tag_exists(e, tag)) {
+    if (e.has_tag(tag)) {
       return true;
     }
   }
@@ -98,7 +98,7 @@ bool tagged_any(e_t e, const tags_t& tags) {
 
 bool tagged_all(e_t e, const tags_t& tags) {
   for (auto &tag: tags) {
-    if (!tag_exists(e, tag)) {
+    if (!e.has_tag(tag)) {
       return false;
     }
   }
@@ -120,42 +120,36 @@ bool expired(e_t e) {
 }
 
 bool above_eq(e_t e, const double value) {
-  return (metric_to_double(e) >= value);
+  return (e.metric() >= value);
 }
 
 bool above(e_t e, const double value) {
-  return (metric_to_double(e) > value);
+  return (e.metric() > value);
 }
 
 bool under_eq(e_t e, const double value) {
-  return (metric_to_double(e) <= value);
+  return (e.metric() <= value);
 }
 
 bool under(e_t e, const double value) {
-  return (metric_to_double(e) < value);
+  return (e.metric() < value);
 }
 
 bool match(e_t e, const std::string key, const std::string value) {
 
-  const std::string ev_val(event_str_value(e, key));
-
-  return ev_val == value;
+ return e.value_to_str(key) == value;
 
 }
 
 bool match_re(e_t e, const std::string key, const std::string value) {
 
-  const std::string ev_val(event_str_value(e, key));
-
-  return match_regex(ev_val, value);
+  return match_regex(e.value_to_str(key), value);
 
 }
 
 bool match_like(e_t e, const std::string key, const std::string value) {
 
-  const std::string ev_val(event_str_value(e, key));
-
-  return ::match_like(ev_val, value);
+  return ::match_like(e.value_to_str(key), value);
 
 }
 

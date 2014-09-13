@@ -9,7 +9,7 @@
 #include <boost/optional.hpp>
 #include <boost/any.hpp>
 #include <curl/curl.h>
-#include <proto.pb.h>
+#include <common/event.h>
 #include <transport/tcp_pool.h>
 
 

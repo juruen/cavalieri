@@ -1,7 +1,7 @@
 #ifndef CAVALIERI_UTIL_H
 #define CAVALIERI_UTIL_H
 
-#include <proto.pb.h>
+#include <common/event.h>
 #include <ev++.h>
 #include <functional>
 #include <vector>
@@ -9,32 +9,6 @@
 #include <boost/variant.hpp>
 
 #define UNUSED_VAR(x) (void)x
-
-std::string metric_to_string(const Event& e);
-
-double metric_to_double(const Event &e);
-
-bool metric_set(const Event & e);
-
-bool field_set(const Event & e, const std::string & field);
-
-Event & set_metric(Event & e, const double m);
-
-Event set_metric_c(const Event  e, const double m);
-
-void clear_metrics(Event & e);
-
-std::string string_to_value(const Event& e, const std::string& key);
-
-std::string event_to_json(const Event &e);
-
-bool tag_exists(const Event& e, const std::string& tag);
-
-bool attribute_exists(const Event& e, const std::string& attribute);
-
-std::string attribute_value(const Event& e, const std::string& attribute);
-
-std::string event_str_value(const Event & e, const std::string & key);
 
 bool match_regex(const std::string value, const std::string re);
 
@@ -67,8 +41,6 @@ void set_event_value(
     const boost::variant<std::string, int, double> & val,
     const bool & replace
 );
-
-
 
 std::basic_string<char> base64Encode(std::vector<unsigned char> inputBuffer);
 

@@ -6,7 +6,7 @@
 #include <functional>
 #include <memory>
 #include <boost/variant.hpp>
-#include <proto.pb.h>
+#include <common/event.h>
 #include <streams/stream_infra.h>
 #include <index/index.h>
 #include <instrumentation/instrumentation.h>
@@ -153,7 +153,7 @@ class streams {
 public:
   streams(instrumentation &);
   void add_stream(streams_t stream);
-  void process_message(const Msg& message);
+  void process_message(const riemann::Msg& message);
   void push_event(const Event& e);
   void stop();
 

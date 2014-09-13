@@ -1,7 +1,7 @@
 #ifndef CAVALIERI_EXTERNAL_RIEMANN_TCP_CLIENT_H
 #define CAVALIERI_EXTERNAL_RIEMANN_TCP_CLIENT_H
 
-#include <proto.pb.h>
+#include <common/event.h>
 #include <mutex>
 #include <config/config.h>
 #include <external/rieman_tcp_client_pool.h>

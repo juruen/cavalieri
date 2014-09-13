@@ -18,6 +18,7 @@
   * Add set_host() function
   * Add email() signature for multiple receipients
   * Catch also SIGTERM
+  * Add wrapper class to profobuf event class
 
 0.0.6 2014-08-05
 ================

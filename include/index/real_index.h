@@ -1,7 +1,7 @@
 #ifndef CAVALIERI_INDEX_REAL_INDEX_H
 #define CAVALIERI_INDEX_REAL_INDEX_H
 
-#include <proto.pb.h>
+#include <common/event.h>
 #include <atomic>
 #include <mutex>
 #include <pub_sub/pub_sub.h>

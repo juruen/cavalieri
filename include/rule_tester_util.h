@@ -2,7 +2,7 @@
 #define CAVALIERI_RULE_TESTER_UTIL_H
 
 #include <vector>
-#include <proto.pb.h>
+#include <common/event.h>
 #include <external/mock_external.h>
 
 typedef std::pair<time_t, Event> mock_index_events_t;

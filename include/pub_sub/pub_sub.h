@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <functional>
 #include <string>
-#include <proto.pb.h>
+#include <common/event.h>
 #include <vector>
 #include <tbb/concurrent_queue.h>
 #include <memory>

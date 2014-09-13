@@ -138,9 +138,9 @@ TEST(with_streams_test_case, test)
   changes = {{"attribute", "foo"}};
   push_event(with(changes) >> sink(v), e);
   ASSERT_EQ(1, v.size());
-  EXPECT_EQ(1, v[0].attributes_size());
-  EXPECT_EQ("attribute", v[0].attributes(0).key());
-  EXPECT_EQ("foo", v[0].attributes(0).value());
+  EXPECT_EQ(1, v[0].riemann_event().attributes_size());
+  EXPECT_EQ("attribute", v[0].riemann_event().attributes(0).key());
+  EXPECT_EQ("foo", v[0].riemann_event().attributes(0).value());
 }
 
 TEST(default_to_streams_test_case, test)
@@ -202,7 +202,7 @@ TEST(split_streams_test_case, test)
   split_clauses_t clauses =
     {
       {PRED(e.host() == "host1"),       sink(v1)},
-      {PRED(metric_to_double(e) > 3.3), sink(v2)}
+      {PRED(e.metric() > 3.3), sink(v2)}
     };
 
   Event e;
@@ -251,7 +251,7 @@ TEST(split_streams_test_case, test)
   split_clauses_t clauses_stream =
   {
     {PRED(e.host() == "host1"),       sink(v3)},
-    {PRED(metric_to_double(e) > 3.3), sink(v3)}
+    {PRED(e.metric() > 3.3), sink(v3)}
   };
 
   e.set_host("host1");
@@ -414,16 +414,16 @@ TEST(tagged_any_test_case, test)
   push_event(tag_stream, e);
   ASSERT_EQ(0, v.size());
 
-  *(e.add_tags()) = "baz";
+  e.add_tag("baz");
 
   push_event(tag_stream, e);
   ASSERT_EQ(0, v.size());
 
- *(e.add_tags()) = "foo";
+  e.add_tag("foo");
   push_event(tag_stream, e);
   ASSERT_EQ(1, v.size());
 
- *(e.add_tags()) = "bar";
+ e.add_tag("bar");
   push_event(tag_stream, e);
   ASSERT_EQ(2, v.size());
 }
@@ -439,15 +439,15 @@ TEST(tagged_all_streams_test_case, test)
   push_event(tag_stream, e);
   ASSERT_EQ(0, v.size());
 
-  *(e.add_tags()) = "baz";
+  e.add_tag("baz");
   push_event(tag_stream, e);
   ASSERT_EQ(0, v.size());
 
- *(e.add_tags()) = "foo";
+  e.add_tag("foo");
   push_event(tag_stream, e);
   ASSERT_EQ(0, v.size());
 
- *(e.add_tags()) = "bar";
+  e.add_tag("bar");
   push_event(tag_stream, e);
   ASSERT_EQ(1, v.size());
 }
@@ -463,11 +463,11 @@ TEST(tagged_streams_test_case, test)
   push_event(tag_stream, e);
   ASSERT_EQ(0, v.size());
 
-  *(e.add_tags()) = "baz";
+  e.add_tag("baz");
   push_event(tag_stream, e);
   ASSERT_EQ(0, v.size());
 
- *(e.add_tags()) = "foo";
+  e.add_tag("foo");
   push_event(tag_stream, e);
   ASSERT_EQ(1, v.size());
 }
@@ -708,7 +708,7 @@ TEST(scale_streams_test_case, test)
   e.set_metric_d(6);
   push_event(scale_stream, e);
   ASSERT_EQ(1, v.size());
-  ASSERT_EQ(12, metric_to_double(v[0]));
+  ASSERT_EQ(12, v[0].metric());
 }
 
 TEST(counter_streams_test_case, test)
@@ -723,17 +723,17 @@ TEST(counter_streams_test_case, test)
   e.set_metric_d(1);
   push_event(counter_stream, e);
   ASSERT_EQ(1, v.size());
-  ASSERT_EQ(1, metric_to_double(v[0]));
+  ASSERT_EQ(1, v[0].metric());
   v.clear();
 
   push_event(counter_stream, e);
   ASSERT_EQ(1, v.size());
-  ASSERT_EQ(2, metric_to_double(v[0]));
+  ASSERT_EQ(2, v[0].metric());
   v.clear();
 
   push_event(counter_stream, e);
   ASSERT_EQ(1, v.size());
-  ASSERT_EQ(3, metric_to_double(v[0]));
+  ASSERT_EQ(3, v[0].metric());
   v.clear();
 }
 
@@ -1276,7 +1276,7 @@ TEST(set_metric_streams_test_case, test)
   push_event(set_stream, e);
 
   ASSERT_EQ(1, v.size());
-  ASSERT_EQ(1, metric_to_double(v[0]));
+  ASSERT_EQ(1, v[0].metric());
 }
 
 TEST(state_streams_test_case, test)

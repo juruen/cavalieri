@@ -7,7 +7,7 @@
 #include <memory>
 #include <functional>
 #include <boost/variant/variant.hpp>
-#include <proto.pb.h>
+#include <common/event.h>
 
 typedef std::function<bool(const Event&)> query_fn_t;
 

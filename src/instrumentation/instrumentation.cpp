@@ -157,7 +157,7 @@ std::vector<Event> instrumentation::snapshot() {
 
   Event event;
 
-  *(event.add_tags()) = k_instrumentation_tag;
+  event.add_tag(k_instrumentation_tag);
 
   event.set_host(k_fqdn);
   event.set_state("ok");

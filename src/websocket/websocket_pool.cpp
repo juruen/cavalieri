@@ -172,7 +172,7 @@ void websocket_pool::on_async_signal(async_loop & loop) {
 
 
 
-    fd_ctx.queue.push(event_to_json(e.event));
+    fd_ctx.queue.push(e.event.json_str());
 
     if (!flush_fd_queue(loop, e.fd, fd_ctx)) {
       available_fds.erase(e.fd);
@@ -207,7 +207,7 @@ bool websocket_pool::handle_ws_init(async_fd & async,
       auto events(index_.query_index(query_fn, k_max_ws_queue_size));
 
       for (const auto & event : events) {
-        fd_ctx.queue.emplace(event_to_json(event));
+        fd_ctx.queue.emplace(event.json_str());
       }
 
       if (!fd_ctx.queue.empty()) {

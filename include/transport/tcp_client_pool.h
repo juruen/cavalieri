@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <transport/tcp_pool.h>
 #include <transport/tcp_connection.h>
-#include <proto.pb.h>
+#include <common/event.h>
 
 /* This callback is used to translate events into whatever needs to be
  * sent in the wire.

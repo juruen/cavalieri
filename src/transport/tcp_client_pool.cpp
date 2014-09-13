@@ -154,7 +154,7 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
 
 void tcp_client_pool::push_event(const Event & event) {
 
-  VLOG(3) << "push_event() " << event_to_json(event);
+  VLOG(3) << "push_event() " << event.json_str();
 
   auto & queue = thread_event_queues_[next_thread_];
 

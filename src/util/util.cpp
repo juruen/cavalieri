@@ -9,153 +9,6 @@
 #include <curl/curl.h>
 #include <util/util.h>
 
-std::string metric_to_string(const Event& e) {
-  std::ostringstream ss;
-  if (e.has_metric_f()) {
-    ss << e.metric_f();
-  } else if (e.has_metric_d()) {
-    ss << e.metric_d();
-  } else if (e.has_metric_sint64()) {
-    ss << e.metric_sint64();
-  } else {
-    ss << "";
-  }
-  return ss.str();
-}
-
-std::string ttl_to_string(const Event& e) {
-  std::ostringstream ss;
-  ss << e.ttl();
-  return ss.str();
-}
-
-double metric_to_double(const Event &e) {
-  if (e.has_metric_f()) {
-    return e.metric_f();
-  } else if (e.has_metric_sint64()) {
-    return e.metric_sint64();
-  } else if (e.has_metric_d()) {
-    return e.metric_d();
-  } else {
-    return 0;
-  }
-}
-
-void clear_metrics(Event & e) {
-  e.clear_metric_d();
-  e.clear_metric_f();
-  e.clear_metric_sint64();
-}
-
-bool metric_set(const Event & e) {
-  return (e.has_metric_f() || e.has_metric_d() || e.has_metric_sint64());
-}
-
-Event & set_metric(Event & e, const double m) {
-  clear_metrics(e);
-  e.set_metric_d(m);
-
-  return e;
-}
-
-Event set_metric_c(const Event e, const double m) {
-  Event ne(e);
-
-  return set_metric(ne, m);
-}
-
-std::string string_to_value(const Event& e, const std::string& key) {
-  if (key == "host") {
-    return e.host();
-  } else if (key == "service") {
-    return e.service();
-  } else if (key == "description") {
-    return e.description();
-  } else if (key == "state") {
-    return e.state();
-  } else if (key == "metric") {
-    return metric_to_string(e);
-  }  else if (key == "ttl") {
-    return ttl_to_string(e);
-  } else {
-    return "__nil__";
-  }
-}
-
-bool field_set(const Event & e, const std::string & field) {
-
-  if (field == "host") {
-    return e.has_host();
-  } else if (field == "service") {
-    return e.has_service();
-  } else if (field == "description") {
-    return e.has_description();
-  } else if (field == "state") {
-    return e.has_state();
-  } else if (field == "metric") {
-    return metric_set(e);
-  } else if (field == "ttl") {
-    return e.has_ttl();
-  } else {
-    return attribute_exists(e, field);
-  }
-
-}
-
-std::string event_to_json(const Event &e) {
-
-  Json::Value event;
-
-  if (e.has_host()) {
-    event["host"] = Json::Value(e.host());
-  }
-
-  if (e.has_service()) {
-    event["service"] = Json::Value(e.service());
-  }
-
-  if (e.has_description()) {
-    event["description"] = Json::Value(e.description());
-  }
-
-  if (e.has_state()) {
-    event["state"] = Json::Value(e.state());
-  }
-
-  if (e.has_time()) {
-    event["time"] = Json::Value(Json::UInt64(e.time()));
-  }
-
-
-  if (metric_set(e)) {
-    event["metric"] = Json::Value(metric_to_double(e));
-  }
-
-  for (int i = 0; i < e.attributes_size(); i++) {
-
-    if (!(e.attributes(i).has_key() && e.attributes(i).has_value())) {
-      continue;
-    }
-
-    event[e.attributes(i).key()] = Json::Value(e.attributes(i).value());
-
-  }
-
-  if (e.tags_size() > 0) {
-
-    auto tags = Json::Value(Json::arrayValue);
-
-    for (int i = 0; i < e.tags_size(); i++) {
-      tags.append(Json::Value(e.tags(i)));
-    }
-
-    event["tags"] = tags;
-  }
-
-  return event.toStyledString();
-
-}
-
 bool match_regex(const std::string value, const std::string re) {
   return regex_match(value, std::regex(re));
 }
@@ -166,27 +19,6 @@ bool match_like(const std::string value, const std::string re) {
 
     return match_regex(value, regex_str);
 }
-
-std::string event_str_value(const Event & e, const std::string & key)
-
-{
-  if (key == "host") {
-    return e.host();
-  } else if (key == "service") {
-    return e.service();
-  } else if (key == "description") {
-    return e.description();
-  } else if (key == "state") {
-    return e.state();
-  } else {
-    if (attribute_exists(e, key)) {
-      return attribute_value(e, key);
-    }
-  }
-
-  return std::string();
-}
-
 
 void set_event_value(
     Event & e,
@@ -211,14 +43,8 @@ void set_event_value(
       e.set_state(value);
     }
   } else {
-    auto att = e.add_attributes();
-    att->set_key(key);
-    att->set_value(value);
+    e.set_attr(key, value);
   }
-}
-
-bool no_metric_set(const Event & e) {
-  return (!e.has_metric_sint64() && !e.has_metric_d() && ! e.has_metric_f());
 }
 
 void set_event_value(
@@ -229,10 +55,9 @@ void set_event_value(
 {
   if (key == "metric") {
    if (replace) {
-      e.clear_metric_d();
-      e.clear_metric_f();
+      e.clear_metric();
       e.set_metric_sint64(value);
-    } else if (no_metric_set(e)) {
+    } else if (!e.has_metric()) {
       e.set_metric_sint64(value);
     }
   } else if (key == "ttl") {
@@ -259,7 +84,7 @@ void set_event_value(
       e.clear_metric_sint64();
       e.clear_metric_f();
       e.set_metric_d(value);
-    } else if (no_metric_set(e)) {
+    } else if (!e.has_metric()) {
       e.set_metric_d(value);
     }
   } else {
@@ -284,35 +109,6 @@ void set_event_value(
       set_event_value(e, key, boost::get<double>(val), replace);
       break;
   }
-}
-
-bool tag_exists(const Event& e, const std::string& tag) {
-  for (int i = 0; i < e.tags_size(); i++) {
-    if (e.tags(i) == tag) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool attribute_exists(const Event& e, const std::string& attribute) {
-  for (int i = 0; i < e.attributes_size(); i++) {
-    if (e.attributes(i).key() == attribute) {
-      return true;
-    }
-  }
-  return false;
-}
-
-std::string attribute_value(const Event& e, const std::string& attribute) {
-  if (attribute_exists(e, attribute)) {
-    for (int i = 0; i < e.attributes_size(); i++) {
-      if (e.attributes(i).key() == attribute) {
-        return e.attributes(i).value();
-      }
-    }
-  }
-  return "";
 }
 
 std::string sha1(const std::string& str) {

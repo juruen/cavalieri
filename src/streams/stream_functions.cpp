@@ -67,7 +67,7 @@ streams_t  prn() {
   return create_stream(
     [](e_t e) -> next_events_t
     {
-      LOG(INFO) << "prn() " <<  event_to_json(e);
+      LOG(INFO) << "prn() " <<  e.json_str();
 
       return {e};
     });
@@ -77,7 +77,7 @@ streams_t  prn(const std::string prefix) {
   return create_stream(
     [=](e_t e) -> next_events_t
     {
-      LOG(INFO) << "prn() " << prefix <<  event_to_json(e);
+      LOG(INFO) << "prn() " << prefix <<  e.json_str();
 
       return {e};
     });
@@ -104,7 +104,7 @@ streams_t service_like_any(const std::vector<std::string> patterns) {
 }
 
 streams_t has_attribute(const std::string attribute) {
-  return where(PRED(attribute_exists(e, attribute)));
+  return where(PRED(e.has_attr(attribute)));
 }
 
 streams_t state(const std::string state) {
@@ -291,7 +291,7 @@ streams_t rate(const int interval) {
         do {
 
           expected = rate->load();
-          newval = expected + metric_to_double(e);
+          newval = expected + e.metric();
 
         } while (!rate->compare_exchange_strong(expected, newval));
 
@@ -514,7 +514,7 @@ streams_t scale(double s) {
   return create_stream(
     [=](e_t e) -> next_events_t {
 
-      return {set_metric_c(e, s * metric_to_double(e))};
+      return {e.copy().set_metric(s * e.metric())};
 
   });
 }
@@ -560,11 +560,10 @@ on_event_fn_t counter_() {
 
    return [=](e_t e) -> next_events_t {
 
-      if (metric_set(e)) {
+      if (e.has_metric()) {
 
-        Event ne(e);
-        ne.set_metric_sint64(counter->fetch_add(1) + 1);
-        return {ne};
+        return {e.copy().clear_metric()
+                .set_metric_sint64(counter->fetch_add(1) + 1)};
 
       } else {
 
@@ -618,7 +617,7 @@ streams_t tag(tags_t tags) {
       Event ne(e);
 
       for (const auto & t: tags) {
-        *(ne.add_tags()) = t;
+        ne.add_tag(t);
       }
 
       return {ne};
@@ -746,7 +745,7 @@ void streams::add_stream(streams_t stream) {
   streams_.push_back(stream);
 }
 
-void streams::process_message(const Msg& message) {
+void streams::process_message(const riemann::Msg& message) {
 
   if (stop_) {
     return;
