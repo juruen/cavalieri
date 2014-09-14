@@ -48,8 +48,11 @@ std::vector<char> payload_text(const mailer_extra extra, const Event & e) {
     to = extra.to[0];
   }
 
-  std::string subject = e.host() + " " + e.service() + " is " + e.state()
-                        + e.metric_to_str();
+  std::string subject = e.host() + " " + e.service() + " is " + e.state();
+
+  if (e.has_metric()) {
+    subject += " (" + e.metric_to_str() +  ")";
+  }
 
   std::string payload = "To: " + to + "\r\n" +
                         "From: " + extra.from + "\r\n" +
