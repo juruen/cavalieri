@@ -14,6 +14,8 @@
 typedef const Event& e_t;
 typedef std::vector<Event> events_t;
 
+#define WITH(EXP) \
+  create_stream([=](const Event & oe) -> events_t { auto e = oe.copy(); (EXP); return {e}; })
 
 #define sdo(...) svec({__VA_ARGS__})
 
