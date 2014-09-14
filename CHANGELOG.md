@@ -1,3 +1,7 @@
+0.0.8 TBD
+=========
+  * Add Event members to README.md
+
 0.0.7 2014-09-14
 ================
 
