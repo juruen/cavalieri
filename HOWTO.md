@@ -84,13 +84,7 @@ of the event.
 
 ```cpp
 
-auto append_build = create_stream(
-    [](e_t e)
-    {
-        auto ne(e);
-        ne.set_service(ne.service() + "-" attribute_value(e, "build"));
-        return {ne};
-    });
+auto append_build = WITH(e.set_service(e.service() + "-" + e.attr("build")));
 
 ```
 
@@ -102,7 +96,7 @@ number.
 
 ```cpp
 
-auto match_version   = PRED(std::stoi(attribute_value(e, "build")) < 1055);
+auto match_version   = PRED(std::stoi(e.attr("build")) < 1055);
 
 auto scale_old_build = where(match_version, send_index()) >> scale(0.5);
 
@@ -309,7 +303,7 @@ You can create your own predicate function.
 
 ```cpp
 
-auto my_predicate = PRED((metric_to_double(e) * 100) > 2.5);
+auto my_predicate = PRED((e.metric() * 100) > 2.5);
 
 ```
 
@@ -325,7 +319,7 @@ Note that *my_predicate* makes use of a *PRED* macro. It is equivalent to:
 
 ```cpp
 
-auto my_predicate = [=](e_t e) { return ((metric_to_double(e) * 100) > 2.5); };
+auto my_predicate = [=](e_t e) { return ((e.metric() * 100) > 2.5); };
 
 ```
 
@@ -336,7 +330,7 @@ Or you can just create your own stream function:
 auto my_filter = create_stream(
   [=](e_t e)
   {
-    if ((metric_to_double(e) * 100) > 2.5) {
+    if ((e.metric() * 100) > 2.5) {
       return {e};
     } else {
       return {};
