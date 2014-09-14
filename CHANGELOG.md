@@ -1,5 +1,6 @@
-0.0.7 TBA
-=========
+0.0.7 2014-09-14
+================
+
   * Change stream data structures and functions
   * BY() macro is not necessary any more
   * Add support to replicate streams after by()
@@ -53,7 +54,7 @@
 ================
 
   * Add TCP client pool infra
-  * Add graphite support (new line TCP carbon protocl)
+  * Add graphite support (new line TCP carbon protocol)
   * Add forward support to riemann/cavalieri (TCP protocol)
   * Add g_scheduler to g_core
 
