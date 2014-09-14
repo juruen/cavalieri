@@ -52,6 +52,8 @@ streams_t state(const std::string state);
 
 streams_t state_any(const std::vector<std::string> states);
 
+streams_t set_service(const std::string service);
+
 streams_t set_state(const std::string state);
 
 streams_t set_host(const std::string host);
@@ -59,6 +61,20 @@ streams_t set_host(const std::string host);
 streams_t set_metric(const double metric);
 
 streams_t set_description(const std::string description);
+
+streams_t set_ttl(const float ttl);
+
+streams_t default_service(const std::string service);
+
+streams_t default_state(const std::string state);
+
+streams_t default_host(const std::string host);
+
+streams_t default_metric(const double metric);
+
+streams_t default_description(const std::string description);
+
+streams_t default_ttl(const float ttl);
 
 streams_t with(const with_changes_t& changes);
 

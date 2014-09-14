@@ -123,20 +123,52 @@ streams_t state_any(const std::vector<std::string> states) {
     });
 }
 
+streams_t set_service(const std::string service) {
+  return WITH(e.set_service(service));
+}
+
 streams_t set_state(const std::string state) {
-  return with({{"state", state}});
+  return WITH(e.set_state(state));
 }
 
 streams_t set_host(const std::string host) {
-  return with({{"host", host}});
+  return WITH(e.set_host(host));
 }
 
 streams_t set_metric(const double metric) {
-  return with({{"metric", metric}});
+  return WITH(e.set_metric(metric));
 }
 
 streams_t set_description(const std::string description) {
-  return with({{"description", description}});
+  return WITH(e.set_description(description));
+}
+
+streams_t set_ttl(const float ttl) {
+  return WITH(e.set_ttl(ttl));
+}
+
+streams_t default_service(const std::string service) {
+  return WITH(e.has_service() ? e : e.set_service(service));
+}
+
+streams_t default_state(const std::string state) {
+  return WITH(e.has_state() ? e : e.set_state(state));
+}
+
+streams_t default_host(const std::string host) {
+  return WITH(e.has_host() ? e : e.set_host(host));
+}
+
+streams_t default_metric(const double metric) {
+  return WITH(e.has_metric() ? e : e.set_metric(metric));
+}
+
+streams_t default_description(const std::string description) {
+  return WITH(e.has_description() ? e : e.set_description(description));
+}
+
+streams_t default_ttl(const float ttl) {
+  return WITH(e.has_ttl() ? e : e.set_ttl(ttl));
 }
 
 streams_t with(const with_changes_t & changes, const bool & replace)
