@@ -481,20 +481,15 @@ tagged("production") >> above(5) >> email();
 
 #### smap (const smap_fn_t fn)
 
-Events are recevied and passed to *fn* which returns a new event.
-This new event is forwarded.
+Events are recevied and passed to *fn* as a mutable reference. You
+are free to modify the received event as you wish.
 
-Use this when you need to modify events dynamically, as in opposed to
-statically, use *with()* for the latter.
+The function below changes appends the host name to the service.
 
 ```cpp
-// Function that takes and event and returns a new event which service
-// has the host appended.
-Event host_service(e_t e)
+void host_service(Event & e)
 {
-  auto ne(e);
-  ne.set_service(e.service() + "-" + e.host());
-  return ne;
+  e.set_service(e.service() + "-" + e.host());
 };
 
 smap(host_service) >> prn("new shiny service string");
