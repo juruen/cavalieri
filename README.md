@@ -12,7 +12,7 @@ It implements the original [riemann.io](http://riemann.io) protocol. That means
 you can leverage the existing *riemann* clients and tools. It also tries to
 mimic its stream API where possible.
 
-Cavalieri's current version *0.0.6* is considered to be  in **alpha** state.
+Cavalieri's current version *0.0.7* is considered to be  in **alpha** state.
 We expect to release a beta version in the following weeks.
 
 Current benchmarks show that it can process more than one million events per
@@ -23,7 +23,7 @@ Install
 
 #### Ubuntu packages
 
-You can install a deb package for Ubuntu 13.10 and 14.04 by adding this ppa:
+You can install a deb package for Ubuntry 14.04 (Trusty) by adding this ppa:
 
 ```
 sudo add-apt-repository ppa:juruen/cavalieri
