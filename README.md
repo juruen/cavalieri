@@ -42,7 +42,7 @@ Have a look at the build dependencies extracted from the deb package:
 
 ```
 cmake, subversion, protobuf-compiler,libprotobuf-dev, libev-dev, libgflags-dev, 
-libgoogle-glog-dev, libpython-dev,libcurl4-openssl-dev, libssl-dev, libtbb-dev,
+libgoogle-glog-dev, libcurl4-openssl-dev, libssl-dev, libtbb-dev,
 libjsoncpp-dev, lcov, flex, bison, libgoogle-glog-dev, libboost-filesystem-dev,
 libboost-system-dev
 
