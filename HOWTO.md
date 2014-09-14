@@ -606,24 +606,24 @@ Event failed_ratio(const std::vector<Event> events) {
     return {};
   }
 
-  auto failed = std::count_if(begin(events), end(events),
-                              [](Event e) { return e.state() == "error") });
+  auto failed = std::count_if(begin(events),
+                              end(events),
+                              PRED(e.state() == "error));
 
   auto ratio = static_cast<double>(failed) / event.size();
 
-  Event event(events.front());
-
+  std::string state;
   if (ratio > 0.7) {
-    event.set_state("critical");
+    state = "critical";
   } else if (ratio > 0.3) {
-    event.set_state("warning");
+    state = "warning";
   } else {
-    event.set_state("ok");
+    state = "ok";
   }
 
-  event.set_service("authorization failures");
-
-  return event;
+  return events[0].copy()
+         .set_service("authorization failures")
+         .set_state(state);
 
 }
 
