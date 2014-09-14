@@ -15,8 +15,6 @@ typedef const Event& e_t;
 typedef std::vector<Event> events_t;
 
 
-#define TR(EXP) [](Event & e) {(EXP); }
-#define NE(EXP) [=](const Event & event) { Event e(event); (EXP); return e;  }
 #define sdo(...) svec({__VA_ARGS__})
 
 

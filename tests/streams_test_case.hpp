@@ -478,7 +478,7 @@ TEST(smap_streams_test_case, test)
 {
   std::vector<Event> v;
 
-  auto smap_stream = smap(TR(e.set_host("foo"))) >>  sink(v);
+  auto smap_stream = smap([](Event & e){e.set_host("foo");}) >>  sink(v);
 
   Event e;
   e.set_host("bar");
