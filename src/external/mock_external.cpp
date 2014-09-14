@@ -46,7 +46,7 @@ void mock_external::pager_duty_acknowledge(const std::string pg_key,
 }
 
 void mock_external::email(const std::string server, const std::string from,
-                          const std::string to, const Event e)
+                          const std::vector<std::string>, const Event e)
 {
   add_call(calls_, "email", "send email from " + from + " to ", "", e);
 }

@@ -1,5 +1,5 @@
-#ifndef EXTERNAL_EXTERNAL_EVENT_H
-#define EXTERNAL_EXTERNAL_EVENT_H
+#ifndef CAVALIERI_EXTERNAL_EXTERNAL_EVENT_H
+#define CAVALIERI_EXTERNAL_EXTERNAL_EVENT_H
 
 #include <string>
 #include <proto.pb.h>

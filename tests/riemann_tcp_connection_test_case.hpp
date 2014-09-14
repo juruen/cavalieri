@@ -6,8 +6,8 @@
 #include <netinet/in.h>
 #include <riemann_tcp_connection.h>
 #include "mock_async_fd.hpp"
-#include <mock_os_functions.h>
-#include <proto.pb.h>
+#include <os/mock_os_functions.h>
+#include <common/event.h>
 #include <async/async_loop.h>
 
 extern mock_os_functions mock_os;
@@ -79,7 +79,7 @@ TEST(riemann_tcp_connection_broken_size_test_case, test)
   EXPECT_CALL(async_fd, ready_read()).WillRepeatedly(Return(true));
   EXPECT_CALL(async_fd, ready_write()).WillRepeatedly(Return(true));
 
-  Msg msg;
+  riemann::Msg msg;
   msg.set_ok(true);
 
   mock_os.buffer.clear();

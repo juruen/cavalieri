@@ -1,5 +1,5 @@
-#ifndef TRANSPORT_WS_UTIL_H
-#define TRANSPORT_WS_UTIL_H
+#ifndef CAVALIERI_TRANSPORT_WS_UTIL_H
+#define CAVALIERI_TRANSPORT_WS_UTIL_H
 
 #include <string>
 #include <vector>

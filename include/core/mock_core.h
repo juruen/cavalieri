@@ -1,5 +1,5 @@
-#ifndef CORE_MOCK_CORE_H
-#define CORE_MOCK_CORE_H
+#ifndef CAVALIERI_CORE_MOCK_CORE_H
+#define CAVALIERI_CORE_MOCK_CORE_H
 
 #include <core/core.h>
 #include <index/mock_index.h>

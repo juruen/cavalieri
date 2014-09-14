@@ -1,5 +1,5 @@
-#ifndef TRANSPORT_WS_CONNECTION_H
-#define TRANSPORT_WS_CONNECTION_H
+#ifndef CAVALIERI_TRANSPORT_WS_CONNECTION_H
+#define CAVALIERI_TRANSPORT_WS_CONNECTION_H
 
 #include <transport/tcp_connection.h>
 #include <transport/ws_util.h>

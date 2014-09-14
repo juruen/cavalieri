@@ -3,19 +3,21 @@
 #include <async/real_async_loop.h>
 
 namespace {
-  int ev_mode(const async_fd::mode & initial_mode) {
-    int mode = 0;
-    if (initial_mode == async_fd::read) {
-      mode |= EV_READ;
-    }
-    if (initial_mode == async_fd::write) {
-      mode |= EV_WRITE;
-    }
-    if (initial_mode == async_fd::readwrite) {
-      mode |= EV_WRITE | EV_READ;
-    }
-    return  mode;
+
+int ev_mode(const async_fd::mode & initial_mode) {
+  int mode = 0;
+  if (initial_mode == async_fd::read) {
+    mode |= EV_READ;
   }
+  if (initial_mode == async_fd::write) {
+    mode |= EV_WRITE;
+  }
+  if (initial_mode == async_fd::readwrite) {
+    mode |= EV_WRITE | EV_READ;
+  }
+  return  mode;
+}
+
 };
 
 real_async_fd::real_async_fd(
@@ -96,13 +98,6 @@ void real_async_loop::set_async_cb(async_cb_fn_t async_cb) {
   async_cb_fn_ = async_cb;
 }
 
-void real_async_loop::set_timer(const float interval, timer_cb_fn_t timer_cb_fn)
-{
-  timer_.set(loop_);
-  timer_.set<real_async_loop, &real_async_loop::timer_callback>(this);
-  timer_.start(0, interval);
-  timer_cb_fn_ = timer_cb_fn;
-}
 
 size_t real_async_loop::id() const {
   return id_;
@@ -150,16 +145,105 @@ void real_async_loop::set_fd_mode(const int fd, const async_fd::mode mode) {
   it->second->set_mode(mode);
 }
 
-void real_async_loop::set_timer_interval(const float t) {
-  timer_.start(t, 0);
-}
-
 ev::dynamic_loop & real_async_loop::loop() {
   return loop_;
 }
 
-void real_async_loop::timer_callback(ev::timer &, int) {
-  timer_cb_fn_(*this);
+timer_id_t real_async_loop::add_timer(const timer_cb_fn_t task,
+                                      const bool once, const float t)
+{
+  auto timer_id = next_timer_id_++;
+
+  auto  fn = [=]()
+  {
+    task(id_);
+
+    if (once) { // Move this to static fun
+      auto it = timers_.find(timer_id);
+      CHECK(it != timers_.end()) << "timer not found";
+      timers_.erase(it);
+    }
+  };
+
+  timer_ctx_t ctx{{std::make_shared<ev::timer>(loop_)},
+                   std::make_shared<task_cb_fn_t>(fn),
+                   *this,
+                   {id_, timer_id},
+                   once};
+
+  auto it = timers_.insert({timer_id, std::make_shared<timer_ctx_t>(ctx)});
+  auto ev_timer = it.first->second->timer;
+
+  auto ctx_ptr = static_cast<void*>(it.first->second.get());
+  ev_timer->set<timer_callback>(ctx_ptr);
+
+  ev_timer->start(t, once ? 0 : t);
+
+  return {id_, timer_id};
+}
+
+void real_async_loop::timer_callback(ev::timer & timer, int) {
+
+  VLOG(3) << "timer_callback()";
+
+  auto ctx_ptr = static_cast<timer_ctx_t*>(timer.data);
+
+  (*ctx_ptr->task)();
+
+  if (ctx_ptr->once) {
+    ctx_ptr->async_loop.remove_task(ctx_ptr->id);
+  }
+
+}
+
+timer_id_t real_async_loop::add_once_task(const timer_cb_fn_t task,
+                                          const float t) {
+  VLOG(3) << "add_once_task() t: " << t;
+
+  return add_timer(task, true, t);
+
+}
+
+timer_id_t real_async_loop::add_periodic_task(const timer_cb_fn_t task,
+                                              const float t) {
+  VLOG(3) << "add_periodic_task() t: " << t;
+
+  return add_timer(task, false, t);
+
+}
+
+void real_async_loop::set_task_interval(const timer_id_t id, const float t) {
+
+  VLOG(3) << "set_task_interval() t: " << t;
+  return;
+
+  auto it = timers_.find(id.timer_id);
+  CHECK(it != timers_.end()) << "timer not found";
+
+  auto & ev_timer = it->second->timer;
+  ev_timer->start(t, t);
+
+}
+
+bool real_async_loop::remove_task(const timer_id_t id) {
+
+  VLOG(3) << "remove_task()";
+
+  auto it = timers_.find(id.timer_id);
+
+  if (it != timers_.end()) {
+
+   it->second->timer->stop();
+   timers_.erase(it);
+
+  return true;
+
+  } else {
+
+    VLOG(3) << "timer not found";
+    return false;
+  }
+
 }
 
 real_async_events::real_async_events(size_t num_loops, async_cb_fn_t cb_fn) :
@@ -169,22 +253,6 @@ real_async_events::real_async_events(size_t num_loops, async_cb_fn_t cb_fn) :
   loops_(num_loops)
 {
   for (size_t i = 0; i < num_loops_; i++) {
-    loops_[i].set_id(i);
-    loops_[i].set_async_cb(cb_fn);
-  }
-}
-
-real_async_events::real_async_events(size_t num_loops, async_cb_fn_t cb_fn,
-                                     const float interval,
-                                     timer_cb_fn_t timer_cb_fn)
-  :
-  async_events_interface(),
-  num_loops_(num_loops),
-  cb_fn_(cb_fn),
-  loops_(num_loops)
-{
-  for (size_t i = 0; i < num_loops_; i++) {
-    loops_[i].set_timer(interval, timer_cb_fn);
     loops_[i].set_id(i);
     loops_[i].set_async_cb(cb_fn);
   }
@@ -213,16 +281,6 @@ std::unique_ptr<async_events_interface> make_async_events(size_t threads,
 {
   return std::move(std::unique_ptr<real_async_events>(
                     new real_async_events(threads, cb)));
-}
-
-std::unique_ptr<async_events_interface> make_async_events(size_t threads,
-                                                          async_cb_fn_t a_cb,
-                                                          const float interval,
-                                                          timer_cb_fn_t t_cb)
-{
-
-  return std::move(std::unique_ptr<real_async_events>(
-                    new real_async_events(threads,a_cb, interval, t_cb)));
 }
 
 listen_io::listen_io(const int fd, on_new_client_fn_t on_new_client)
@@ -272,14 +330,18 @@ void timer_io::timer(ev::timer &, int) {
 real_main_async_loop::real_main_async_loop()
 :
   default_loop_(),
-  sig_(default_loop_),
+  sigint_(default_loop_),
+  sigterm_(default_loop_),
   async_(),
   listen_ios_(),
   timer_ios_(),
   new_tasks_()
 {
-  sig_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
-  sig_.start(SIGINT);
+  sigint_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
+  sigint_.start(SIGINT);
+
+  sigterm_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
+  sigterm_.start(SIGTERM);
 
   async_.set<real_main_async_loop, &real_main_async_loop::async_cb>(this);
   async_.start();

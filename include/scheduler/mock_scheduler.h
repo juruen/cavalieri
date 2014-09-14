@@ -1,5 +1,5 @@
-#ifndef SCHEDULER_MOCK_SCHEDULER_H
-#define SCHEDULER_MOCK_SCHEDULER_H
+#ifndef CAVALIERI_SCHEDULER_MOCK_SCHEDULER_H
+#define CAVALIERI_SCHEDULER_MOCK_SCHEDULER_H
 
 #include <queue>
 #include <vector>
@@ -19,11 +19,12 @@ public:
 class mock_scheduler : public scheduler_interface {
 public:
   mock_scheduler();
-  void add_periodic_task(task_fn_t task, float interval);
-  void add_once_task(task_fn_t task, float dt);
-  time_t unix_time();
-  void set_time(const time_t t);
-  void clear();
+  remove_task_future_t add_periodic_task(task_fn_t task,
+                                         float interval) override;
+  remove_task_future_t add_once_task(task_fn_t task, float dt) override;
+  time_t unix_time()  override;
+  void set_time(const time_t t) override;
+  void clear() override;
 
 private:
   void set_forward_time(time_t time);

@@ -1,5 +1,5 @@
-#ifndef EXTERNAL_GRAPHITE_POOL_H
-#define EXTERNAL_GRAPHITE_POOL_H
+#ifndef CAVALIERI_EXTERNAL_GRAPHITE_POOL_H
+#define CAVALIERI_EXTERNAL_GRAPHITE_POOL_H
 
 #include <transport/tcp_client_pool.h>
 

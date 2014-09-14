@@ -4,15 +4,14 @@
 #include <atomic>
 #include <chrono>
 #include <atom/atom.h>
-#include <util.h>
+#include <util/util.h>
 #include <core/core.h>
 #include <scheduler/scheduler.h>
+#include <predicates/predicates.h>
 #include <streams/stream_functions_lock.h>
 #include <streams/stream_functions.h>
 
 namespace {
-
-const unsigned int k_default_ttl = 60;
 
 const std::string k_rate_service = "cavalieri stream rate";
 const std::string k_rate_desc = "events per second in streams";
@@ -62,13 +61,15 @@ void update_in_latency(instrumentation & inst, const int id,
 
 }
 
+namespace pred = predicates;
+
 streams_t  prn() {
   return create_stream(
     [](e_t e) -> next_events_t
     {
-      LOG(INFO) << "prn() " <<  event_to_json(e);
+      LOG(INFO) << "prn() " <<  e.json_str();
 
-      return {};
+      return {e};
     });
 }
 
@@ -76,30 +77,38 @@ streams_t  prn(const std::string prefix) {
   return create_stream(
     [=](e_t e) -> next_events_t
     {
-      LOG(INFO) << "prn() " << prefix <<  event_to_json(e);
+      LOG(INFO) << "prn() " << prefix <<  e.json_str();
 
-      return {};
+      return {e};
     });
 }
 
+streams_t null() {
+  return create_stream([=](e_t) -> next_events_t { return {}; });
+}
+
 streams_t service(const std::string service) {
-  return where(match_pred("service", service));
+  return where(pred::match("service", service));
 }
 
 streams_t service_any(const std::vector<std::string> services) {
-  return where(match_any_pred("service", services));
+  return where(pred::match_any("service", services));
 }
 
 streams_t service_like(const std::string pattern) {
-  return where(match_like_pred("service", pattern));
+  return where(pred::match_like("service", pattern));
 }
 
 streams_t service_like_any(const std::vector<std::string> patterns) {
-  return where(match_like_any_pred("service", patterns));
+  return where(pred::match_like_any("service", patterns));
+}
+
+streams_t has_attribute(const std::string attribute) {
+  return where(PRED(e.has_attr(attribute)));
 }
 
 streams_t state(const std::string state) {
-  return where(match_pred("state", state));
+  return where(pred::match("state", state));
 }
 
 streams_t state_any(const std::vector<std::string> states) {
@@ -116,6 +125,10 @@ streams_t state_any(const std::vector<std::string> states) {
 
 streams_t set_state(const std::string state) {
   return with({{"state", state}});
+}
+
+streams_t set_host(const std::string host) {
+  return with({{"host", host}});
 }
 
 streams_t set_metric(const double metric) {
@@ -219,7 +232,7 @@ streams_t where(const predicate_t & predicate,
 }
 
 
-streams_t by(const by_keys_t & keys, const by_stream_t stream) {
+streams_t by(const by_keys_t & keys, const streams_t stream) {
 
 #ifdef BY_LOCKFREE
   return by_lockfree(keys, stream);
@@ -229,53 +242,64 @@ streams_t by(const by_keys_t & keys, const by_stream_t stream) {
 
 }
 
-streams_t rate(const int interval) {
+streams_t by(const by_keys_t & keys) {
 
-  auto rate = std::make_shared<std::atomic<double>>(0);
+#ifdef BY_LOCKFREE
+  return by_lockfree(keys, stream);
+#else
+  return by_lock(keys);
+#endif
+
+}
+
+
+
+streams_t rate(const int interval) {
 
   return create_stream(
 
-    [=](e_t e) mutable ->next_events_t
+    // on_init_stream
+    [=](fwd_new_stream_fn_t fwd_new_stream) -> on_event_fn_t
     {
 
-      double expected, newval;
+      auto rate = std::make_shared<std::atomic<double>>(0);
+      auto forward = fwd_new_stream();
 
-      do {
+      // Schedule periodic task to report rate
+      g_core->sched().add_periodic_task(
+        [=]()
+        {
+          VLOG(3) << "rate-timer()";
 
-        expected = rate->load();
-        newval = expected + metric_to_double(e);
+          Event event;
 
-      } while (!rate->compare_exchange_strong(expected, newval));
+          event.set_metric_d(rate->exchange(0) / interval);
+          event.set_time(g_core->sched().unix_time());
 
-      return {};
+          forward({event});
+        },
+
+        interval
+        );
+
+      // on_event_fn function that does that counts events
+      return [=](e_t e) -> next_events_t
+      {
+
+        double expected, newval;
+
+        do {
+
+          expected = rate->load();
+          newval = expected + e.metric();
+
+        } while (!rate->compare_exchange_strong(expected, newval));
+
+        return {};
+
+      };
 
     });
-  /*
-    [=](forward_fn_t forward)
-    {
-
-      g_core->sched().add_periodic_task(
-          [=]() mutable
-          {
-
-            VLOG(3) << "rate-timer()";
-
-            Event event;
-
-            event.set_metric_d(rate->exchange(0) / interval);
-            event.set_time(g_core->sched().unix_time());
-
-            forward(event);
-          },
-
-          interval
-          );
-
-    }
-
-  );
-  */
-
 }
 
 streams_t coalesce(fold_fn_t fold) {
@@ -310,7 +334,13 @@ streams_t changed_state_(std::string initial) {
 
 streams_t changed_state(std::string initial) {
 
-  return by({"host", "service"}, BY(changed_state_(initial)));
+  return by({"host", "service"}, changed_state_(initial));
+
+}
+
+streams_t changed_state() {
+
+  return changed_state("ok");
 
 }
 
@@ -319,7 +349,7 @@ streams_t tagged_any(const tags_t& tags) {
     [=](e_t e) -> next_events_t
     {
 
-      if (tagged_any_(e, tags)) {
+      if (pred::tagged_any(e, tags)) {
         return {e};
       } else {
         return {};
@@ -332,7 +362,7 @@ streams_t tagged_all(const tags_t& tags) {
   return create_stream(
     [=](e_t e) -> next_events_t
     {
-      if (tagged_all_(e, tags)) {
+      if (pred::tagged_all(e, tags)) {
         return {e};
       } else {
         return {};
@@ -417,11 +447,22 @@ streams_t throttle(size_t n, time_t dt) {
 
 }
 
+streams_t percentiles(time_t interval, std::vector<double> percentiles) {
+
+#ifdef PERCENTILES_LOCKFREE
+  return percentiles_lockfree(interval, percentiles);
+#else
+  return percentiles_lock(interval, percentiles);
+#endif
+
+
+}
+
 streams_t above(double m) {
   return create_stream(
    [=](e_t e) -> next_events_t {
 
-      if (above_(e, m)) {
+      if (pred::above(e, m)) {
         return {e};
       } else {
         return {};
@@ -434,7 +475,7 @@ streams_t under(double m) {
   return create_stream(
    [=](e_t e) -> next_events_t {
 
-      if (under_(e, m)) {
+      if (pred::under(e, m)) {
         return {e};
       } else {
         return {};
@@ -447,7 +488,7 @@ streams_t within(double a, double b) {
   return create_stream(
     [=](e_t e) -> next_events_t {
 
-    if (above_eq_(e,a) && under_eq_(e, b)) {
+    if (pred::above_eq(e,a) && pred::under_eq(e, b)) {
       return {e};
     } else {
       return {};
@@ -460,7 +501,7 @@ streams_t without(double a, double b) {
   return create_stream(
     [=](e_t e) -> next_events_t {
 
-    if (under_(e,a) || above_(e, b)) {
+    if (pred::under(e,a) || pred::above(e, b)) {
       return {e};
     } else {
       return {};
@@ -473,57 +514,67 @@ streams_t scale(double s) {
   return create_stream(
     [=](e_t e) -> next_events_t {
 
-      return {set_metric_c(e, s * metric_to_double(e))};
+      return {e.copy().set_metric(s * e.metric())};
 
   });
 }
 
 streams_t svec(std::vector<streams_t> streams) {
   return create_stream(
-    [=](e_t e) -> next_events_t {
+    [=]() mutable -> on_event_fn_t {
 
-      if (!streams.empty()) {
+      for (streams_t & s : streams) {
+        init_streams(s);
+      }
 
-        next_events_t next_events;
+      return [=](e_t e) -> next_events_t {
 
-        for (const auto & stream : streams) {
+        if (!streams.empty()) {
 
-          const auto ret = push_event(stream, e);
-          std::copy(begin(ret), end(ret), back_inserter(next_events));
+          next_events_t next_events;
+
+          for (const auto & stream : streams) {
+
+            const auto ret = push_event(stream, e);
+            std::copy(begin(ret), end(ret), back_inserter(next_events));
+
+          }
+
+          return next_events;
+
+        } else {
+
+          return {e};
 
         }
 
-        return next_events;
-
-      } else {
-
-        return {e};
-
-      }
+      };
 
     }
 
     );
 }
 
-streams_t counter() {
+on_event_fn_t counter_() {
    auto counter = std::make_shared<std::atomic<unsigned int>>(0);
 
-  return create_stream(
-    [=](e_t e) mutable -> next_events_t {
+   return [=](e_t e) -> next_events_t {
 
-      if (metric_set(e)) {
+      if (e.has_metric()) {
 
-        Event ne(e);
-        ne.set_metric_sint64(counter->fetch_add(1) + 1);
-        return {ne};
+        return {e.copy().clear_metric()
+                .set_metric_sint64(counter->fetch_add(1) + 1)};
 
       } else {
 
         return {e};
 
       }
-  });
+    };
+}
+
+streams_t counter() {
+  return create_stream(counter_);
 }
 
 streams_t ddt() {
@@ -540,7 +591,18 @@ streams_t ddt() {
 streams_t expired() {
   return create_stream(
     [=](e_t e) -> next_events_t {
-      if (expired_(e)) {
+      if (pred::expired(e)) {
+        return {e};
+      } else {
+        return {};
+      }
+  });
+}
+
+streams_t not_expired() {
+  return create_stream(
+    [=](e_t e) -> next_events_t {
+      if (pred::expired(e)) {
         return {e};
       } else {
         return {};
@@ -555,7 +617,7 @@ streams_t tag(tags_t tags) {
       Event ne(e);
 
       for (const auto & t: tags) {
-        *(ne.add_tags()) = t;
+        ne.add_tag(t);
       }
 
       return {ne};
@@ -567,7 +629,7 @@ streams_t send_index() {
   return create_stream(
     [=](e_t e) -> next_events_t {
 
-      if (!expired_(e)) {
+      if (!pred::expired(e)) {
 
         g_core->idx().add_event(e);
 
@@ -605,7 +667,15 @@ streams_t forward(const std::string host, const int port) {
 }
 
 streams_t email(const std::string server, const std::string from,
-                const std::string to) {
+                const std::string to)
+{
+
+  return email(server, from, std::vector<std::string>{to});
+
+}
+
+streams_t email(const std::string server, const std::string from,
+                const std::vector<std::string> to) {
   return create_stream(
     [=](e_t e) -> next_events_t {
 
@@ -616,6 +686,8 @@ streams_t email(const std::string server, const std::string from,
     }
   );
 }
+
+
 
 streams_t pagerduty_resolve(const std::string key) {
   return create_stream(
@@ -653,157 +725,6 @@ streams_t pagerduty_trigger(const std::string key) {
   );
 }
 
-predicate_t above_eq_pred(const double value) {
-  return PRED(above_eq_(e, value));
-}
-
-predicate_t above_pred(const double value) {
-  return PRED(above_(e, value));
-}
-
-predicate_t under_eq_pred(const double value) {
-  return PRED(under_eq_(e, value));
-}
-
-predicate_t under_pred(const double value) {
-  return PRED(under_(e, value));
-}
-
-predicate_t state_pred(const std::string state) {
-  return PRED(e.state() == state);
-}
-
-predicate_t service_pred(const std::string service) {
-  return PRED(e.service() == service);
-}
-
-predicate_t match_pred(const std::string key, const std::string value) {
-  return PRED(match_(e, key, value));
-}
-
-predicate_t match_any_pred(const std::string key,
-                           const std::vector<std::string> values)
-{
-  return PRED(
-      std::find(values.begin(), values.end(), event_str_value(e, key))
-      != values.end()
-  );
-}
-
-predicate_t match_re_pred(const std::string key, const std::string value) {
-  return PRED(match_re_(e, key, value));
-}
-
-predicate_t match_re_any_pred(const std::string key,
-                              const std::vector<std::string> values)
-{
-  return [=](e_t e) {
-
-    for (const auto & val : values) {
-      if (match_re_(e, key, val)) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-}
-
-predicate_t match_like_pred(const std::string key, const std::string value) {
-  return PRED(match_like_(e, key, value));
-}
-
-predicate_t match_like_any_pred(const std::string key,
-                              const std::vector<std::string> values)
-{
-  return [=](e_t e) {
-
-    for (const auto & val : values) {
-      if (match_like_(e, key, val)) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-}
-
-predicate_t default_pred() {
-  return [](e_t){ return true; };
-}
-
-bool tagged_any_(e_t e, const tags_t& tags) {
-  for (auto &tag: tags) {
-    if (tag_exists(e, tag)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool tagged_all_(e_t e, const tags_t& tags) {
-  for (auto &tag: tags) {
-    if (!tag_exists(e, tag)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool expired_(e_t e) {
-  auto ttl = e.has_ttl() ? e.ttl() : k_default_ttl;
-
-  if (e.state() == "expired") {
-    return true;
-  }
-
-  if (g_core->sched().unix_time() < e.time()) {
-    return false;
-  }
-
-  return (g_core->sched().unix_time() - e.time() > ttl);
-}
-
-bool above_eq_(e_t e, const double value) {
-  return (metric_to_double(e) >= value);
-}
-
-bool above_(e_t e, const double value) {
-  return (metric_to_double(e) > value);
-}
-
-bool under_eq_(e_t e, const double value) {
-  return (metric_to_double(e) <= value);
-}
-
-bool under_(e_t e, const double value) {
-  return (metric_to_double(e) < value);
-}
-
-bool match_(e_t e, const std::string key, const std::string value) {
-
-  const std::string ev_val(event_str_value(e, key));
-
-  return ev_val == value;
-
-}
-
-bool match_re_(e_t e, const std::string key, const std::string value) {
-
-  const std::string ev_val(event_str_value(e, key));
-
-  return match_regex(ev_val, value);
-
-}
-
-bool match_like_(e_t e, const std::string key, const std::string value) {
-
-  const std::string ev_val(event_str_value(e, key));
-
-  return match_like(ev_val, value);
-
-}
-
 streams::streams(instrumentation & instrumentation)
   : instrumentation_(instrumentation), stop_(false)
 {
@@ -824,7 +745,7 @@ void streams::add_stream(streams_t stream) {
   streams_.push_back(stream);
 }
 
-void streams::process_message(const Msg& message) {
+void streams::process_message(const riemann::Msg& message) {
 
   if (stop_) {
     return;

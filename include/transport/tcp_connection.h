@@ -1,5 +1,5 @@
-#ifndef TRANSPORT_TCP_CONNECTION_H
-#define TRANSPORT_TCP_CONNECTION_H
+#ifndef CAVALIERI_TRANSPORT_TCP_CONNECTION_H
+#define CAVALIERI_TRANSPORT_TCP_CONNECTION_H
 
 #include <vector>
 #include <boost/circular_buffer.hpp>

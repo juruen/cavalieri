@@ -16,8 +16,8 @@
 #include "index_test_case.hpp"
 #include <scheduler/mock_scheduler.h>
 #include <core/mock_core.h>
-#include "os_functions.h"
-#include "mock_os_functions.h"
+#include "os/os_functions.h"
+#include "os/mock_os_functions.h"
 #include "atom/atom.h"
 
 mock_os_functions mock_os;

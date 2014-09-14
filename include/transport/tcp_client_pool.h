@@ -1,5 +1,5 @@
-#ifndef TCP_CLIENT_POOL_H
-#define TCP_CLIENT_POOL_H
+#ifndef CAVALIERI_TCP_CLIENT_POOL_H
+#define CAVALIERI_TCP_CLIENT_POOL_H
 
 #include <tbb/concurrent_queue.h>
 #include <functional>
@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <transport/tcp_pool.h>
 #include <transport/tcp_connection.h>
-#include <proto.pb.h>
+#include <common/event.h>
 
 /* This callback is used to translate events into whatever needs to be
  * sent in the wire.
@@ -32,7 +32,8 @@ class tcp_client_pool {
     void create_conn(int fd, async_loop & loop, tcp_connection & conn);
     void data_ready(async_fd & async, tcp_connection & conn);
     void async(async_loop & loop);
-    void timer(async_loop & loop);
+    void signal_batch_flush(const size_t loop_id);
+    void connect_clients(const size_t loop_id);
 
   private:
     typedef tbb::concurrent_bounded_queue<Event> event_queue_t;

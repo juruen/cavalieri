@@ -1,5 +1,5 @@
-#ifndef RIEMANN_UDP_POOL
-#define RIEMANN_UDP_POOL
+#ifndef CAVALIERI_RIEMANN_UDP_POOL
+#define CAVALIERI_RIEMANN_UDP_POOL
 
 #include <transport/udp_pool.h>
 

@@ -1,5 +1,6 @@
 option java_package = "com.aphyr.riemann";
 option java_outer_classname = "Proto";
+package riemann;
 
 message State {
   optional int64 time = 1;

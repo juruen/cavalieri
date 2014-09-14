@@ -1,9 +1,11 @@
-#ifndef STREAMS_STREAM_FUNCTIONS_LOCK_H
-#define STREAMS_STREAM_FUNCTIONS_LOCK_H
+#ifndef CAVALIERI_STREAMS_STREAM_FUNCTIONS_LOCK_H
+#define CAVALIERI_STREAMS_STREAM_FUNCTIONS_LOCK_H
 
 #include <streams/stream_functions.h>
 
-streams_t by_lock(const by_keys_t & keys, const by_stream_t stream);
+streams_t by_lock(const by_keys_t & keys, const streams_t stream);
+
+streams_t by_lock(const by_keys_t & keys);
 
 streams_t coalesce_lock(fold_fn_t fold);
 
@@ -22,6 +24,8 @@ streams_t fixed_time_window_lock(time_t dt, fold_fn_t fold);
 streams_t stable_lock(time_t dt);
 
 streams_t throttle_lock(size_t n, time_t dt);
+
+streams_t percentiles_lock(time_t interval, std::vector<double> percentiles);
 
 streams_t ddt_lock();
 

@@ -1,14 +1,15 @@
-#ifndef INDEX_INDEX_H
-#define INDEX_INDEX_H
+#ifndef CAVALIERI_INDEX_INDEX_H
+#define CAVALIERI_INDEX_INDEX_H
 
-#include <proto.pb.h>
+#include <common/event.h>
 #include <functional>
 #include <memory>
 #include <scheduler/scheduler.h>
 #include <pub_sub/pub_sub.h>
 
-typedef std::function<void(const Event &)> push_event_fn_t;
-typedef std::function<void(std::function<void()>)> spwan_thread_fn_t;
+using push_event_fn_t = std::function<void(const Event &)>;
+using match_fn_t = std::function<bool(const Event &)>;
+using spwan_thread_fn_t = std::function<void(std::function<void()>)>;
 
 class index_interface {
 public:

@@ -1,7 +1,7 @@
 #include <thread>
 #include <queue>
 #include <glog/logging.h>
-#include <util.h>
+#include <util/util.h>
 #include <atom/atom.h>
 #include <core/core.h>
 #include <index/real_index.h>
@@ -43,31 +43,11 @@ real_index::real_index(pub_sub & pubsub, push_event_fn_t push_event,
   mutexes_(k_indexes)
 {
 
-  pubsub_.add_publisher(k_default_index,
-                        std::bind(&real_index::all_events, this));
+  pubsub_.add_publisher(k_default_index);
 
   sched_.add_periodic_task(std::bind(&real_index::timer_cb, this),
                             expire_interval);
 
-}
-
-std::vector<std::shared_ptr<Event>> real_index::all_events() {
-
-  std::vector<std::shared_ptr<Event>> events;
-
-  for (size_t i = 0; i < indexes_.size(); i++) {
-
-    mutexes_[i].lock();
-    auto index(indexes_[i]);
-    mutexes_[i].unlock();
-
-    for (const auto & kv : index) {
-      events.push_back(kv.second);
-    }
-
-  }
-
-  return events;
 }
 
 void real_index::add_event(const Event& e) {
@@ -78,11 +58,9 @@ void real_index::add_event(const Event& e) {
 
   const size_t index(hash_fn(ev_key) % indexes_.size());
 
-  auto shared_event = std::make_shared<Event>(e);
-
   {
     std::lock_guard<std::mutex> lock(mutexes_[index]);
-    indexes_[index][ev_key] = shared_event;
+    indexes_[index][ev_key] = e;
   }
 
   pubsub_.publish(k_default_index, e);
@@ -108,9 +86,7 @@ void real_index::expire_events() {
 
   VLOG(3) << "expire_fn()++";
 
-
-
-  std::vector<std::shared_ptr<Event>> expired_events;
+  std::vector<Event> expired_events;
 
   int64_t now = static_cast<int64_t>(sched_.unix_time());
 
@@ -127,7 +103,7 @@ void real_index::expire_events() {
 
       const auto & event(it->second);
 
-      auto expire = event->time() + static_cast<int64_t>(event->ttl());
+      auto expire = event.time() + static_cast<int64_t>(event.ttl());
       if (expire < now) {
         expired_events.push_back(event);
         indexes_[i].erase(it++);
@@ -147,9 +123,9 @@ void real_index::expire_events() {
           << static_cast<int64_t>(sched_.unix_time()) - now << " seconds";
 
   for (auto & event : expired_events) {
-    event->set_state("expired");
-    pubsub_.publish(k_default_index, *event);
-    push_event_fn_(*event);
+    event.set_state("expired");
+    pubsub_.publish(k_default_index, event);
+    push_event_fn_(event);
   }
 
   VLOG(3) << "expire_fn()--";
@@ -157,6 +133,43 @@ void real_index::expire_events() {
   expiring_.store(false);
 
   atom_detach_thread();
+}
+
+std::vector<Event> real_index::query_index(const match_fn_t match_fn,
+                                           const size_t max_matches)
+{
+
+  VLOG(3) << "quering index";
+
+  std::vector<Event> events;
+
+  size_t matches = 0;
+
+  for (size_t i = 0; i < indexes_.size(); i++) {
+
+    std::lock_guard<std::mutex> lock(mutexes_[i]);
+
+    for (const auto & event : indexes_[i]) {
+
+      if (match_fn(event.second)) {
+
+        events.push_back(event.second);
+
+        matches++;
+
+        if (matches == max_matches) {
+          return std::move(events);
+        }
+
+      }
+
+    }
+
+  }
+
+  VLOG(3) << "matches: " << matches;
+
+  return std::move(events);
 }
 
 real_index::~real_index() {

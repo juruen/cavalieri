@@ -1,5 +1,5 @@
-#ifndef ATOM_MUTEX_H
-#define ATOM_MUTEX_H
+#ifndef CAVALIERI_ATOM_MUTEX_H
+#define CAVALIERI_ATOM_MUTEX_H
 
 #include <unordered_map>
 #include <memory>

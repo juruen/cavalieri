@@ -5,11 +5,11 @@
 #include <sys/socket.h>
 #include <glog/logging.h>
 #include <transport/tcp_connection.h>
-#include <os_functions.h>
+#include <os/os_functions.h>
 
 namespace {
 
-const size_t k_default_buffer_size = 1024 * 1024;
+const size_t k_default_buffer_size = 1024 * (1024 + 512);
 
 bool read_from_fd(boost::circular_buffer<unsigned char> & buffer,
                   const int & fd)

@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <jsoncpp/json/json.h>
 #include "rule_tester_util.h"
-#include <util.h>
+#include <util/util.h>
 
 namespace {
   bool compare_time_events(const Event & left, const Event & right) {
@@ -20,13 +20,14 @@ namespace {
     event["service"] = Json::Value(e.service());
     event["description"] = Json::Value(e.description());
     event["state"] = Json::Value(e.state());
-    event["metric"] = Json::Value(metric_to_double(e));
+    event["metric"] = Json::Value(e.metric());
     event["time"] = Json::Value::UInt64(e.time());
     event["state"] = Json::Value(e.state());
 
     Json::Value tags(Json::arrayValue);
-    for (auto i = 0; i < e.tags_size(); i++ ) {
-      tags.append(e.tags(i));
+    auto re = e.riemann_event();
+    for (auto i = 0; i < re.tags_size(); i++ ) {
+      tags.append(re.tags(i));
     }
 
     event["tags"] = tags;
@@ -96,7 +97,7 @@ std::vector<Event> json_to_events(const std::string json, bool & ok) {
         }
       } else {
         for (const auto & tag: e[m]) {
-          *event.add_tags() = tag.asString();
+          event.add_tag(tag.asString());
         }
       }
     }

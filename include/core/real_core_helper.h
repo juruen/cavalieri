@@ -1,5 +1,5 @@
-#ifndef CORE_REAL_CORE_HELPER_H
-#define CORE_REAL_CORE_HELPER_H
+#ifndef CAVALIERI_CORE_REAL_CORE_HELPER_H
+#define CAVALIERI_CORE_REAL_CORE_HELPER_H
 
 #include <functional>
 #include <core/real_core.h>
@@ -23,7 +23,8 @@ std::unique_ptr<riemann_udp_pool> init_udp_server(
 std::unique_ptr<websocket_pool> init_ws_server(
     const config & conf,
     main_async_loop_interface & loop,
-    pub_sub & pubsub);
+    pub_sub & pubsub,
+    real_index & index);
 
 void start_instrumentation(scheduler_interface & sched,
                            instrumentation & instrumentation,

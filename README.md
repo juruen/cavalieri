@@ -12,7 +12,7 @@ It implements the original [riemann.io](http://riemann.io) protocol. That means
 you can leverage the existing *riemann* clients and tools. It also tries to
 mimic its stream API where possible.
 
-Cavalieri's current version *0.0.5* is considered to be  in **alpha** state.
+Cavalieri's current version *0.0.6* is considered to be  in **alpha** state.
 We expect to release a beta version in the following weeks.
 
 Current benchmarks show that it can process more than one million events per
@@ -78,19 +78,20 @@ service is above 40.
 #include <external/pagerduty.h>
 #include <external/email.h>
 
-streams_t* rules() {
+streams_t rules() {
 
   auto mail_stream = email("localhost", "cavalieri@localhost",
                            "devops@localhost");
 
-  auto s =  service("requests_rate")
-               >> above(40)
-                 >> set_state("critical")
-                   >> changed_state("ok")
-                     >>  mail_stream;
+  return service("requests_rate")
+           >> above(40)
+             >> set_state("critical")
+               >> changed_state()
+                 >>  mail_stream;
 
-  return new streams_t(s);
 }
+
+EXPORT_RULES(rules)
 ```
 
 Build a plugin containing your rules that will be loaded by *cavalieri*.
@@ -153,7 +154,7 @@ Let's have a look at the default rules again:
 auto s =  service("requests_rate")
            >> above(40)
              >> set_state("critical")
-               >> changed_state("ok")
+               >> changed_state()
                  >>  mail_stream;
 
 [...]
@@ -222,13 +223,17 @@ Streams API
 
 #### What is a stream function?
 
-#### prn()
+#### prn ()
 
 It prints events that pass through it.
 
 #### prn (const std::string  str)
 
 It prints events that pass through it and also the string that takes as an argument.
+
+#### null ()
+
+This can be used a as a sink that doesn't forward events.
 
 #### service (const std::string service)
 
@@ -255,10 +260,25 @@ It forwards events which services match any of the given pattern. This
 behaves just like *service_like* but it takes a list of patterns instead of
 a single one.
 
+#### state (const std::string state)
+
+It forwards events which state is set to *state*.
+
+#### state_any (const std::vector&lt;std::string> states)
+
+It forwards events which state is any of *states*.
+
+#### has_attribute (const std::string attribute)
+
+It fowards events that have a set *attribute*.
+
 #### set_state (const std::string state)
 
 It sets the events state to *state* and forwards them.
 
+#### set_host (const std::string host)
+
+It sets the events host to *host* and forwards them.
 
 #### set_metric (const double value);
 
@@ -292,8 +312,8 @@ When an event is received, the event is passed to the first stream which
 predicate returns true.
 
 ```cpp
-split({above_pred(10), set_state("ok")},
-      {under_pred(5),  set_state("critical"});
+split({p::above(10), set_state("ok")},
+      {p::under(5),  set_state("critical"});
 ```
 
 #### split (const split_clauses_t clauses, const streams_t default_stream)
@@ -304,8 +324,8 @@ first stream which predicate returns true. If none of the predicates match,
 the event is passed to the default stream.
 
 ```cpp
-split({above_pred(10), set_state("ok")},
-      {under_pred(5),  set_state("critical")},
+split({p::above(10), set_state("ok")},
+      {p::under(5),  set_state("critical")},
       set_state("warning"));
 ```
 
@@ -314,7 +334,7 @@ split({above_pred(10), set_state("ok")},
 It passes events that make the predicate function return true.
 
 ```cpp
-where(under_pred(5)) >> set_state("critical") >> notiy_email();
+where(p::under(5)) >> set_state("critical") >> notiy_email();
 ```
 
 #### where (const predicate_t & predicate, const streams_t else_stream)
@@ -325,10 +345,10 @@ Otherwise, events are passed to *else_stream*.
 ```cpp
 above_stream = set_state("ok") >> prn("metric is above 5");
 
-where(under_pred(5), above_stream) >> set_state("critical") >> notiy_email(); 
+where(p::under(5), above_stream) >> set_state("critical") >> notiy_email(); 
 ```
 
-#### by (const by_keys_t  & keys, const by_stream_t stream)
+#### by (const by_keys_t  & keys, const streams_t stream)
 
 It takes a list of event's fields. When an event enters this function,
 the field(s) are retrieved, for every new value that has not been seen before,
@@ -354,18 +374,30 @@ It helps us  replicate the stream per each host so we can compute the rates
 individually.
 
 ```cpp
-auto rate_stream = BY(set_metric(1)
-                        >> rate(60)
-                          >> prn("exceptions per second:"));
+auto rate_stream = set_metric(1)
+                      >> rate(60)
+                        >> prn("exceptions per second:");
 
 // Use the host field and replicate rate_stream for evey distinct host.
 by({"host"}, rate_stream);
 ```
 
-Note that we need to wrap the stream function that we want to replicate with
-the *BY()* macro.
-
 You can pass several fields to *by()*.
+
+#### by (const by_keys_t  & keys)
+
+This is similar to *by(const by keys_t & keys, const streams_t streams)*. But
+instead of passing the streams to clone for every distinct combinations of
+*keys* as a parameter, it will duplicate the streams that are concatenated
+after it.
+
+Let's see the example of the other *by()* function using this one.
+
+```cpp
+// Use the host field and replicate the stream that is next to it.
+by({"host"}) >> set_metric(1) >> rate(60) >> prn("exceptions per second:");
+```
+
 
 #### rate (const uint32 & dt)
 
@@ -401,16 +433,27 @@ any of the predicates, all the stored events are forwared to *fold_fn*.
 
 ```cpp
 // Create a new event metric that is the sum of foo and bar
-project({service_pred("foo"), service_pred("bar"), sum) >> prn("foo + bar");
+project({p::serviced("foo"), p::service("bar"), sum) >> prn("foo + bar");
 ```
 
 #### changed_state (const std::string & initial)
 
-It only forwards events if there is a state change for every host and service.
-It assummes *initial* as the first state.
+It only forwards events if there is a state change for a host and service.
+It assummes *initial* as the first state. It uses *by({"host", "service"})*
+internally.
 
 If you are sending emails, this is useful to not spam yourself and only send
 emails when something goes from *ok* to *critical* and viceversa.
+
+#### changed_state ()
+
+It only forwards events if there is a state change for a host and service.
+It assummes *ok* as the first state. It uses *by({"host", "service"})*
+internally.
+
+If you are sending emails, this is useful to not spam yourself and only send
+emails when something goes from *ok* to *critical* and viceversa.
+
 
 #### tagged_any (const tags_t & tags)
 
@@ -487,6 +530,24 @@ This is useful to avoid spikes.
 
 It only forwards a maximum of *n* events during *dt* seconds.
 
+#### percentiles (time_t interval, const std::vector<double> percentiles)
+
+It creates a reservoir that represents a distribution of the metrics received.
+Every *interval* seconds, it will emit a list of events with the given
+*percentiles*.
+
+The corresponding percentile will be added to the service name of the emitted
+events.
+
+```cpp
+// This will create a distrbution of the request_time metrics, and every
+// 2 seconds it will emit events containing percentils: 0th, 50th, 90th, 95th
+// and 100th
+service("request_time") >> percentiles(2, {0.0, 0.5, 0.90, 0.95, 1});
+```
+
+
+
 #### above (double k)
 
 It forwards events with metrics above *k*.
@@ -524,6 +585,10 @@ It counts the number of events that pass through it.
 #### expired ()
 
 It forwards events that are expired.
+
+#### not_expired ()
+
+It forwards events that are not expired.
 
 #### tags (tags_t tags)
 
@@ -631,6 +696,10 @@ It returns an event that contains the minimum value of the metrics of *events*.
 
 It returns an event that contains the maximum of the metrics of *events*.
 
+#### count(const std::vector<Event> events)
+
+It returns an event that contains the number of received *events*.
+
 ### Common Rules
 
 These rules are based on the above stream functions, but they are more
@@ -660,7 +729,7 @@ It sets it back to critical when *trigger* has returned *false* for more than
 This is useful to avoid spikes.
 
 ```cpp
-stable_metric( /* seconds */ 300, above_pred(200))
+stable_metric( /* seconds */ 300, p::above(200))
   >> changed_state("ok")
     >>  email();
 ```
@@ -680,7 +749,7 @@ It sets it back to critical when *cancel* has returned *true* for more than
 This is useful to avoid spikes.
 
 ```cpp
-stable_metric( /* seconds */ 300, above_pred(200))
+stable_metric( /* seconds */ 300, p::above(200))
   >> changed_state("ok")
     >>  email();
 ```
@@ -701,7 +770,7 @@ more than *dt* seconds.
 ```cpp
 service("failed_requests_rate")
   >> tagged("datacenter::london")
-    >> agg_stable_metric(/* secs */ 300, sum, above_pred(200), under_pred(50))
+    >> agg_stable_metric(/* secs */ 300, sum, p::above(200), p::under(50))
       >> changed_state("ok")
         >> email();
 ```
@@ -719,7 +788,7 @@ report a puppet failure in a DC.
 service("puppet")
   >> tagged("datacenter::paris")
     >> max_critial_hosts(20)
-      >> changed_state("ok")
+      >> changed_state()
         >> set_host("datacenter::paris")
           >> set_service("too many puppet failures")
             >> email();
@@ -727,6 +796,114 @@ service("puppet")
 
 
 ### Predicate functions
+
+These functions are used to filter events. Its main purpose is to evaluate
+events and return *true* or *false* based on what is being checked.
+
+There are two types of predicate functions. Those returning *predicate_t*,
+which can be used as arguments for *where()* and *split*. And those returning
+*bool*, which can be returned to build your own *predicate_t* functions, or
+within your own stream functions.
+
+#### predicate_t above_eq (const double value)
+
+Check if the event metric is greater than or equal  to *value*.
+
+#### predicate_t above(const double value)
+
+Check if the event metric is greater than *value*.
+
+#### predicate_t under_eq(const double value)
+
+Check if the event metric is less than or equal  to *value*.
+
+#### predicate_t under(const double value)
+
+Check if the event metric is less than *value*.
+
+#### predicate_t state(const std::string state)
+
+Check if the event state is equal to *state*.
+
+#### predicate_t service(const std::string service)
+
+Check if the event service is equal to *service*.
+
+#### predicate_t match(const std::string key, const std::string value)
+
+Check if the field *key* in the event is equal to *value*.
+
+#### predicate_t match_any(const std::string key, const std::vector<std::string> values)
+
+Check if the field *key* in the event is equal to any of the *values*.
+
+#### predicate_t match_re(const std::string key, const std::string regex)
+
+Check if the field *key* in the event matches the regular expression in
+*regex*.
+
+*regex* is a string containing a valid
+[ECMAScript](http://www.cplusplus.com/reference/regex/ECMAScript/) regular
+expression.
+
+#### predicate_t match_re_any(const std::string key, const std::vector<std::string> regexes)
+
+Check if the field *key* in the event matches any of the regular expression in
+*regexes*.
+
+#### predicate_t match_like(const std::string key, const std::string like)
+
+Check if the field *key* in the event matches a *SQL like* string that uses
+'%' to search for patterns.
+
+#### predicate_t match_like_any(const std::string key, const std::vector<std::string> likes)
+
+Check if the field *key* in the event matches any of the  *SQL like* strings.
+
+#### predicate_t default_true()
+
+This function always returns true.
+
+#### bool tagged_any(e_t event, const tags_t& tags)
+
+Check if any of the *tags* is present in *event*.
+
+#### bool tagged_all(e_t event, const tags_t& tags)
+
+Check if all *tags* are present in *event*.
+
+#### bool expired(e_t event)
+
+Check if *event* is expired.
+
+#### bool above_eq(e_t event, const double value)
+
+Check if metric in *event* is greater than or equal *value*.
+
+#### bool above(e_t event, const double value)
+
+Check if metric in *event* is greater than *value*.
+
+#### bool under_eq(e_t event, const double value)
+
+Check if metric in *event* is less than or equal to *value*.
+
+#### bool under(e_t event, const double value)
+
+Check if metric in*event* is less than *value*.
+
+#### bool match(e_t event, const std::string key, const std::string value)
+
+Check if the field *key* in *event* is equal to *value*.
+
+#### bool match_re(e_t event, const std::string key, const std::string regex)
+
+Check if the field *key* in *event* matches the *regex*.
+
+#### bool match_like(e_t event, const std::string key, const std::string like)
+
+Check if the field *key* in *event* matches the *SQL like* string that uses
+'%' to search for patterns.
 
 ### Some utility functions
 

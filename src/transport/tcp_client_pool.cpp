@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
-#include <util.h>
+#include <util/util.h>
 #include <transport/tcp_connection.h>
 #include <transport/tcp_client_pool.h>
 
@@ -88,8 +88,6 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
     {},
     std::bind(&tcp_client_pool::create_conn, this, _1, _2, _3),
     std::bind(&tcp_client_pool::data_ready, this, _1, _2),
-    k_reconnect_interval_secs,
-    std::bind(&tcp_client_pool::timer, this, _1),
     std::bind(&tcp_client_pool::async, this, _1)
   ),
   host_(host),
@@ -118,8 +116,6 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
     {},
     std::bind(&tcp_client_pool::create_conn, this, _1, _2, _3),
     std::bind(&tcp_client_pool::data_ready, this, _1, _2),
-    k_reconnect_interval_secs,
-    std::bind(&tcp_client_pool::timer, this, _1),
     std::bind(&tcp_client_pool::async, this, _1)
   ),
   host_(host),
@@ -141,6 +137,14 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
 
     thread_event_queues_.push_back(queue);
 
+    tcp_pool_.loop(i).add_periodic_task(
+        std::bind(&tcp_client_pool::connect_clients, this, _1),
+        k_reconnect_interval_secs);
+
+    tcp_pool_.loop(i).add_periodic_task(
+        std::bind(&tcp_client_pool::signal_batch_flush, this, _1),
+        k_reconnect_interval_secs);
+
   }
 
   tcp_pool_.start_threads();
@@ -150,7 +154,7 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
 
 void tcp_client_pool::push_event(const Event & event) {
 
-  VLOG(3) << "push_event() " << event_to_json(event);
+  VLOG(3) << "push_event() " << event.json_str();
 
   auto & queue = thread_event_queues_[next_thread_];
 
@@ -310,12 +314,14 @@ void tcp_client_pool::async(async_loop & loop) {
 
 }
 
-void tcp_client_pool::timer(async_loop & loop) {
-
-  size_t loop_id =  loop.id();
+void tcp_client_pool::signal_batch_flush(const size_t loop_id) {
 
   flush_batch_[loop_id] = 1;
   tcp_pool_.signal_thread(loop_id);
+
+}
+
+void tcp_client_pool::connect_clients(const size_t loop_id) {
 
   if (!fd_event_queues_[loop_id].empty()) {
     return;

@@ -3,7 +3,7 @@
 #include <regex>
 #include <dlfcn.h>
 #include <iostream>
-#include <util.h>
+#include <util/util.h>
 #include <core/core.h>
 #include <rules_loader.h>
 
@@ -76,7 +76,10 @@ std::vector<std::shared_ptr<streams_t>> load_rules(const std::string dir) {
     std::shared_ptr<streams_t> stream = load_library(lib);
 
     if (stream) {
+
+      init_streams(*stream);
       rules.push_back(stream);
+
      }
 
   }

@@ -1,5 +1,5 @@
-#ifndef TRANSPORT_TCP_POOL_H
-#define TRANSPORT_TCP_POOL_H
+#ifndef CAVALIERI_TRANSPORT_TCP_POOL_H
+#define CAVALIERI_TRANSPORT_TCP_POOL_H
 
 #include <map>
 #include <queue>
@@ -47,16 +47,6 @@ class tcp_pool {
         hook_fn_t run_fn,
         tcp_create_conn_fn_t create_conn_fn,
         tcp_ready_fn_t tcp_ready_fn_t,
-        const float inteval,
-        timer_cb_fn_t timer_cb_fn
-    );
-    tcp_pool(
-        size_t thread_num,
-        hook_fn_t run_fn,
-        tcp_create_conn_fn_t create_conn_fn,
-        tcp_ready_fn_t tcp_ready_fn_t,
-        const float inteval,
-        timer_cb_fn_t timer_cb_fn,
         async_fn_t async_fn
     );
 

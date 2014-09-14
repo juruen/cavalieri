@@ -1,5 +1,5 @@
-#ifndef TRANSPORT_CURL_POOL_H
-#define TRANSPORT_CURL_POOL_H
+#ifndef CAVALIERI_TRANSPORT_CURL_POOL_H
+#define CAVALIERI_TRANSPORT_CURL_POOL_H
 
 #include <tbb/concurrent_queue.h>
 #include <functional>
@@ -9,7 +9,7 @@
 #include <boost/optional.hpp>
 #include <boost/any.hpp>
 #include <curl/curl.h>
-#include <proto.pb.h>
+#include <common/event.h>
 #include <transport/tcp_pool.h>
 
 
@@ -38,7 +38,7 @@ class curl_pool {
   private:
     void on_ready(async_fd & async, tcp_connection & conn);
     void async(async_loop & loop);
-    void timer(async_loop & loop);
+    void timer(const size_t id);
 
     void set_fd(const size_t loop_id, const int fd, async_fd::mode mode);
 
@@ -78,6 +78,7 @@ class curl_pool {
     std::vector<std::unique_ptr<set_timer_cb_t>> set_timer_cbs_;
     std::vector<std::unique_ptr<multi_socket_cb_t>> multi_socket_cbs_;
 
+    std::vector<timer_id_t> loop_timers_;
 };
 
 #endif

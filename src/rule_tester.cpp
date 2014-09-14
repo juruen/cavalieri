@@ -4,7 +4,7 @@
 #include <scheduler/scheduler.h>
 #include <scheduler/mock_scheduler.h>
 #include <rule_tester_util.h>
-#include <util.h>
+#include <util/util.h>
 #include <rules_loader.h>
 #include <core/mock_core.h>
 #include <index/mock_index.h>

@@ -2,7 +2,7 @@
 #include <functional>
 #include <transport/tcp_pool.h>
 #include <transport/tcp_connection.h>
-#include <util.h>
+#include <util/util.h>
 
 using namespace std::placeholders;
 
@@ -29,31 +29,9 @@ tcp_pool::tcp_pool(
     hook_fn_t run_fn,
     tcp_create_conn_fn_t tcp_create_conn_fn,
     tcp_ready_fn_t tcp_ready_fn,
-    const float interval,
-    timer_cb_fn_t timer_cb_fn)
-:
-  async_thread_pool_(thread_num ,interval, timer_cb_fn),
-  mutexes_(thread_num),
-  new_fds_(thread_num),
-  conn_maps_(thread_num),
-  tcp_create_conn_fn_(tcp_create_conn_fn),
-  tcp_ready_fn_(tcp_ready_fn),
-  async_fn_()
-{
-  async_thread_pool_.set_async_hook(std::bind(&tcp_pool::async_hook, this, _1));
-  async_thread_pool_.set_run_hook(run_fn);
-}
-
-tcp_pool::tcp_pool(
-    size_t thread_num,
-    hook_fn_t run_fn,
-    tcp_create_conn_fn_t tcp_create_conn_fn,
-    tcp_ready_fn_t tcp_ready_fn,
-    const float interval,
-    timer_cb_fn_t timer_cb_fn,
     async_fn_t async_fn)
 :
-  async_thread_pool_(thread_num ,interval, timer_cb_fn),
+  async_thread_pool_(thread_num),
   mutexes_(thread_num),
   new_fds_(thread_num),
   conn_maps_(thread_num),
@@ -129,8 +107,6 @@ void tcp_pool::signal_thread(const size_t loop_id) {
   async_thread_pool_.signal_thread(loop_id);
 
 }
-
-
 
 void tcp_pool::async_hook(async_loop & loop) {
 
@@ -209,8 +185,6 @@ void tcp_pool::stop_threads() {
 async_loop & tcp_pool::loop(const size_t id) {
   return async_thread_pool_.loop(id);
 }
-
-
 
 tcp_pool::~tcp_pool() {
   async_thread_pool_.stop_threads();

@@ -1,5 +1,5 @@
-#ifndef ASYNC_ASYNC_LOOP_H
-#define ASYNC_ASYNC_LOOP_H
+#ifndef CAVALIERI_ASYNC_ASYNC_LOOP_H
+#define CAVALIERI_ASYNC_ASYNC_LOOP_H
 
 #include <functional>
 #include <memory>
@@ -25,8 +25,13 @@ public:
 };
 
 typedef std::function<void(async_fd&)> fd_cb_fn_t;
-typedef std::function<void(async_loop&)> timer_cb_fn_t;
+typedef std::function<void(const size_t)> timer_cb_fn_t;
 typedef std::function<void()> task_cb_fn_t;
+
+typedef struct {
+  size_t loop_id;
+  uint64_t timer_id;
+} timer_id_t;
 
 class async_loop {
 public:
@@ -38,7 +43,11 @@ public:
                       fd_cb_fn_t fd_cb_fn) = 0;
   virtual void remove_fd(const int fd) = 0;
   virtual void set_fd_mode(const int fd, const async_fd::mode mode) = 0;
-  virtual void set_timer_interval(const float t) = 0;
+
+  virtual timer_id_t add_once_task(const timer_cb_fn_t, const float t) = 0;
+  virtual timer_id_t add_periodic_task(const timer_cb_fn_t, const float t) = 0;
+  virtual void set_task_interval(const timer_id_t, const float t) = 0;
+  virtual bool remove_task(const timer_id_t) = 0;
 };
 
 typedef std::function<void(async_loop&)> async_cb_fn_t;

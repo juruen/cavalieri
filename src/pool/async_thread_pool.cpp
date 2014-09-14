@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <glog/logging.h>
-#include <util.h>
+#include <util/util.h>
 #include <pool/async_thread_pool.h>
 #include <atom/atom.h>
 
@@ -25,26 +25,6 @@ async_thread_pool::async_thread_pool(size_t thread_num) :
   }
 }
 
-async_thread_pool::async_thread_pool(
-    size_t thread_num,
-    const float interval,
-    timer_cb_fn_t timer_cb_fn
-) :
-  stop_(false),
-  thread_num_(thread_num),
-  next_thread_(0),
-  finished_threads_(thread_num, false),
-  async_events_(make_async_events(thread_num,
-                                  std::bind(&async_thread_pool::async_callback,
-                                            this, _1),
-                                  interval,
-                                  timer_cb_fn))
-{
-  if (thread_num < 1) {
-    LOG(FATAL) << "Thread number must be greater than 0";
-  }
-}
-
 void async_thread_pool::set_run_hook(hook_fn_t hook) {
   run_hook_fn_ = hook;
 }
@@ -56,6 +36,7 @@ void async_thread_pool::set_async_hook(hook_fn_t hook) {
 void async_thread_pool::start_threads() {
   auto run_fn = [=](size_t i)
   {
+    VLOG(3) << "run_fn: " << i;
     atom_attach_thread();
     this->run(i);
     atom_detach_thread();

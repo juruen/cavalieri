@@ -1,8 +1,8 @@
-#ifndef MOCK_OS_FUNCTIONS_H
-#define MOCK_OS_FUNCTIONS_H
+#ifndef CAVALIERI_MOCK_OS_FUNCTIONS_H
+#define CAVALIERI_MOCK_OS_FUNCTIONS_H
 
 #include <vector>
-#include <os_functions.h>
+#include <os/os_functions.h>
 
 class mock_os_functions : public os_functions_interface {
 public:

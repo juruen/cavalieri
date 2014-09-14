@@ -7,7 +7,7 @@
 #include <core/real_core.h>
 #include <stdlib.h>
 #include <string.h>
-#include <util.h>
+#include <util/util.h>
 #include <unistd.h>
 
 real_core::real_core(const config & conf)
@@ -20,7 +20,7 @@ real_core::real_core(const config & conf)
 
     main_loop_(make_main_async_loop()),
 
-    scheduler_(new real_scheduler(*main_loop_)),
+    scheduler_(new real_scheduler()),
 
     externals_(new real_external(conf, instrumentation_)),
 
@@ -37,7 +37,7 @@ real_core::real_core(const config & conf)
 
     udp_server_(init_udp_server(conf, streams_)),
 
-    ws_server_(init_ws_server(conf, *main_loop_, *pubsub_))
+    ws_server_(init_ws_server(conf, *main_loop_, *pubsub_, *index_))
 {
 
   if (conf.enable_internal_metrics) {
@@ -60,6 +60,7 @@ void real_core::start() {
 
   VLOG(3) << "Stopping services";
 
+  scheduler_->stop();
   executor_pool_.stop();
   streams_->stop();
   tcp_server_->stop();
@@ -103,8 +104,8 @@ void start_core(int argc, char **argv) {
   int orig_argc = argc;
   char **orig_argv = copy_args(argc, argv);
 
-  FLAGS_logtostderr = true;
-  FLAGS_v = 1;
+  FLAGS_stderrthreshold = 0;
+  FLAGS_logbuflevel = -1;
 
   google::ParseCommandLineFlags(&argc, &argv, true);
 

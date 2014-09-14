@@ -1,7 +1,7 @@
 #include <boost/variant/get.hpp>
 #include <glog/logging.h>
 #include <expression.h>
-#include <util.h>
+#include <util/util.h>
 
 
 query_node::~query_node() {};
@@ -23,7 +23,7 @@ query_fn_t query_tagged::evaluate() const {
   std::string tag(string_->substr(1, string_->size() - 2));
 
   return [=](const Event & e) {
-    return tag_exists(e, tag);
+    return e.has_tag(tag);
   };
 
 }
@@ -104,7 +104,7 @@ query_fn_t query_field::evaluate() const {
 
 query_fn_t query_field::evaluate_nil() const {
 
-   return [=](const Event & e) { return ! field_set(e, *field_); };
+   return [=](const Event & e) { return !e.has_field_set(*field_); };
 
 }
 
@@ -160,9 +160,9 @@ query_fn_t query_field::evaluate(const std::string & value) const {
 
     return [=](const Event & e) {
 
-      if (attribute_exists(e, key)) {
+      if (e.has_attr(key)) {
 
-        return compare(attribute_value(e, key), strip_val, "=");
+        return compare(e.attr(key), strip_val, "=");
 
       }
 
@@ -194,11 +194,11 @@ query_fn_t query_field::evaluate(const int & value) const {
 
     return [=](const Event & e) {
 
-      if (!metric_set(e)) {
+      if (!e.has_metric()) {
         return false;
       }
 
-      return compare(metric_to_double(e), static_cast<double>(ival), op);
+      return compare(e.metric(), static_cast<double>(ival), op);
 
     };
 
@@ -206,11 +206,11 @@ query_fn_t query_field::evaluate(const int & value) const {
 
     return [=](const Event & e) {
 
-      if (attribute_exists(e, key)) {
+      if (e.has_attr(key)) {
 
         try {
 
-          return compare(std::stoi(attribute_value(e, key)), ival, op);
+          return compare(std::stoi(e.attr(key)), ival, op);
 
         } catch (std::invalid_argument &) { }
 
@@ -231,17 +231,17 @@ query_fn_t query_field::evaluate(const double & value) const {
   if (*field_ == "metric") {
 
     return [=](const Event & e) {
-      return compare(metric_to_double(e), ival, op);
+      return compare(e.metric(), ival, op);
     };
 
   } else {
 
     return [=](const Event & e) {
 
-      if (attribute_exists(e, key)) {
+      if (e.has_attr(key)) {
 
         try {
-          return compare(std::stod(attribute_value(e, key)), ival, op);
+          return compare(std::stod(e.attr(key)), ival, op);
         } catch (std::invalid_argument &) { }
 
       }

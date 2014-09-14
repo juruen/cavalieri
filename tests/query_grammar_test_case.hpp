@@ -44,7 +44,7 @@ TEST(query_grammar_tagged_test_case, test)
   ASSERT_FALSE(eval_fn(e));
 
   // Check foo matches
-  *(e.add_tags()) = "foo";
+  e.add_tag("foo");
   ASSERT_TRUE(eval_fn(e));
 
 
@@ -57,7 +57,7 @@ TEST(query_grammar_tagged_test_case, test)
   ASSERT_FALSE(eval_fn(e));
 
   //Check foo and bar match
-  *(e.add_tags()) = "bar";
+  e.add_tag("bar");
   ASSERT_TRUE(eval_fn(e));
 
   query = "(tagged = \"foo\" or tagged = \"bar\")";
@@ -67,17 +67,17 @@ TEST(query_grammar_tagged_test_case, test)
 
   // Check that only foo matches
   e.clear_tags();
-  *(e.add_tags()) = "foo";
+  e.add_tag("foo");
   ASSERT_TRUE(eval_fn(e));
 
   //Check only bar matches
   e.clear_tags();
-  *(e.add_tags()) = "bar";
+  e.add_tag("bar");
   ASSERT_TRUE(eval_fn(e));
 
 
   // Check that foo and bar match
-  *(e.add_tags()) = "foo";
+  e.add_tag("foo");
   ASSERT_TRUE(eval_fn(e));
 
   query = "((tagged = \"foo\" or tagged = \"bar\") and (tagged = \"baz\"))";
@@ -87,27 +87,24 @@ TEST(query_grammar_tagged_test_case, test)
 
   // Check that missing baz doesn't match
   e.clear_tags();
-  *(e.add_tags()) = "foo";
-  *(e.add_tags()) = "bar";
+  e.add_tag("foo").add_tag("bar");
   ASSERT_FALSE(eval_fn(e));
 
   // Check that only foo and baz match
   e.clear_tags();
-  *(e.add_tags()) = "foo";
-  *(e.add_tags()) = "baz";
+  e.add_tag("foo");
+  e.add_tag("baz");
   ASSERT_TRUE(eval_fn(e));
 
  // Check that only bar and baz match
   e.clear_tags();
-  *(e.add_tags()) = "bar";
-  *(e.add_tags()) = "baz";
+  e.add_tag("bar");
+  e.add_tag("baz");
   ASSERT_TRUE(eval_fn(e));
 
   // Check that foo, bar and baz match
   e.clear_tags();
-  *(e.add_tags()) = "foo";
-  *(e.add_tags()) = "bar";
-  *(e.add_tags()) = "baz";
+  e.add_tag("foo").add_tag("bar").add_tag("baz");
   ASSERT_TRUE(eval_fn(e));
 
   query = "(not tagged = \"foo\")";
@@ -117,12 +114,12 @@ TEST(query_grammar_tagged_test_case, test)
 
   // Check that missing foo matches
   e.clear_tags();
-  *(e.add_tags()) = "bar";
+  e.add_tag("bar");
   ASSERT_TRUE(eval_fn(e));
 
   // Check that foo doesn't match
   e.clear_tags();
-  *(e.add_tags()) = "foo";
+  e.add_tag("foo");
   ASSERT_FALSE(eval_fn(e));
 
   query = "((tagged = \"foo\" or tagged = \"bar\") and not (tagged = \"baz\"))";
@@ -132,15 +129,12 @@ TEST(query_grammar_tagged_test_case, test)
 
   // Check that missing baz matches
   e.clear_tags();
-  *(e.add_tags()) = "foo";
-  *(e.add_tags()) = "bar";
+  e.add_tag("foo").add_tag("bar");
   ASSERT_TRUE(eval_fn(e));
 
   // Check thatbaz doesn't match
   e.clear_tags();
-  *(e.add_tags()) = "foo";
-  *(e.add_tags()) = "bar";
-  *(e.add_tags()) = "baz";
+  e.add_tag("foo").add_tag("bar").add_tag("baz");
   ASSERT_FALSE(eval_fn(e));
 }
 
@@ -275,7 +269,7 @@ TEST(query_grammar_fields_test_case, test)
 
   ASSERT_FALSE(eval_fn(e));
 
-  clear_metrics(e);
+  e.clear_metric();
   e.set_metric_sint64(0);
   ASSERT_TRUE(eval_fn(e));
 
@@ -288,7 +282,7 @@ TEST(query_grammar_fields_test_case, test)
   ASSERT_FALSE(eval_fn(e));
 
   e.clear_ttl();
-  clear_metrics(e);
+  e.clear_metric();
   e.set_metric_d(7.1);
   ASSERT_TRUE(eval_fn(e));
 
@@ -300,9 +294,7 @@ TEST(query_grammar_fields_test_case, test)
   ASSERT_FALSE(eval_fn(e));
 
   e.clear_metric_d();
-  auto att = e.add_attributes();
-  att->set_key("foo");
-  att->set_value("bar");
+  e.set_attr("foo", "bar");
   ASSERT_TRUE(eval_fn(e));
 
   query = "(foo = 7.1)";
@@ -312,10 +304,8 @@ TEST(query_grammar_fields_test_case, test)
 
   ASSERT_FALSE(eval_fn(e));
 
-  e.clear_attributes();
-  att = e.add_attributes();
-  att->set_key("foo");
-  att->set_value("7.1");
+  e.clear_attrs();
+  e.set_attr("foo", "7.1");
   ASSERT_TRUE(eval_fn(e));
 
   query = "(host = nil)";

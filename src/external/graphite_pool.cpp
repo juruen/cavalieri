@@ -1,5 +1,5 @@
 #include <glog/logging.h>
-#include <util.h>
+#include <util/util.h>
 #include <stdio.h>
 #include <sstream>
 #include <boost/algorithm/string/replace.hpp>
@@ -48,7 +48,7 @@ std::vector<char> graphite_pool::output_events(const std::vector<Event> events)
   for (const auto & event : events) {
 
     sstream << event.host() << "." << escape(event.service()) << " "
-            << metric_to_double(event) << " " << event.time() << "\n";
+            << event.metric_to_str() << " " << event.time() << "\n";
 
   }
 

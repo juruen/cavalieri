@@ -1,5 +1,5 @@
-#ifndef CONFIG_CONFIG_H
-#define CONFIG_CONFIG_H
+#ifndef CAVALIERI_CONFIG_CONFIG_H
+#define CAVALIERI_CONFIG_CONFIG_H
 
 #include <string>
 

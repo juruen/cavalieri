@@ -1,5 +1,5 @@
-#ifndef QUERY_EXPRESSION_H
-#define QUERY_EXPRESSION_H
+#ifndef CAVALIERI_QUERY_EXPRESSION_H
+#define CAVALIERI_QUERY_EXPRESSION_H
 
 #include <vector>
 #include <ostream>
@@ -7,7 +7,7 @@
 #include <memory>
 #include <functional>
 #include <boost/variant/variant.hpp>
-#include <proto.pb.h>
+#include <common/event.h>
 
 typedef std::function<bool(const Event&)> query_fn_t;
 

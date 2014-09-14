@@ -7,8 +7,8 @@
 #include <errno.h>
 #include <glog/logging.h>
 #include <iostream>
-#include <proto.pb.h>
-#include <util.h>
+#include <common/event.h>
+#include <util/util.h>
 #include <transport/ws_connection.h>
 #include <query/driver.h>
 #include <query/expression.h>

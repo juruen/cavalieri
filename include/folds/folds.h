@@ -1,7 +1,7 @@
-#ifndef FOLDS_H
-#define FOLDS_H
+#ifndef CAVALIERI_FOLDS_H
+#define CAVALIERI_FOLDS_H
 
-#include <proto.pb.h>
+#include <common/event.h>
 
 Event sum(const std::vector<Event> & events);
 
@@ -14,5 +14,7 @@ Event mean(const std::vector<Event> & events);
 Event minimum(const std::vector<Event> & events);
 
 Event maximum(const std::vector<Event> &  events);
+
+Event count(const std::vector<Event> & events);
 
 #endif

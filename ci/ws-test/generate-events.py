@@ -3,6 +3,7 @@
 import bernhard
 import datetime
 import sys
+import os
 import random
 
 batch_size = 1000
@@ -16,7 +17,7 @@ class BatchClient(bernhard.Client):
 def create_event(i):
     global services
     return {
-        'host': "foo%i.com" % i  ,
+        'host': "foo%i-%i.com" % (i, os.getpid())  ,
         'service': "requests_rate",
         'metric': 100,
         'description': str(datetime.datetime.now()),

@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <transport/tcp_connection.h>
-#include <mock_os_functions.h>
+#include <os/mock_os_functions.h>
 
 extern mock_os_functions mock_os;
 

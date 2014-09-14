@@ -1,10 +1,10 @@
-#ifndef STREAM_FUNCTIONS_LOCKFREE
-#define STREAM_FUNCTIONS_LOCKFREE
+#ifndef CAVALIERI_STREAM_FUNCTIONS_LOCKFREE
+#define CAVALIERI_STREAM_FUNCTIONS_LOCKFREE
 
 #include <streams/stream_functions.h>
 
 
-streams_t by_lockfree(const by_keys_t & keys, const by_stream_t stream);
+streams_t by_lockfree(const by_keys_t & keys, const streams_t stream);
 
 streams_t coalesce_lockfree(fold_fn_t fold);
 

@@ -1,8 +1,9 @@
 #include <atomic>
-#include <folds.h>
-#include <util.h>
+#include <folds/folds.h>
+#include <util/util.h>
 #include <algorithm>
 #include <streams/stream_functions.h>
+#include <predicates/predicates.h>
 #include <rules/common.h>
 
 namespace {
@@ -78,12 +79,12 @@ fold_fn_t fold_ratio(const double zero_ratio) {
 
   return [=](const std::vector<Event> events)
   {
-    if (events.size() == 2 && metric_set(events[0]) && metric_set(events[1])
+    if (events.size() == 2 && events[0].has_metric() && events[1].has_metric()
         && same_interval(events))
     {
 
-      auto a = metric_to_double(events[0]);
-      auto b = metric_to_double(events[1]);
+      auto a = events[0].metric();
+      auto b = events[1].metric();
 
       double ratio;
       if (b == 0) {
@@ -95,7 +96,7 @@ fold_fn_t fold_ratio(const double zero_ratio) {
       Event e(events[0]);
       e.set_service(events[0].service() + " / " + events[1].service());
 
-      return set_metric(e, ratio);
+      return e.set_metric(ratio);
 
     } else {
       return Event();
@@ -123,12 +124,14 @@ streams_t no_expire() {
 
 }
 
+namespace pred = predicates;
+
 streams_t critical_above(double value) {
-  return set_critical_predicate(above_pred(value));
+  return set_critical_predicate(pred::above(value));
 }
 
 streams_t critical_under(double value) {
-  return set_critical_predicate(under_pred(value));
+  return set_critical_predicate(pred::under(value));
 }
 
 streams_t stable_metric(double dt, predicate_t trigger)
@@ -138,23 +141,33 @@ streams_t stable_metric(double dt, predicate_t trigger)
 
 streams_t stable_metric(double dt, predicate_t trigger, predicate_t cancel)
 {
-  auto state_ok = std::make_shared<std::atomic<bool>>(true);
 
-  auto is_critical = [=](e_t e) {
+  return create_stream(
+    [=]() -> on_event_fn_t {
 
-    if (trigger(e)) {
-      return true;
-    }
+      auto state_ok = std::make_shared<std::atomic<bool>>(true);
 
-    if (!state_ok->load() && !cancel(e)) {
-      return true;
-    }
+      auto s_stream = stable_stream(dt, state_ok);
+      init_streams(s_stream);
 
-    return false;
-  };
+      return [=](e_t e) -> next_events_t {
 
+          auto ne(e);
 
-  return set_critical_predicate(is_critical) >>  stable_stream(dt, state_ok);
+          if (trigger(e)) {
+            ne.set_state("critical");
+          } else if (!state_ok->load() && !cancel(e)) {
+            ne.set_state("critical");
+          } else {
+            ne.set_state("ok");
+          }
+
+          return push_event(s_stream, ne);
+
+      };
+
+    });
+
 }
 
 
@@ -173,8 +186,8 @@ streams_t max_critical_hosts(size_t n) {
 streams_t ratio(const std::string a, const std::string b,
                 const double default_zero)
 {
-  return project({service_pred(a), service_pred(b)}, fold_ratio(default_zero))
-         >> where(PRED(metric_set(e)));
+  return project({pred::service(a), pred::service(b)}, fold_ratio(default_zero))
+         >> where(PRED(e.has_metric()));
 }
 
 streams_t per_host_ratio(const std::string a, const std::string b,
@@ -182,7 +195,7 @@ streams_t per_host_ratio(const std::string a, const std::string b,
                          predicate_t trigger,
                          predicate_t cancel)
 {
-  return by({"host"}, BY(ratio(a, b, default_zero)))
+  return by({"host"}, ratio(a, b, default_zero))
          >> stable_metric(dt, trigger, cancel);
 }
 

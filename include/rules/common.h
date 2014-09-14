@@ -1,5 +1,5 @@
-#ifndef RULES_COMMON_H
-#define RULES_COMMON_H
+#ifndef CAVALIERI_RULES_COMMON_H
+#define CAVALIERI_RULES_COMMON_H
 
 #include <streams/stream_functions.h>
 

@@ -1,6 +1,6 @@
 #include <glog/logging.h>
 #include <core/real_core_helper.h>
-#include <util.h>
+#include <util/util.h>
 #include <transport/listen_tcp_socket.h>
 
 namespace {
@@ -24,20 +24,20 @@ std::shared_ptr<core_interface> make_real_core(const config conf) {
 inline void incoming_event(const std::vector<unsigned char> & raw_msg,
                            streams & streams)
 {
-    Msg msg;
+  riemann::Msg msg;
 
-    if (!msg.ParseFromArray(&raw_msg[0], raw_msg.size())) {
-      VLOG(2) << "error parsing protobuf payload";
-      return;
-    }
+  if (!msg.ParseFromArray(&raw_msg[0], raw_msg.size())) {
+    VLOG(2) << "error parsing protobuf payload";
+    return;
+  }
 
-    if (msg.has_query()) {
-      VLOG(1) << "query messages are not supported yet";
-      return;
+  if (msg.has_query()) {
+    VLOG(1) << "query messages are not supported yet";
+    return;
 
-    }
+  }
 
-    streams.process_message(msg);
+  streams.process_message(msg);
 }
 
 std::unique_ptr<riemann_tcp_pool> init_tcp_server(
@@ -86,11 +86,12 @@ std::unique_ptr<riemann_udp_pool> init_udp_server(
 std::unique_ptr<websocket_pool> init_ws_server(
     const config & conf,
     main_async_loop_interface & loop,
-    pub_sub & pubsub)
+    pub_sub & pubsub,
+    real_index & index)
 {
 
   std::unique_ptr<websocket_pool> ws_server(new websocket_pool(
-        conf.ws_pool_size, pubsub));
+        conf.ws_pool_size, pubsub, index));
 
   auto ptr_server = ws_server.get();
 

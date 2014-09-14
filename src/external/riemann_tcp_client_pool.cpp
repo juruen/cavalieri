@@ -1,7 +1,8 @@
 #include <glog/logging.h>
-#include <util.h>
+#include <util/util.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <proto.pb.h>
 #include <external/rieman_tcp_client_pool.h>
 
 namespace {
@@ -36,11 +37,11 @@ std::vector<char> riemann_tcp_client_pool::output_events(
 
   std::vector<char> buffer;
 
-  Msg msg;
+  riemann::Msg msg;
   msg.set_ok(true);
 
   for (const auto & event : events) {
-   *msg.add_events() = event;
+   *msg.add_events() = event.riemann_event();
   }
 
   auto nsize = htonl(msg.ByteSize());

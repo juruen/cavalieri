@@ -7,16 +7,18 @@ SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
 
 SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/common/event.cpp
     ${CMAKE_SOURCE_DIR}/src/core/core.cpp
     ${CMAKE_SOURCE_DIR}/src/core/mock_core.cpp
     ${CMAKE_SOURCE_DIR}/src/index/mock_index.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
-    ${CMAKE_SOURCE_DIR}/src/mock_os_functions.cpp
-    ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/os/mock_os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/os/os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
+    ${CMAKE_SOURCE_DIR}/src/predicates/predicates.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
@@ -27,10 +29,10 @@ SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/instrumentation/gauge.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/mem.cpp
     ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
-    ${CMAKE_SOURCE_DIR}/src/folds.cpp
+    ${CMAKE_SOURCE_DIR}/src/folds/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/index/real_index.cpp
     ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
-    ${CMAKE_SOURCE_DIR}/src/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/query/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/query/scanner.cpp
     ${CMAKE_SOURCE_DIR}/src/query/parser.cpp
@@ -52,7 +54,6 @@ INCLUDE_DIRECTORIES(
     ${PROTOBUF_INCLUDE_DIR}
     ${Glog_INCLUDE_DIR}
     ${LibEv_INCLUDE_DIR}
-    ${PYTHON_INCLUDE_DIRS}
     ${ThirdParty_INCLUDE_DIRS}
     ${JsonCpp_INCLUDE_DIRS}
   )
@@ -89,7 +90,6 @@ TARGET_LINK_LIBRARIES(
     ${PROTOBUF_LIBRARY}
     ${LibEv_LIBRARIES}
     ${Glog_LIBRARIES}
-    ${PYTHON_LIBRARIES}
     ${JsonCpp_LIBRARIES}
     ssl
     crypto

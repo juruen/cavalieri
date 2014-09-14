@@ -12,24 +12,25 @@ ADD_SUBDIRECTORY(thirdparty)
 
 SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/cavalieri.cpp
+    ${CMAKE_SOURCE_DIR}/src/common/event.cpp
     ${CMAKE_SOURCE_DIR}/src/core/core.cpp
     ${CMAKE_SOURCE_DIR}/src/core/real_core_helper.cpp
     ${CMAKE_SOURCE_DIR}/src/core/real_core.cpp
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_udp_pool.cpp
-    ${CMAKE_SOURCE_DIR}/src/websocket_pool.cpp
     ${CMAKE_SOURCE_DIR}/src/riemann_tcp_connection.cpp
-    ${CMAKE_SOURCE_DIR}/src/os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/os/os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/config/config.cpp
-    ${CMAKE_SOURCE_DIR}/src/real_os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/os/real_os_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/predicates/predicates.cpp
     ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
     #${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
-    ${CMAKE_SOURCE_DIR}/src/folds.cpp
-    ${CMAKE_SOURCE_DIR}/src/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/folds/folds.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/async/real_async_loop.cpp
     ${CMAKE_SOURCE_DIR}/src/index/real_index.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
@@ -62,6 +63,9 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/external/riemann_tcp_client.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/real_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket/websocket_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket/worker_pool.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket/worker_threads.cpp
   )
 
 SET(CAVALIERI_HDRS
@@ -80,9 +84,11 @@ SET(CAVALIERI_PROTOFILES
 SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/rule_tester.cpp
     ${CMAKE_SOURCE_DIR}/src/rule_tester_util.cpp
+    ${CMAKE_SOURCE_DIR}/src/common/event.cpp
     ${CMAKE_SOURCE_DIR}/src/core/core.cpp
     ${CMAKE_SOURCE_DIR}/src/core/mock_core.cpp
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
+    ${CMAKE_SOURCE_DIR}/src/predicates/predicates.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
@@ -92,15 +98,15 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/gauge.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/mem.cpp
-    ${CMAKE_SOURCE_DIR}/src/folds.cpp
+    ${CMAKE_SOURCE_DIR}/src/folds/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/rules/common.cpp
     ${CMAKE_SOURCE_DIR}/src/scheduler/mock_scheduler.cpp
     ${CMAKE_SOURCE_DIR}/src/index/mock_index.cpp
-    ${CMAKE_SOURCE_DIR}/src/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
   )
 
-ADD_DEFINITIONS( -Wall -std=c++11 -g -O3 )
+ADD_DEFINITIONS( -Wall -std=c++11 -g )
 
 INCLUDE(FindProtobuf)
 
@@ -132,14 +138,8 @@ INCLUDE_DIRECTORIES(
     ${ThirdParty_INCLUDE_DIRS}
   )
 
-SET(
-  PYTHON_INSTALL_DIR
-  ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME}/python
-)
-
 ADD_DEFINITIONS(
      -Wall -std=c++11 -g
-    -DPYTHON_MODULES_PATH="${PYTHON_INSTALL_DIR}"
 )
 
 ADD_EXECUTABLE(
@@ -206,6 +206,17 @@ TARGET_LINK_LIBRARIES(
     dl
   )
 
+configure_file(
+    ${CMAKE_SOURCE_DIR}/conf/cavalieri.conf.in
+    ${CMAKE_BINARY_DIR}/cavalieri.conf
+)
+
+install(
+    FILES
+    ${CMAKE_BINARY_DIR}/cavalieri.conf
+    DESTINATION share/doc/${CMAKE_PROJECT_NAME}/examples
+)
+
 install(
   PROGRAMS
   ${CMAKE_BINARY_DIR}/cavalieri
@@ -214,13 +225,6 @@ install(
 )
 
 install(PROGRAMS ${libcds_LIBS} DESTINATION lib)
-
-install(
-  FILES
-  ${CMAKE_SOURCE_DIR}/src/python/mailer.py
-  ${CMAKE_SOURCE_DIR}/src/python/pagerduty.py
-  DESTINATION share/${CMAKE_PROJECT_NAME}/python
-)
 
 install(
   DIRECTORY

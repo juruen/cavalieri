@@ -1,5 +1,5 @@
-#ifndef CORE_REAL_CORE_H
-#define CORE_REAL_CORE_H
+#ifndef CAVALIERI_CORE_REAL_CORE_H
+#define CAVALIERI_CORE_REAL_CORE_H
 
 #include <core/core.h>
 #include <instrumentation/instrumentation.h>
@@ -9,7 +9,7 @@
 #include <index/real_index.h>
 #include <riemann_tcp_pool.h>
 #include <riemann_udp_pool.h>
-#include <websocket_pool.h>
+#include <websocket/websocket_pool.h>
 #include <pool/executor_thread_pool.h>
 #include <external/real_external.h>
 #include <scheduler/real_scheduler.h>
