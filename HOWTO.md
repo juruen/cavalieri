@@ -41,7 +41,7 @@ Cavalieri is doing in real time.
 
 You will find intersting metrics such as the rate of events being processed
 along with its latency distribution. Number of connections, queues and
-memory consumption.
+memory consumption, or the size of the index.
 
 You can enable or disable these internal metrics in your configuration.
 
@@ -54,9 +54,9 @@ metrics.
 
 #### Custom event attributes
 
-The Riemann protocol allows clients to send arbitrary key-value pairs. This can
-be used to extend the information that is encoded in the events when its
-regular fields are not enough.
+The Riemann protocol allows clients to send arbitrary key-value pairs. This
+feature can be used to extend the information that is encoded in the events
+when its regular fields are not enough.
 
 See this snippet for a Ruby client sending a custom event attribute.
 
@@ -65,7 +65,7 @@ client << {service: "thumbnailer rate",
            metric:  5.0,
            build:   "7543"}
 ```
-*build* is the custom attributes. Custom attributes are restricted by the wire
+*build* is the custom attribute. Custom attributes are restricted by the wire
 protocol to be strings.
 
 Let's now use this attribute in a stream.
@@ -124,8 +124,9 @@ new events, an empty list of events, or a list containing just the same event.
 
 These functions take a *const Event &*, normally abbreviated with *e_t*. Note
 that it's a const reference. That means that if you need to modify the event,
-you need to create a copy. Passing constant references helps a lot with
-concurrency.
+you need to create a copy. Passing constant references makes things easier
+when dealing with concurrency.
+
 
 Most of the functions build a linear stream, where events are passed from one
 stream to another. However,  some functions help you to
@@ -135,10 +136,10 @@ The simplest function that allows you to do this is *sdo()*. It takes a list
 of streams, and upon receiving an event, this event is sent to all of its
 streams.
 
-The output of the streams is send to the stream function after *sdo()*. This
+The output of the streams is sent to the stream function after *sdo()*. This
 effectively allows you to combine multiple streams in one.
 
-We first create a few streams depending on the different environments.
+We first create a few streams depending on different environments.
 
 ```cpp
 
@@ -154,14 +155,14 @@ auto testing = tagged("testing") >> above(5) >> set_state("warning");
 
 ```cpp
 
-auto experimental = tagged("experimental") >> above(5) >> set_state("warning");
+auto experimental = tagged("experimental") >> above(2) >> set_state("warning");
 
 ```
 
 The rule below makes use of the above streams. We first filter events from
 the *foo* service. These events are sent to *production*, *testing*, and
 *experimental*. Whatever events *production* and *testing* generate are then
-sent to *prn()*. Not that this is not the case with *experimental*, because
+sent to *prn()*. Note that this is not the case with *experimental*, because
 we append *null()* to it, which is a stream that acts as a sink and doesn't
 forward any event that enters into it.
 
@@ -181,7 +182,7 @@ after *split()*.
 
 #### Distinct streams for each host, service, etc.
 
-A common use case is to replicate a stream for a all hosts or services.
+A common use case is to replicate a stream for  all hosts or services.
 
 When you see yourself writing rules like these:
 
@@ -368,7 +369,7 @@ to only do so when there is a state change. You are most certainly instersted
 in state transitions: from *ok* to *critical*, or *critical* to *ok*.
 
 *changed_state()* helps you to implement the above behavior. One thing to note
-is that, this function will handle the pairs of *host* and *service*
+is that this function will handle the pairs of *host* and *service*
 independently.
 
 
@@ -413,8 +414,8 @@ auto request_latency = percentiles(5, {0.0, 0.5, 0.9, 0.95, 1});
 
 We also want to report the rate of API requests that our system is handling. To
 do that, we use *rate*, which takes an *interval* in seconds. During this
-*interval*, *rate* accumulates the metrics that receives, and at the end of the
-interval, the accumulated value is divided by *interval*. Note that we need
+*interval*, *rate* accumulates the metrics that ir receives, and at the end of
+the interval, the accumulated value is divided by *interval*. Note that we need
 to set the metric to *1* before entering *rate*. Otherwise, we wouldn't be
 computing the request rate.
 
@@ -425,7 +426,7 @@ auto request_rate = set_metric(1) >> rate(5);
 ```
 
 Finally, we use *request_latency* and *request_rate*. The events that are
-outputed by these two streams are set to state *ok* and get indexed so we
+output by these two streams are set to state *ok* and get indexed so we
 can nicely see them in green on our dashboard.
 
 ```cpp
@@ -470,7 +471,7 @@ tagged("exception") >> throttle(10, 3600) >> email("crash@bar.org")
 
 #### Detect down services
 
-Cavalieri has an index where events can be pushed. You can reason about
+Cavalieri has an index where events can be pushed to. You can reason about
 this index like it were a hash map or dictionary where events are stored.
 
 The *key* of the inserted elements is created by composing event's host and
@@ -493,12 +494,12 @@ You can use expired events to alert when a host or service is down.
 A simple way to detect a service is down is creating or picking an existing
 service that you send to cavalieri and alert if it expires.
 
-The rule below sends an email when a expired event from the *ping* service is
+The rule below sends an email when an expired event from the *ping* service is
 detected.
 
 *ping* service is something that your machines would send in a fixed interval
 *t*, and its ttl could be something like *2t*. Note that you don't want to set
-the *ttl* to the same interval that you send the event.
+the *ttl* to the same interval as the one that you send the event.
 
 
 ```cpp
@@ -512,10 +513,11 @@ service("ping") >> expired() >> email("ops@foo.org")
 There are certian rules where you need to analyze a bunch of events over a
 period of time.
 
-The function belows are specifically tailored for those cases. They accumulate
+The functions belows are specifically tailored for those cases. They accumulate
 events based on time or number of events, and at some point they are passed
 to a [fold function](https://github.com/juruen/cavalieri#fold-functions), which
-processes the list of events and returns one.
+processes the list of events and *reduces* that list and returns one single
+event with the result.
 
 ##### moving_event_window (const size_t n, const fold_fn_t fn)
 
@@ -557,11 +559,11 @@ which stores events based on its host and service. That means that we will
 store an event per every host.
 
 *coalesce* sends the stored events to *count*, a fold function, that simply
-calculates the number of events passade to it, and sets the metric of the first
-event  to this value.
+calculates the number of events that it receives, and sets the metric of the
+first event  to this value.
 
 The event coming out from coalesce contains the number of hosts. We also change
-the host in that event because otherwise it would contain a random host. And,
+the host in that event because, otherwise, it would contain a random host. And,
 finally, we index the event.
 
 
@@ -592,8 +594,8 @@ attempt by a user is succesful or not.
 ```
 
 We wish to alert when the percentage of failed authorizations is too high.
-First, we need a fold function that will take a list of events and decide
-which state the forwarded event should have.
+First, we need a fold function that takes a list of events and decide
+whether the percentage of failures  is *critical* or not.
 
 
 ```cpp
@@ -602,9 +604,7 @@ which state the forwarded event should have.
 
 Event failed_ratio(const std::vector<Event> events) {
 
-  if (events.empty()) {
-    return {};
-  }
+  if (events.empty()) return {};
 
   auto failed = std::count_if(begin(events),
                               end(events),
@@ -690,7 +690,7 @@ tagged("cavalieri::internal)
 ```
 
 And again, if you use this in more than one place, to avoid writing the same
-graphite configuration, you con do the following:
+graphite configuration, you can do the following:
 
 ```cpp
 
