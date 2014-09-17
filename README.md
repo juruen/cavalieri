@@ -272,6 +272,10 @@ It forwards events which state is any of *states*.
 
 It fowards events that have a set *attribute*.
 
+#### set_service (const std::string service)
+
+It sets the events service to *service* and forwards them.
+
 #### set_state (const std::string state)
 
 It sets the events state to *state* and forwards them.
@@ -284,25 +288,69 @@ It sets the events host to *host* and forwards them.
 
 It sets the events metric to *value* and forwards them.
 
+#### set_description (const std::string description);
 
-#### with (const with_changes_t & changes)
+It sets the events metric to *description* and forwards them.
 
-Modifies the event. It takes a map that contains the keys to be modified
-and their corresponding new value.
+#### set_ttl (const double ttl);
+
+It sets the events TTL to *tll* and forwards them.
+
+#### default_service (const std::string service)
+
+If service is not set, it sets the events service to *service*
+and forwards them.
+
+#### default_state (const std::string state)
+
+If state is not set, it sets the events state to *state* and forwards them.
+
+#### default_host (const std::string host)
+
+If host is not set, it sets the events host to *host* and forwards them.
+
+#### default_metric (const double value);
+
+If metric is not set, it sets the events metric to *value* and forwards them.
+
+#### default_description (const std::string description);
+
+If description is not set, it sets the events metric to *description* and
+forwards them.
+
+#### default_ttl (const double ttl);
+
+If TTL is not set, it sets the events TTL to *tll* and forwards them.
+
+
+#### WITH(EXP)
+
+Use this macro as a way to create a stream that modify any of the event's
+fields.
+
+It defines *e* as an event within its scope. You can call mutable functions on
+it. It then takes care of forwarding the modified event.
+
+This is the actual macro:
+
+```cpp
+#define WITH(EXP)\
+  create_stream(
+      [](const Event & const_event)
+      {
+        Event e(const_event);
+
+        (EXP);
+
+        return {e};
+      })
+```
+
+You can use it as follows:
 
 ```cpp
 // Change host field and description
-with({{"host", "cluster-001"}, {"description", "aggregated master metrics"});
-```
-#### default_to (const with_changes_t & changes)
-
-It takes a map that contains key-value pairs to be added to the event, but only
-in case the key is not set in the event already.
-
-
-```cpp
-// Default ttl to 120. Only events with the ttl field not set are modified.
-default_to({"ttl", 120});
+with(e.set_host("cluster-001").set_description("aggregated master metrics"));
 ```
 
 #### split (const split_clauses_t clauses)
