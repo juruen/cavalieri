@@ -1,6 +1,7 @@
 0.0.8 TBD
 =========
   * Add Event members to README.md
+  * Fix concurrency issue with graphite and riemann client pool
 
 0.0.7 2014-09-14
 ================
@@ -24,6 +25,7 @@
   * Add email() signature for multiple receipients
   * Catch also SIGTERM
   * Add wrapper class to profobuf event class
+
 
 0.0.6 2014-08-05
 ================
