@@ -18,6 +18,21 @@ We expect to release a beta version in the following weeks.
 Current benchmarks show that it can process more than one million events per
 second with simple streams.
 
+Content
+-------
+
+* [Install](#install)
+* [Create your rules](#create-your-rules)
+* [Test your rules](#test-your-rules)
+* [Sending events](#sending-events)
+* [Stream functions](#streams-functions)
+* [Fold functions](#fold-functions)
+* [Predicate functions](#predicate-functions)
+* [Common rules](#common-rules)
+* [Event class](#event-class)
+* [Dashboard](#Dashboard)
+* [Cavalieri HOW-TO](https://github.com/juruen/cavalieri/blob/master/HOWTO.md)
+
 Install
 -------
 
