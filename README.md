@@ -350,7 +350,7 @@ You can use it as follows:
 
 ```cpp
 // Change host field and description
-with(e.set_host("cluster-001").set_description("aggregated master metrics"));
+WITH(e.set_host("cluster-001").set_description("aggregated master metrics"));
 ```
 
 #### split (const split_clauses_t clauses)
@@ -376,6 +376,38 @@ split({p::above(10), set_state("ok")},
       {p::under(5),  set_state("critical")},
       set_state("warning"));
 ```
+
+When an event enters the split function that we defined above, three different
+scenarios can happen.
+
+First scenario: the *p::above(10)* predicate returns *true*, and hence the
+event is forwarded to *set_state("ok")*.
+
+![Split-1](https://github.com/juruen/cavalieri/blob/master/docs/images/split-1.png)
+
+Second scenario: metric is not above 10, but it is under 5 and then
+*p::under(5)* returns *true*. The event is then forwarded to
+*set_state("critical")*.
+
+
+![Split-2](https://github.com/juruen/cavalieri/blob/master/docs/images/split-2.png)
+
+Third and last scenario: metric is between 5 and 10. Neither *p::above(10)* or
+*p::under(5)* return *true*. The event is then sent to the default stream. In
+this case *set_state("warning")*.
+
+![Split-3](https://github.com/juruen/cavalieri/blob/master/docs/images/split-3.png)
+
+Note that in the three scenarios, the result of going through any of the
+streams will be forwaded to any stream that is after split. This means that
+the code below prints the event with the state that split sets.
+
+```cpp
+split({p::above(10), set_state("ok")},
+      {p::under(5),  set_state("critical")},
+      set_state("warning")) >> prn ("result after going through split: ")
+```
+
 
 #### where (const predicate_t & predicate)
 
