@@ -2,6 +2,7 @@
 =========
   * Add Event members to README.md
   * Fix concurrency issue with graphite and riemann client pool
+  * Remove libcds depdenency and lock-free streams
 
 0.0.7 2014-09-14
 ================

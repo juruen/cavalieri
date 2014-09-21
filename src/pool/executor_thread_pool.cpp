@@ -23,9 +23,7 @@ executor_thread_pool::executor_thread_pool(instrumentation & instr,
 
   auto run_fn = [=](const int i)
   {
-    atom_attach_thread();
     run_tasks(i);
-    atom_detach_thread();
   };
 
 

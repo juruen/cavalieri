@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
-#include <atom/atom.h>
 #include <util/util.h>
 #include <core/core.h>
 #include <scheduler/scheduler.h>
