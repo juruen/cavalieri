@@ -374,9 +374,12 @@ It takes a list of pairs. Each pair contains a predicate function and a stream.
 When an event is received, the event is passed to the first stream which
 predicate returns true.
 
+You can see this function as a *switch case* statement where predicates are
+the *cases*.
+
 ```cpp
-split({p::above(10), set_state("ok")},
-      {p::under(5),  set_state("critical"});
+split({{p::above(10), set_state("ok")},
+       {p::under(5),  set_state("critical"}});
 ```
 
 #### split (const split_clauses_t clauses, const streams_t default_stream)
@@ -386,9 +389,12 @@ function and a stream.  When an event is received, the event is passed to the
 first stream which predicate returns true. If none of the predicates match,
 the event is passed to the default stream.
 
+You can see this function as a *switch case* statement where predicates are
+the *cases*.
+
 ```cpp
-split({p::above(10), set_state("ok")},
-      {p::under(5),  set_state("critical")},
+split({{p::above(10), set_state("ok")},
+       {p::under(5),  set_state("critical")}},
       set_state("warning"));
 ```
 
