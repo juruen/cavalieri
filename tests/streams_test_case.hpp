@@ -103,18 +103,17 @@ TEST(with_streams_test_case, test)
 {
   std::vector<Event> v;
 
-  with_changes_t changes = {
-    {"host", "host"},
-    {"service", "service"},
-    {"description", "description"},
-    {"state", "state"},
-    {"metric", 1},
-    {"ttl", 2}
-  };
+  auto with_stream = WITH(
+      e.set_host("host")
+      .set_service("service")
+      .set_description("description")
+      .set_state("state")
+      .set_metric_sint64(1)
+      .set_ttl(2));
 
   Event e;
 
-  push_event(with(changes) >> sink(v), e);
+  push_event(with_stream >> sink(v), e);
 
   ASSERT_EQ(1, v.size());
   EXPECT_EQ("host", v[0].host());
@@ -126,8 +125,7 @@ TEST(with_streams_test_case, test)
 
   v.clear();
 
-  changes = {{"metric", 1.0}};
-  push_event(with(changes) >> sink(v), e);
+  push_event(WITH(e.set_metric(1.0)) >> sink(v), e);
   ASSERT_EQ(1, v.size());
   EXPECT_EQ(1.0, v[0].metric_d());
   ASSERT_FALSE(v[0].has_metric_sint64());
@@ -135,8 +133,7 @@ TEST(with_streams_test_case, test)
 
 
   v.clear();
-  changes = {{"attribute", "foo"}};
-  push_event(with(changes) >> sink(v), e);
+  push_event(WITH(e.set_attr("attribute", "foo")) >> sink(v), e);
   ASSERT_EQ(1, v.size());
   EXPECT_EQ(1, v[0].riemann_event().attributes_size());
   EXPECT_EQ("attribute", v[0].riemann_event().attributes(0).key());
@@ -147,14 +144,11 @@ TEST(default_to_streams_test_case, test)
 {
   std::vector<Event> v;
 
-  with_changes_t changes = {
-    {"host", "host"},
-    {"service", "service"},
-  };
+  auto default_stream = default_host("host") >> default_service("service");
 
   Event e;
   e.set_host("localhost");
-  push_event(default_to(changes) >> sink(v), e);
+  push_event(default_stream >> sink(v), e);
 
   ASSERT_EQ(1, v.size());
   EXPECT_EQ("localhost", v[0].host());
@@ -166,8 +160,8 @@ TEST(default_to_streams_test_case, test)
   ASSERT_FALSE(e.has_metric_f());
   ASSERT_FALSE(e.has_metric_sint64());
 
-  changes = {{"metric", 1.0}};
-  push_event(default_to(changes) >> sink(v), e);
+  default_stream = default_metric(1.0);
+  push_event(default_stream >> sink(v), e);
   ASSERT_TRUE(v[0].has_metric_d());
   ASSERT_EQ(1, v.size());
   EXPECT_EQ(1.0, v[0].metric_d());
@@ -176,9 +170,9 @@ TEST(default_to_streams_test_case, test)
 
   v.clear();
 
-  changes = {{"metric", 2.0}};
+  default_stream = default_metric(2.0);
   e.set_metric_d(1.0);
-  push_event(default_to(changes) >> sink(v), e);
+  push_event(default_stream >> sink(v), e);
   ASSERT_EQ(1, v.size());
   EXPECT_EQ(1.0, v[0].metric_d());
   ASSERT_FALSE(v[0].has_metric_sint64());
@@ -186,9 +180,8 @@ TEST(default_to_streams_test_case, test)
 
   v.clear();
 
-  changes = {{"metric", 2}};
   e.set_metric_d(1.0);
-  push_event(default_to(changes) >> sink(v), e);
+  push_event(default_stream >> sink(v), e);
   ASSERT_EQ(1, v.size());
   EXPECT_EQ(1.0, v[0].metric_d());
   ASSERT_FALSE(v[0].has_metric_sint64());
@@ -478,7 +471,7 @@ TEST(smap_streams_test_case, test)
 {
   std::vector<Event> v;
 
-  auto smap_stream = smap(TR(e.set_host("foo"))) >>  sink(v);
+  auto smap_stream = smap([](Event & e){e.set_host("foo");}) >>  sink(v);
 
   Event e;
   e.set_host("bar");

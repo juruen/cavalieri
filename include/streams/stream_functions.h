@@ -14,11 +14,8 @@
 typedef const Event& e_t;
 typedef std::vector<Event> events_t;
 
-
-#define TR(EXP) [](Event & e) {(EXP); }
-#define NE(EXP) [=](const Event & event) { Event e(event); (EXP); return e;  }
-#define sdo(...) svec({__VA_ARGS__})
-
+#define WITH(EXP) \
+  create_stream([=](const Event & oe) -> events_t { auto e = oe.copy(); (EXP); return {e}; })
 
 typedef std::function<bool(e_t)> predicate_t;
 typedef std::function<void(Event &)> smap_fn_t;
@@ -52,6 +49,8 @@ streams_t state(const std::string state);
 
 streams_t state_any(const std::vector<std::string> states);
 
+streams_t set_service(const std::string service);
+
 streams_t set_state(const std::string state);
 
 streams_t set_host(const std::string host);
@@ -59,6 +58,20 @@ streams_t set_host(const std::string host);
 streams_t set_metric(const double metric);
 
 streams_t set_description(const std::string description);
+
+streams_t set_ttl(const float ttl);
+
+streams_t default_service(const std::string service);
+
+streams_t default_state(const std::string state);
+
+streams_t default_host(const std::string host);
+
+streams_t default_metric(const double metric);
+
+streams_t default_description(const std::string description);
+
+streams_t default_ttl(const float ttl);
 
 streams_t with(const with_changes_t& changes);
 
@@ -119,6 +132,11 @@ streams_t without(double a, double b);
 streams_t scale(double s);
 
 streams_t svec(std::vector<streams_t> streams);
+
+template<class ...Ts>
+streams_t sdo(Ts... streams) {
+  return svec({streams...});
+}
 
 streams_t counter();
 

@@ -28,7 +28,6 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
-    #${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
     ${CMAKE_SOURCE_DIR}/src/folds/folds.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/async/real_async_loop.cpp
@@ -92,7 +91,6 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
-    #${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lockfree.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/instrumentation.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/rate.cpp
     ${CMAKE_SOURCE_DIR}/src/instrumentation/reservoir.cpp
@@ -148,7 +146,6 @@ ADD_EXECUTABLE(
     ${ProtoHeaders}
   )
 
-add_dependencies(cavalieri cds)
 add_dependencies(cavalieri googlemock)
 
 TARGET_LINK_LIBRARIES(
@@ -187,7 +184,6 @@ TARGET_LINK_LIBRARIES(
 
 
 
-add_dependencies(cavalieri_tester cds)
 add_dependencies(cavalieri_tester googlemock)
 
 TARGET_LINK_LIBRARIES(
@@ -223,17 +219,9 @@ install(
   DESTINATION bin
 )
 
-install(PROGRAMS ${libcds_LIBS} DESTINATION lib)
-
 install(
   DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/
-  DESTINATION include/${CMAKE_PROJECT_NAME}
-)
-
-install(
-  DIRECTORY
-  ${libcds_INCLUDES}
   DESTINATION include/${CMAKE_PROJECT_NAME}
 )
 

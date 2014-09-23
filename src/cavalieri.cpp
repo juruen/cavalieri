@@ -1,17 +1,10 @@
-#include <atom/atom.h>
 #include <core/core.h>
 
 int main(int argc, char **argv)
 {
-  atom_initialize();
-  {
-    ATOM_GC;
 
-    atom_attach_thread();
-
-    start_core(argc, argv);
-  }
-  atom_terminate();
+  start_core(argc, argv);
 
   return 0;
+
 }

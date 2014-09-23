@@ -2,7 +2,6 @@
 #include <glog/logging.h>
 #include <util/util.h>
 #include <pool/async_thread_pool.h>
-#include <atom/atom.h>
 
 namespace {
   const size_t stop_attempts = 20;
@@ -37,9 +36,7 @@ void async_thread_pool::start_threads() {
   auto run_fn = [=](size_t i)
   {
     VLOG(3) << "run_fn: " << i;
-    atom_attach_thread();
     this->run(i);
-    atom_detach_thread();
   };
 
   for (size_t i = 0; i < thread_num_; i++) {

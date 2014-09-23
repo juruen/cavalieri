@@ -1,6 +1,5 @@
 #include <glog/logging.h>
 #include <websocket/worker_threads.h>
-#include <atom/atom.h>
 
 namespace {
 
@@ -17,9 +16,7 @@ worker_threads::worker_threads(const size_t threads, task_t task)
 
   auto run_fn = [=](const int i)
   {
-    atom_attach_thread();
     run_tasks(i);
-    atom_detach_thread();
   };
 
 

@@ -5,18 +5,29 @@ Cavalieri [![Build Status](https://drone.io/github.com/juruen/cavalieri/status.p
 Introduction
 ------------
 
-*Cavalieri* is a C++ event stream processing tool inspired by the
-awesome [riemann.io](http://riemann.io) project.
+*Cavalieri* is a C++ event stream processing tool to monitor distrubuted
+systems, it is inspired by the awesome [riemann.io](http://riemann.io) project.
 
 It implements the original [riemann.io](http://riemann.io) protocol. That means
 you can leverage the existing *riemann* clients and tools. It also tries to
 mimic its stream API where possible.
 
-Cavalieri's current version *0.0.7* is considered to be  in **alpha** state.
-We expect to release a beta version in the following weeks.
+Cavalieri's current version *0.1.0* is considered to be  in **beta** state.
 
-Current benchmarks show that it can process more than one million events per
-second with simple streams.
+Content
+-------
+
+* [Install](#install)
+* [Create your rules](#create-your-rules)
+* [Test your rules](#test-your-rules)
+* [Sending events](#sending-events)
+* [Stream functions](#streams-functions)
+* [Fold functions](#fold-functions)
+* [Predicate functions](#predicate-functions)
+* [Common rules](#common-rules)
+* [Event class](#event-class)
+* [Dashboard](#Dashboard)
+* [Cavalieri HOW-TO](https://github.com/juruen/cavalieri/blob/master/HOWTO.md)
 
 Install
 -------
@@ -42,7 +53,7 @@ Have a look at the build dependencies extracted from the deb package:
 
 ```
 cmake, subversion, protobuf-compiler,libprotobuf-dev, libev-dev, libgflags-dev, 
-libgoogle-glog-dev, libpython-dev,libcurl4-openssl-dev, libssl-dev, libtbb-dev,
+libgoogle-glog-dev, libcurl4-openssl-dev, libssl-dev, libtbb-dev,
 libjsoncpp-dev, lcov, flex, bison, libgoogle-glog-dev, libboost-filesystem-dev,
 libboost-system-dev
 
@@ -272,6 +283,10 @@ It forwards events which state is any of *states*.
 
 It fowards events that have a set *attribute*.
 
+#### set_service (const std::string service)
+
+It sets the events service to *service* and forwards them.
+
 #### set_state (const std::string state)
 
 It sets the events state to *state* and forwards them.
@@ -284,25 +299,69 @@ It sets the events host to *host* and forwards them.
 
 It sets the events metric to *value* and forwards them.
 
+#### set_description (const std::string description);
 
-#### with (const with_changes_t & changes)
+It sets the events metric to *description* and forwards them.
 
-Modifies the event. It takes a map that contains the keys to be modified
-and their corresponding new value.
+#### set_ttl (const double ttl);
+
+It sets the events TTL to *tll* and forwards them.
+
+#### default_service (const std::string service)
+
+If service is not set, it sets the events service to *service*
+and forwards them.
+
+#### default_state (const std::string state)
+
+If state is not set, it sets the events state to *state* and forwards them.
+
+#### default_host (const std::string host)
+
+If host is not set, it sets the events host to *host* and forwards them.
+
+#### default_metric (const double value);
+
+If metric is not set, it sets the events metric to *value* and forwards them.
+
+#### default_description (const std::string description);
+
+If description is not set, it sets the events metric to *description* and
+forwards them.
+
+#### default_ttl (const double ttl);
+
+If TTL is not set, it sets the events TTL to *tll* and forwards them.
+
+
+#### WITH(EXP)
+
+Use this macro as a way to create a stream that modify any of the event's
+fields.
+
+It defines *e* as an event within its scope. You can call mutable functions on
+it. It then takes care of forwarding the modified event.
+
+This is the actual macro:
+
+```cpp
+#define WITH(EXP)\
+  create_stream(
+      [](const Event & const_event)
+      {
+        Event e(const_event);
+
+        (EXP);
+
+        return {e};
+      })
+```
+
+You can use it as follows:
 
 ```cpp
 // Change host field and description
-with({{"host", "cluster-001"}, {"description", "aggregated master metrics"});
-```
-#### default_to (const with_changes_t & changes)
-
-It takes a map that contains key-value pairs to be added to the event, but only
-in case the key is not set in the event already.
-
-
-```cpp
-// Default ttl to 120. Only events with the ttl field not set are modified.
-default_to({"ttl", 120});
+WITH(e.set_host("cluster-001").set_description("aggregated master metrics"));
 ```
 
 #### split (const split_clauses_t clauses)
@@ -311,9 +370,12 @@ It takes a list of pairs. Each pair contains a predicate function and a stream.
 When an event is received, the event is passed to the first stream which
 predicate returns true.
 
+You can see this function as a *switch case* statement where predicates are
+the *cases*.
+
 ```cpp
-split({p::above(10), set_state("ok")},
-      {p::under(5),  set_state("critical"});
+split({{p::above(10), set_state("ok")},
+       {p::under(5),  set_state("critical"}});
 ```
 
 #### split (const split_clauses_t clauses, const streams_t default_stream)
@@ -323,11 +385,46 @@ function and a stream.  When an event is received, the event is passed to the
 first stream which predicate returns true. If none of the predicates match,
 the event is passed to the default stream.
 
+You can see this function as a *switch case* statement where predicates are
+the *cases*.
+
+```cpp
+split({{p::above(10), set_state("ok")},
+       {p::under(5),  set_state("critical")}},
+      set_state("warning"));
+```
+
+When an event enters the split function that we defined above, three different
+scenarios can happen.
+
+First scenario: the *p::above(10)* predicate returns *true*, and hence the
+event is forwarded to *set_state("ok")*.
+
+![Split-1](https://github.com/juruen/cavalieri/blob/master/docs/images/split-1.png)
+
+Second scenario: metric is not above 10, but it is under 5 and then
+*p::under(5)* returns *true*. The event is then forwarded to
+*set_state("critical")*.
+
+
+![Split-2](https://github.com/juruen/cavalieri/blob/master/docs/images/split-2.png)
+
+Third and last scenario: metric is between 5 and 10. Neither *p::above(10)* or
+*p::under(5)* return *true*. The event is then sent to the default stream. In
+this case *set_state("warning")*.
+
+![Split-3](https://github.com/juruen/cavalieri/blob/master/docs/images/split-3.png)
+
+Note that in the three scenarios, the result of going through any of the
+streams will be forwaded to any stream that is after split. This means that
+the code below prints the event with the state that split sets.
+
 ```cpp
 split({p::above(10), set_state("ok")},
       {p::under(5),  set_state("critical")},
-      set_state("warning"));
+      set_state("warning")) >> prn ("result after going through split: ")
 ```
+
 
 #### where (const predicate_t & predicate)
 
@@ -481,20 +578,15 @@ tagged("production") >> above(5) >> email();
 
 #### smap (const smap_fn_t fn)
 
-Events are recevied and passed to *fn* which returns a new event.
-This new event is forwarded.
+Events are recevied and passed to *fn* as a mutable reference. You
+are free to modify the received event as you wish.
 
-Use this when you need to modify events dynamically, as in opposed to
-statically, use *with()* for the latter.
+The function below changes appends the host name to the service.
 
 ```cpp
-// Function that takes and event and returns a new event which service
-// has the host appended.
-Event host_service(e_t e)
+void host_service(Event & e)
 {
-  auto ne(e);
-  ne.set_service(e.service() + "-" + e.host());
-  return ne;
+  e.set_service(e.service() + "-" + e.host());
 };
 
 smap(host_service) >> prn("new shiny service string");
@@ -905,7 +997,128 @@ Check if the field *key* in *event* matches the *regex*.
 Check if the field *key* in *event* matches the *SQL like* string that uses
 '%' to search for patterns.
 
-### Some utility functions
+### Event class
+
+This is the *Event* class that is used widely all over Cavalieri. It's
+basically a wrapper to the generataed [Riemann
+protobuf](https://github.com/juruen/cavalieri/blob/master/src/proto.proto)
+class that adds some handy functions.
+
+Here is the list of function members in
+[this](https://github.com/juruen/cavalieri/blob/master/include/common/event.h)
+class:
+
+-   Event()
+
+-   Event(const riemann::Event & event)
+
+-   Event(const Event &) = default
+
+-   Event copy() const
+
+-   riemann::Event riemann_event() const
+
+-   std::string host() const
+
+-   Event & set_host(const std::string host)
+
+-   bool has_host() const
+
+-   Event & clear_host()
+
+-   std::string service() const
+
+-   Event & set_service(const std::string service)
+
+-   bool has_service() const
+
+-   Event & clear_service()
+
+-   std::string state() const
+
+-   Event & set_state(const std::string state)
+
+-   bool has_state() const
+
+-   Event & clear_state()
+
+-   std::string description() const
+
+-   Event & set_description(const std::string description)
+
+-   bool has_description() const
+
+-   Event & clear_description()
+
+-   int64_t time() const
+
+-   Event & set_time(const int64_t time)
+
+-   bool has_time() const
+
+-   Event & clear_time()
+
+-   float ttl() const
+
+-   Event & set_ttl(const float ttl)
+
+-   bool has_ttl() const
+
+-   Event & clear_ttl()
+
+-   double metric() const
+
+-   Event & set_metric(const double metric)
+
+-   bool has_metric() const
+
+-   Event & clear_metric()
+
+-   std::string metric_to_str() const
+
+-   float metric_f() const
+
+-   Event & set_metric_f(const float metric)
+
+-   bool has_metric_f() const
+
+-   Event & clear_metric_f()
+
+-   float metric_d() const
+
+-   Event & set_metric_d(const double metric)
+
+-   bool has_metric_d() const
+
+-   Event & clear_metric_d()
+
+-   int64_t metric_sint64() const
+
+-   Event & set_metric_sint64(const int64_t metric)
+
+-   bool has_metric_sint64() const
+
+-   Event & clear_metric_sint64()
+
+-   std::string value_to_str(const std::string field) const
+
+-   bool has_field_set(const std::string field) const
+
+-   std::string json_str() const
+
+-   bool has_tag(const std::string tag) const
+
+-   Event & add_tag(const std::string tag)
+
+-   Event & clear_tags()
+
+-   bool has_attr(const std::string attribute) const
+
+-   std::string attr(const std::string attribute) const
+
+-   Event & set_attr(const std::string attribute, const std::string value)
+
+-   Event & clear_attrs()
 
 ### Some typedefs
 
@@ -914,4 +1127,3 @@ Dashboard
 
 You can use the standard [riemann.io dahsboard](http://riemann.io/dashboard.html)
 to query and visualize the state of the index.
-

@@ -2,7 +2,6 @@
 #include <queue>
 #include <glog/logging.h>
 #include <util/util.h>
-#include <atom/atom.h>
 #include <core/core.h>
 #include <index/real_index.h>
 
@@ -82,8 +81,6 @@ void real_index::timer_cb() {
 
 void real_index::expire_events() {
 
-  atom_attach_thread();
-
   VLOG(3) << "expire_fn()++";
 
   std::vector<Event> expired_events;
@@ -132,7 +129,6 @@ void real_index::expire_events() {
 
   expiring_.store(false);
 
-  atom_detach_thread();
 }
 
 std::vector<Event> real_index::query_index(const match_fn_t match_fn,

@@ -1,8 +1,8 @@
 #ifndef CAVALIERI_INSTRUMENTATION_RESERVOIR_H
 #define CAVALIERI_INSTRUMENTATION_RESERVOIR_H
 
+#include <vector>
 #include <atomic>
-#include <atom/atom.h>
 #include <mutex>
 
 class reservoir {
