@@ -1,3 +1,8 @@
+0.1.1 TBD
+=========
+
+  * Update README.md with cavalieri-rules function's name
+
 0.1.0 2014-09-23
 ================
   * Add Event members to README.md

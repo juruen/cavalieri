@@ -89,7 +89,7 @@ service is above 40.
 #include <external/pagerduty.h>
 #include <external/email.h>
 
-streams_t rules() {
+streams_t cavalieri_rules() {
 
   auto mail_stream = email("localhost", "cavalieri@localhost",
                            "devops@localhost");
@@ -102,7 +102,7 @@ streams_t rules() {
 
 }
 
-EXPORT_RULES(rules)
+EXPORT_RULES(cavalieri_rules)
 ```
 
 Build a plugin containing your rules that will be loaded by *cavalieri*.
