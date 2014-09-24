@@ -1,3 +1,9 @@
+0.1.1 2014-09-2014
+==================
+
+  * Update README.md with cavalieri-rules function's name
+  * Enable Pager Duty
+
 0.1.0 2014-09-23
 ================
   * Add Event members to README.md
