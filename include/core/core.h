@@ -11,6 +11,7 @@ class core_interface {
 public:
   virtual void start() = 0;
   virtual void add_stream(std::shared_ptr<streams_t> stream) = 0;
+  virtual void reload_rules() = 0;
   virtual index_interface & idx() = 0;
   virtual scheduler_interface & sched() = 0;
   virtual external_interface & externals() = 0;

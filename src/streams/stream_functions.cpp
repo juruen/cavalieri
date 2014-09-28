@@ -7,10 +7,13 @@
 #include <core/core.h>
 #include <scheduler/scheduler.h>
 #include <predicates/predicates.h>
+#include <rules_loader.h>
 #include <streams/stream_functions_lock.h>
 #include <streams/stream_functions.h>
 
 namespace {
+
+const size_t k_streams = 10;
 
 const std::string k_rate_service = "cavalieri stream rate";
 const std::string k_rate_desc = "events per second in streams";
@@ -55,7 +58,6 @@ void update_in_latency(instrumentation & inst, const int id,
   inst.update_latency(id, difftime(time(0), start));
 
 }
-
 
 
 }
@@ -756,8 +758,11 @@ streams_t pagerduty_trigger(const std::string key) {
   );
 }
 
-streams::streams(instrumentation & instrumentation)
-  : instrumentation_(instrumentation), stop_(false)
+streams::streams(const config & conf, instrumentation & instrumentation)
+  : rules_directory_(conf.rules_directory),
+    streams_(k_streams),
+    instrumentation_(instrumentation),
+    stop_(false)
 {
 
   rate_id_ = instrumentation_.add_rate(k_rate_service,
@@ -770,10 +775,17 @@ streams::streams(instrumentation & instrumentation)
   in_latency_id_ = instrumentation_.add_latency(k_in_latency_service,
                                                 k_in_latency_desc,
                                                 k_percentiles);
+
+  reload_rules();
 }
 
-void streams::add_stream(streams_t stream) {
-  streams_.push_back(stream);
+void streams::add_stream(streams_t) {
+  VLOG(3) << "add_stream()";
+  //streams_.push_back(stream);
+}
+
+void streams::reload_rules() {
+ load_rules(rules_directory_, streams_);
 }
 
 void streams::process_message(const riemann::Msg& message) {
@@ -796,16 +808,31 @@ void streams::process_message(const riemann::Msg& message) {
   }
 }
 
+void push_stream(stream_lib & stream, const Event & event) {
+
+  if (!stream.inc()) {
+    return;
+  }
+
+  ::push_event(*stream.stream, event);
+
+  stream.dec();
+}
+
 void streams::push_event(const Event& e) {
 
   if (stop_) {
     return;
   }
 
-  for (const auto & s: streams_) {
+  for (auto & s: streams_) {
+
+    if (!s.used()) {
+      continue;
+    }
 
     if (e.state() == "expired") {
-      ::push_event(s, e);
+      ::push_stream(s, e);
       continue;
     }
 
@@ -815,7 +842,7 @@ void streams::push_event(const Event& e) {
 
       auto start_time = now();
 
-      ::push_event(s, e);
+      ::push_stream(s, e);
 
       update_latency(instrumentation_, latency_id_, start_time);
 
@@ -823,7 +850,7 @@ void streams::push_event(const Event& e) {
       Event ne(e);
       ne.set_time(g_core->sched().unix_time());
 
-      ::push_event(s, ne);
+      ::push_stream(s, ne);
     }
 
   }

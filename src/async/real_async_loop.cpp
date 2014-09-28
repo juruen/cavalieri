@@ -1,5 +1,6 @@
 #include <netinet/in.h>
 #include <glog/logging.h>
+#include <core/core.h>
 #include <async/real_async_loop.h>
 
 namespace {
@@ -381,9 +382,11 @@ real_main_async_loop::real_main_async_loop()
   sigterm_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
   sigterm_.start(SIGTERM);
 
+  sigterm_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
+  sigterm_.start(SIGHUP);
+
   async_.set<real_main_async_loop, &real_main_async_loop::async_cb>(this);
   async_.start();
-
 }
 
 void real_main_async_loop::start() {
@@ -395,8 +398,16 @@ void real_main_async_loop::add_tcp_listen_fd(const int fd,
   listen_ios_.emplace_back(std::make_shared<listen_io>(fd, on_new_client));
 }
 
-void real_main_async_loop::signal_cb(ev::sig &, int) {
-  default_loop_.break_loop();
+void real_main_async_loop::signal_cb(ev::sig & sig, int) {
+
+  VLOG(3) << "signal_cb() " << sig.signum;
+
+  if (sig.signum == SIGHUP) {
+    g_core->reload_rules();
+  } else {
+    default_loop_.break_loop();
+  }
+
 }
 
 void real_main_async_loop::add_periodic_task(task_cb_fn_t task,

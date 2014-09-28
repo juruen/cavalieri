@@ -24,7 +24,7 @@ real_core::real_core(const config & conf)
 
     externals_(new real_external(conf, instrumentation_)),
 
-    streams_(new streams(instrumentation_)),
+    streams_(new streams(conf, instrumentation_)),
 
     pubsub_(new pub_sub()),
 
@@ -47,10 +47,6 @@ real_core::real_core(const config & conf)
 }
 
 void real_core::start() {
-
-  for (const auto & stream : load_rules(config_.rules_directory)) {
-    add_stream(stream);
-  }
 
   LOG(INFO) << "Brace for impact, starting nuclear core.";
 
@@ -85,6 +81,11 @@ void real_core::add_stream(std::shared_ptr<streams_t> stream) {
 
 real_core::~real_core() {
   VLOG(3) << "~real_core";
+}
+
+void real_core::reload_rules() {
+  VLOG(3) << "reload_rules()";
+  streams_->reload_rules();
 }
 
 index_interface & real_core::idx() {

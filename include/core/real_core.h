@@ -21,6 +21,7 @@ public:
   real_core(const config &);
   void start();
   void add_stream(std::shared_ptr<streams_t> stream);
+  void reload_rules();
   index_interface & idx();
   scheduler_interface & sched();
   external_interface & externals();
