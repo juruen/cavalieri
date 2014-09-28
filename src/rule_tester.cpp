@@ -43,17 +43,20 @@ int main(int argc, char **argv) {
 
   start_core(argc, argv);
 
-  auto rules = load_rules(FLAGS_rules_directory);
+  std::vector<stream_lib> streams(100);
+  load_rules(FLAGS_rules_directory, streams);
 
-  if (rules.empty()) {
+  if (!streams[0].used()) {
     LOG(ERROR) << "failed to load rules";
     return -1;
   }
 
   for (const auto & event: events) {
     g_core->sched().set_time(event.time());
-    for (const auto & stream : rules) {
-      push_event(*stream, event);
+    for (const auto & stream : streams) {
+      if (stream.used()) {
+        push_event(*stream.stream, event);
+      }
     }
   }
 

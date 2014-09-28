@@ -19,6 +19,8 @@ SET(CAVALIERI_TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/transport/ws_connection.cpp
     ${CMAKE_SOURCE_DIR}/src/transport/ws_util.cpp
     ${CMAKE_SOURCE_DIR}/src/predicates/predicates.cpp
+    ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams/lib.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
@@ -96,6 +98,9 @@ TARGET_LINK_LIBRARIES(
     pthread
     tbb
     ${ThirdParty_LIBRARIES}
+    dl
+    boost_filesystem
+    boost_system
   )
 
 add_dependencies(test_plan cds)

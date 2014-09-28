@@ -53,13 +53,17 @@ public:
   void remove_fd(const int fd);
   void set_fd_mode(const int fd, const async_fd::mode mode);
   ev::dynamic_loop & loop();
-  timer_id_t add_once_task(const timer_cb_fn_t, const float t);
-  timer_id_t add_periodic_task(const timer_cb_fn_t, const float t);
+  timer_id_t add_once_task(
+      const std::string lib_namespace, const timer_cb_fn_t, const float t);
+  timer_id_t add_periodic_task(
+      const std::string lib_namespace, const timer_cb_fn_t, const float t);
   void set_task_interval(const timer_id_t, const float t);
   bool remove_task(const timer_id_t);
+  void remove_task_lib_namespace(const std::string lib_namespace);
 
 private:
   using sched_task_t =  struct {
+    std::string lib_namespace;
     task_cb_fn_t task;
     timer_id_t id;
     unsigned long interval_ms;
@@ -81,8 +85,10 @@ private:
 private:
   void async_callback(ev::async &, int);
   void timer_callback(ev::timer &, int);
-  timer_id_t add_task(const timer_cb_fn_t, bool, float);
+  timer_id_t add_task(
+      const std::string, const timer_cb_fn_t, bool, float);
   void sched_next_task();
+  bool remove_task(const std::function<bool(const sched_task_t &)> &);
 
 private:
   bool stop_;
@@ -151,6 +157,7 @@ private:
   ev::default_loop default_loop_;
   ev::sig sigint_;
   ev::sig sigterm_;
+  ev::sig sighup_;
   ev::async async_;
   std::vector<std::shared_ptr<listen_io>> listen_ios_;
   std::vector<std::shared_ptr<timer_io>> timer_ios_;

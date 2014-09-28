@@ -22,6 +22,7 @@ public:
   remove_task_future_t add_periodic_task(task_fn_t task,
                                          float interval) override;
   remove_task_future_t add_once_task(task_fn_t task, float dt) override;
+  remove_ns_tasks_future_t remove_ns_tasks(const std::string nm) override;
   time_t unix_time()  override;
   void set_time(const time_t t) override;
   void clear() override;
