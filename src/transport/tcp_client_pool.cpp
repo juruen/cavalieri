@@ -316,12 +316,16 @@ void tcp_client_pool::async(async_loop & loop) {
 
 void tcp_client_pool::signal_batch_flush(const size_t loop_id) {
 
+  VLOG(3) << "signal_batch_flush";
+
   flush_batch_[loop_id] = 1;
   tcp_pool_.signal_thread(loop_id);
 
 }
 
 void tcp_client_pool::connect_clients(const size_t loop_id) {
+
+  VLOG(3) << "connect_clients";
 
   if (!fd_event_queues_[loop_id].empty()) {
     return;

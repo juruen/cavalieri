@@ -18,6 +18,11 @@ int ev_mode(const async_fd::mode & initial_mode) {
   return  mode;
 }
 
+unsigned long now() {
+   return  std::chrono::system_clock::now().time_since_epoch()
+           / std::chrono::milliseconds(1);
+}
+
 };
 
 real_async_fd::real_async_fd(
@@ -84,10 +89,16 @@ async_loop& real_async_fd::loop() {
   return async_loop_;
 }
 
-real_async_loop::real_async_loop() : async_loop(), stop_(false)
+real_async_loop::real_async_loop()
+  :
+    async_loop(),
+    stop_(false),
+    next_timer_id_(0)
 {
   async_.set(loop_);
   async_.set<real_async_loop, &real_async_loop::async_callback>(this);
+  timer_.set(loop_);
+  timer_.set<real_async_loop, &real_async_loop::timer_callback>(this);
 }
 
 void real_async_loop::set_id(size_t id) {
@@ -149,50 +160,83 @@ ev::dynamic_loop & real_async_loop::loop() {
   return loop_;
 }
 
-timer_id_t real_async_loop::add_timer(const timer_cb_fn_t task,
+timer_id_t real_async_loop::add_task(const timer_cb_fn_t task,
                                       const bool once, const float t)
 {
-  auto timer_id = next_timer_id_++;
+  const auto timer_id = next_timer_id_++;
+  const unsigned long current_time = now();
+  const unsigned long t_ms = static_cast<unsigned long>(t * 1000);
+  const sched_task_t sched_task{[=](){ task(id_); },
+                                {id_, timer_id},
+                                once ? 0 : t_ms,
+                                current_time + t_ms};
+  tasks_.push(sched_task);
 
-  auto  fn = [=]()
-  {
-    task(id_);
-
-    if (once) { // Move this to static fun
-      auto it = timers_.find(timer_id);
-      CHECK(it != timers_.end()) << "timer not found";
-      timers_.erase(it);
-    }
-  };
-
-  timer_ctx_t ctx{{std::make_shared<ev::timer>(loop_)},
-                   std::make_shared<task_cb_fn_t>(fn),
-                   *this,
-                   {id_, timer_id},
-                   once};
-
-  auto it = timers_.insert({timer_id, std::make_shared<timer_ctx_t>(ctx)});
-  auto ev_timer = it.first->second->timer;
-
-  auto ctx_ptr = static_cast<void*>(it.first->second.get());
-  ev_timer->set<timer_callback>(ctx_ptr);
-
-  ev_timer->start(t, once ? 0 : t);
+  sched_next_task();
 
   return {id_, timer_id};
 }
 
-void real_async_loop::timer_callback(ev::timer & timer, int) {
+void real_async_loop::sched_next_task() {
+  VLOG(3) << "sched_next_task";
 
+  if (tasks_.empty()) {
+    VLOG(3) << "task queue is empty";
+    timer_.stop();
+    return;
+  }
+
+  unsigned long next_time = tasks_.top().time_ms;
+  unsigned long current_time = now();
+
+  VLOG(3) << "next_time: " <<  next_time << " current_time: " << current_time;
+
+  float next;
+  if (current_time > next_time) {
+    next = 0;
+  } else {
+    next = (next_time - current_time) / 1000.0;
+  }
+
+  VLOG(3) << "next: " << next;
+
+  timer_.set<real_async_loop, &real_async_loop::timer_callback>(this);
+
+  timer_.start(next);
+}
+
+void real_async_loop::timer_callback(ev::timer &, int) {
   VLOG(3) << "timer_callback()";
 
-  auto ctx_ptr = static_cast<timer_ctx_t*>(timer.data);
+  while (!tasks_.empty()) {
 
-  (*ctx_ptr->task)();
+    auto task = tasks_.top();
 
-  if (ctx_ptr->once) {
-    ctx_ptr->async_loop.remove_task(ctx_ptr->id);
+    if (task.time_ms > now()) {
+      break;
+    }
+
+    task.task();
+
+    // The task we just run may have removed itself
+    if (tasks_.empty()) {
+      continue;
+    }
+
+    if (tasks_.top().id.timer_id != task.id.timer_id) {
+      continue;
+    }
+
+    tasks_.pop();
+
+    if (task.interval_ms > 0) {
+      task.time_ms = now() + task.interval_ms;
+      tasks_.push(task);
+    }
+
   }
+
+  sched_next_task();
 
 }
 
@@ -200,7 +244,7 @@ timer_id_t real_async_loop::add_once_task(const timer_cb_fn_t task,
                                           const float t) {
   VLOG(3) << "add_once_task() t: " << t;
 
-  return add_timer(task, true, t);
+  return add_task(task, true, t);
 
 }
 
@@ -208,42 +252,36 @@ timer_id_t real_async_loop::add_periodic_task(const timer_cb_fn_t task,
                                               const float t) {
   VLOG(3) << "add_periodic_task() t: " << t;
 
-  return add_timer(task, false, t);
+  return add_task(task, false, t);
 
 }
 
 void real_async_loop::set_task_interval(const timer_id_t id, const float t) {
 
+  // TODO
   VLOG(3) << "set_task_interval() t: " << t;
   return;
-
-  auto it = timers_.find(id.timer_id);
-  CHECK(it != timers_.end()) << "timer not found";
-
-  auto & ev_timer = it->second->timer;
-  ev_timer->start(t, t);
 
 }
 
 bool real_async_loop::remove_task(const timer_id_t id) {
-
   VLOG(3) << "remove_task()";
 
-  auto it = timers_.find(id.timer_id);
+  std::priority_queue<sched_task_t,
+                      std::vector<sched_task_t>,
+                      sched_task_cmp> new_tasks;
 
-  if (it != timers_.end()) {
-
-   it->second->timer->stop();
-   timers_.erase(it);
-
-  return true;
-
-  } else {
-
-    VLOG(3) << "timer not found";
-    return false;
+  bool removed = false;
+  while (!tasks_.empty()) {
+    auto task = tasks_.top();
+    if (task.id.timer_id == id.timer_id) {
+      removed = true;
+      continue;
+    }
+    new_tasks.push(task);
   }
 
+  return removed;
 }
 
 real_async_events::real_async_events(size_t num_loops, async_cb_fn_t cb_fn) :
