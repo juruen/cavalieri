@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <streams/lib.h>
 #include <transport/tcp_connection.h>
 #include <transport/curl_pool.h>
 
@@ -184,6 +185,7 @@ curl_pool::curl_pool(const size_t thread_num,
     VLOG(3) << "Initializing timer: " << i;
 
     loop_timers_.push_back(tcp_pool_.loop(i).add_periodic_task(
+          k_global_ns,
           std::bind(&curl_pool::timer, this, _1), k_initial_interval_secs));
 
 

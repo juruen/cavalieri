@@ -25,6 +25,7 @@ SET(CAVALIERI_SRCS
     ${CMAKE_SOURCE_DIR}/src/os/real_os_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/predicates/predicates.cpp
     ${CMAKE_SOURCE_DIR}/src/pub_sub/pub_sub.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams/lib.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp
@@ -88,6 +89,7 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/core/mock_core.cpp
     ${CMAKE_SOURCE_DIR}/src/rules_loader.cpp
     ${CMAKE_SOURCE_DIR}/src/predicates/predicates.cpp
+    ${CMAKE_SOURCE_DIR}/src/streams/lib.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_infra.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/streams/stream_functions_lock.cpp

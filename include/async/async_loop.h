@@ -44,10 +44,13 @@ public:
   virtual void remove_fd(const int fd) = 0;
   virtual void set_fd_mode(const int fd, const async_fd::mode mode) = 0;
 
-  virtual timer_id_t add_once_task(const timer_cb_fn_t, const float t) = 0;
-  virtual timer_id_t add_periodic_task(const timer_cb_fn_t, const float t) = 0;
+  virtual timer_id_t add_once_task(
+      const std::string lib_namespace, const timer_cb_fn_t, const float t) = 0;
+  virtual timer_id_t add_periodic_task(
+      const std::string lib_namespace, const timer_cb_fn_t, const float t) = 0;
   virtual void set_task_interval(const timer_id_t, const float t) = 0;
   virtual bool remove_task(const timer_id_t) = 0;
+  virtual void remove_task_lib_namespace(const std::string lib_namespace) = 0;
 };
 
 typedef std::function<void(async_loop&)> async_cb_fn_t;

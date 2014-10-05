@@ -1,8 +1,8 @@
 #ifndef CAVALIERI_RULES_LOADER_H
 #define CAVALIERI_RULES_LOADER_H
 
-#include <streams/stream_functions.h>
+#include <streams/lib.h>
 
-std::vector<std::shared_ptr<streams_t>> load_rules(const std::string file);
+void load_rules(const std::string file, std::vector<stream_lib> & streams);
 
 #endif

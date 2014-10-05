@@ -1,5 +1,6 @@
 #include <netinet/in.h>
 #include <glog/logging.h>
+#include <core/core.h>
 #include <async/real_async_loop.h>
 
 namespace {
@@ -160,13 +161,15 @@ ev::dynamic_loop & real_async_loop::loop() {
   return loop_;
 }
 
-timer_id_t real_async_loop::add_task(const timer_cb_fn_t task,
-                                      const bool once, const float t)
+timer_id_t real_async_loop::add_task(const std::string lib_namespace,
+                                     const timer_cb_fn_t task,
+                                     const bool once, const float t)
 {
   const auto timer_id = next_timer_id_++;
   const unsigned long current_time = now();
   const unsigned long t_ms = static_cast<unsigned long>(t * 1000);
-  const sched_task_t sched_task{[=](){ task(id_); },
+  const sched_task_t sched_task{lib_namespace,
+                                [=](){ task(id_); },
                                 {id_, timer_id},
                                 once ? 0 : t_ms,
                                 current_time + t_ms};
@@ -240,23 +243,25 @@ void real_async_loop::timer_callback(ev::timer &, int) {
 
 }
 
-timer_id_t real_async_loop::add_once_task(const timer_cb_fn_t task,
+timer_id_t real_async_loop::add_once_task(const std::string lib_namespace,
+                                          const timer_cb_fn_t task,
                                           const float t) {
   VLOG(3) << "add_once_task() t: " << t;
 
-  return add_task(task, true, t);
+  return add_task(lib_namespace, task, true, t);
 
 }
 
-timer_id_t real_async_loop::add_periodic_task(const timer_cb_fn_t task,
+timer_id_t real_async_loop::add_periodic_task(const std::string lib_namespace,
+                                              const timer_cb_fn_t task,
                                               const float t) {
   VLOG(3) << "add_periodic_task() t: " << t;
 
-  return add_task(task, false, t);
+  return add_task(lib_namespace, task, false, t);
 
 }
 
-void real_async_loop::set_task_interval(const timer_id_t id, const float t) {
+void real_async_loop::set_task_interval(const timer_id_t, const float t) {
 
   // TODO
   VLOG(3) << "set_task_interval() t: " << t;
@@ -264,7 +269,10 @@ void real_async_loop::set_task_interval(const timer_id_t id, const float t) {
 
 }
 
-bool real_async_loop::remove_task(const timer_id_t id) {
+
+bool real_async_loop::remove_task(
+    const std::function<bool(const sched_task_t &)> & predicate)
+{
   VLOG(3) << "remove_task()";
 
   std::priority_queue<sched_task_t,
@@ -274,14 +282,41 @@ bool real_async_loop::remove_task(const timer_id_t id) {
   bool removed = false;
   while (!tasks_.empty()) {
     auto task = tasks_.top();
-    if (task.id.timer_id == id.timer_id) {
-      removed = true;
+    tasks_.pop();
+
+    if (predicate(task)) {
+      removed = false;
       continue;
     }
+
     new_tasks.push(task);
   }
 
+  tasks_ = new_tasks;
+
   return removed;
+}
+
+bool real_async_loop::remove_task(const timer_id_t timer_id) {
+  return remove_task(
+      [=](const sched_task_t & task)
+      {
+        return (task.id.timer_id == timer_id.timer_id);
+      }
+  );
+}
+
+void real_async_loop::remove_task_lib_namespace(const std::string lib_namespace)
+{
+  VLOG(3) << "remove task for " << lib_namespace;
+
+  remove_task(
+      [=](const sched_task_t & task)
+      {
+        return (task.lib_namespace == lib_namespace);
+      }
+  );
+
 }
 
 real_async_events::real_async_events(size_t num_loops, async_cb_fn_t cb_fn) :
@@ -381,9 +416,11 @@ real_main_async_loop::real_main_async_loop()
   sigterm_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
   sigterm_.start(SIGTERM);
 
+  sigterm_.set<real_main_async_loop, &real_main_async_loop::signal_cb>(this);
+  sigterm_.start(SIGHUP);
+
   async_.set<real_main_async_loop, &real_main_async_loop::async_cb>(this);
   async_.start();
-
 }
 
 void real_main_async_loop::start() {
@@ -395,8 +432,16 @@ void real_main_async_loop::add_tcp_listen_fd(const int fd,
   listen_ios_.emplace_back(std::make_shared<listen_io>(fd, on_new_client));
 }
 
-void real_main_async_loop::signal_cb(ev::sig &, int) {
-  default_loop_.break_loop();
+void real_main_async_loop::signal_cb(ev::sig & sig, int) {
+
+  VLOG(3) << "signal_cb() " << sig.signum;
+
+  if (sig.signum == SIGHUP) {
+    g_core->reload_rules();
+  } else {
+    default_loop_.break_loop();
+  }
+
 }
 
 void real_main_async_loop::add_periodic_task(task_cb_fn_t task,
