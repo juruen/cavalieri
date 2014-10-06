@@ -115,7 +115,16 @@ void real_scheduler::add_tasks(async_loop & loop) {
 
     timer_id_t timer_id;
 
-    auto timer_task = [=](const size_t) { tp.task(); };
+    std::string nm = get_thread_ns();
+
+    auto timer_task = [=](const size_t)
+     {
+      try {
+        tp.task();
+      } catch(const std::exception & e){
+        LOG(ERROR) << "exception in " << nm << " : "  << e.what();
+      }
+    };
 
     VLOG(1) << "add task for nm " << tp.nm;
 

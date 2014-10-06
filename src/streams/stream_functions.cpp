@@ -814,7 +814,11 @@ void push_stream(stream_lib & stream, const Event & event) {
 
   set_thread_ns(stream.file);
 
-  ::push_event(*stream.stream, event);
+  try {
+    ::push_event(*stream.stream, event);
+  } catch(const std::exception & e){
+    LOG(ERROR) << "exception in " << stream.file << " : "  << e.what();
+  }
 
   set_thread_global_ns();
 
