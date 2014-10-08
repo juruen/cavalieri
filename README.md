@@ -259,7 +259,7 @@ a single one.
 
 #### service_like (const std::string pattern)
 
-It forards events which services match the given pattern.
+It forwards events whose services match the given pattern.
 
 ```cpp
 service_like("foo%") >> prn("service starting with foo");
@@ -267,17 +267,17 @@ service_like("foo%") >> prn("service starting with foo");
 
 #### service_like_any (const std::vector&lt;std::string> patterns)
 
-It forwards events which services match any of the given pattern. This
+It forwards events whose services match any of the given pattern. This
 behaves just like *service_like* but it takes a list of patterns instead of
 a single one.
 
 #### state (const std::string state)
 
-It forwards events which state is set to *state*.
+It forwards events whose state is set to *state*.
 
 #### state_any (const std::vector&lt;std::string> states)
 
-It forwards events which state is any of *states*.
+It forwards events whose state is any of *states*.
 
 #### has_attribute (const std::string attribute)
 
@@ -336,7 +336,7 @@ If TTL is not set, it sets the events TTL to *tll* and forwards them.
 
 #### WITH(EXP)
 
-Use this macro as a way to create a stream that modify any of the event's
+Use this macro as a way to create a stream that modifies any of the event's
 fields.
 
 It defines *e* as an event within its scope. You can call mutable functions on
