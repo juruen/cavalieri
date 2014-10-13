@@ -106,7 +106,7 @@ SET(RULETESTER_SRCS
     ${CMAKE_SOURCE_DIR}/src/external/mock_external.cpp
   )
 
-ADD_DEFINITIONS( -Wall -std=c++11 -g )
+ADD_DEFINITIONS( -Wall -Wextra -std=c++11 -g )
 
 INCLUDE(FindProtobuf)
 
