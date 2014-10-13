@@ -35,7 +35,7 @@ TEST(index_test_case, test)
   index.add_event(e);
 
   auto all_events = index.query_index([=](const Event&) { return true; }, 10);
-  ASSERT_EQ(1, all_events.size());
+  ASSERT_EQ(1u, all_events.size());
   ASSERT_EQ("foo", all_events[0].host());
   ASSERT_EQ("bar", all_events[0].service());
 
@@ -47,12 +47,12 @@ TEST(index_test_case, test)
   e.set_ttl(120);
   index.add_event(e);
 
-  ASSERT_EQ(1, vec.size());
+  ASSERT_EQ(1u, vec.size());
   ASSERT_EQ("baz", vec[0].host());
   ASSERT_EQ("bar", vec[0].service());
 
   g_core->sched().set_time(180);
-  ASSERT_EQ(1, s.size());
+  ASSERT_EQ(1u, s.size());
   ASSERT_EQ("foo", s[0].host());
   ASSERT_EQ("bar", s[0].service());
   ASSERT_EQ("expired", s[0].state());

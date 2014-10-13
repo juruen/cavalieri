@@ -47,53 +47,53 @@ TEST(streams_test_case, test)
   Event e;
 
   push_event(sink(v), e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   v.clear();
 
   push_event(a >> sink(v), e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("a", v[0].host());
   v.clear();
 
   push_event(a >> b >> sink(v), e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("ab", v[0].host());
   v.clear();
 
   push_event(a >> b >> c >> sink(v), e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("abc", v[0].host());
   v.clear();
 
   push_event(a >> b >> c >> d >> sink(v), e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
   auto s = a >>  b >> c >> d >> svec({sink(v), f, g});
   init_streams(s);
   push_event(s, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
   s = a >>  b >> c >> d >> svec({f, sink(v),  g});
   init_streams(s);
   push_event(s, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
   s = a >>  b >> c >> d >> svec({f, g, sink(v)});
   init_streams(s);
   push_event(s, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("abcd", v[0].host());
   v.clear();
 
   auto streams = a >> b >> sink(v);
   push_event(c >> streams, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("cab", v[0].host());
   v.clear();
 
@@ -115,7 +115,7 @@ TEST(with_streams_test_case, test)
 
   push_event(with_stream >> sink(v), e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   EXPECT_EQ("host", v[0].host());
   EXPECT_EQ("service", v[0].service());
   EXPECT_EQ("description", v[0].description());
@@ -126,7 +126,7 @@ TEST(with_streams_test_case, test)
   v.clear();
 
   push_event(WITH(e.set_metric(1.0)) >> sink(v), e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   EXPECT_EQ(1.0, v[0].metric_d());
   ASSERT_FALSE(v[0].has_metric_sint64());
   ASSERT_FALSE(v[0].has_metric_f());
@@ -134,7 +134,7 @@ TEST(with_streams_test_case, test)
 
   v.clear();
   push_event(WITH(e.set_attr("attribute", "foo")) >> sink(v), e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   EXPECT_EQ(1, v[0].riemann_event().attributes_size());
   EXPECT_EQ("attribute", v[0].riemann_event().attributes(0).key());
   EXPECT_EQ("foo", v[0].riemann_event().attributes(0).value());
@@ -150,7 +150,7 @@ TEST(default_to_streams_test_case, test)
   e.set_host("localhost");
   push_event(default_stream >> sink(v), e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   EXPECT_EQ("localhost", v[0].host());
   EXPECT_EQ("service", v[0].service());
 
@@ -163,7 +163,7 @@ TEST(default_to_streams_test_case, test)
   default_stream = default_metric(1.0);
   push_event(default_stream >> sink(v), e);
   ASSERT_TRUE(v[0].has_metric_d());
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   EXPECT_EQ(1.0, v[0].metric_d());
   ASSERT_FALSE(v[0].has_metric_sint64());
   ASSERT_FALSE(v[0].has_metric_f());
@@ -173,7 +173,7 @@ TEST(default_to_streams_test_case, test)
   default_stream = default_metric(2.0);
   e.set_metric_d(1.0);
   push_event(default_stream >> sink(v), e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   EXPECT_EQ(1.0, v[0].metric_d());
   ASSERT_FALSE(v[0].has_metric_sint64());
   ASSERT_FALSE(v[0].has_metric_f());
@@ -182,7 +182,7 @@ TEST(default_to_streams_test_case, test)
 
   e.set_metric_d(1.0);
   push_event(default_stream >> sink(v), e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   EXPECT_EQ(1.0, v[0].metric_d());
   ASSERT_FALSE(v[0].has_metric_sint64());
   ASSERT_FALSE(v[0].has_metric_f());
@@ -200,34 +200,34 @@ TEST(split_streams_test_case, test)
 
   Event e;
   push_event(split(clauses), e);
-  ASSERT_EQ(0, v1.size());
-  ASSERT_EQ(0, v2.size());
+  ASSERT_EQ(0u, v1.size());
+  ASSERT_EQ(0u, v2.size());
 
   e.set_host("host2");
   push_event(split(clauses), e);
-  ASSERT_EQ(0, v1.size());
-  ASSERT_EQ(0, v2.size());
+  ASSERT_EQ(0u, v1.size());
+  ASSERT_EQ(0u, v2.size());
 
   e.set_host("host1");
   push_event(split(clauses), e);
-  ASSERT_EQ(1, v1.size());
-  ASSERT_EQ(0, v2.size());
+  ASSERT_EQ(1u, v1.size());
+  ASSERT_EQ(0u, v2.size());
 
   v1.clear();
 
   e.set_host("host1");
   e.set_metric_d(3.4);
   push_event(split(clauses), e);
-  ASSERT_EQ(1, v1.size());
-  ASSERT_EQ(0, v2.size());
+  ASSERT_EQ(1u, v1.size());
+  ASSERT_EQ(0u, v2.size());
 
   v1.clear();
 
   e.set_host("host2");
   e.set_metric_d(3.4);
   push_event(split(clauses), e);
-  ASSERT_EQ(0, v1.size());
-  ASSERT_EQ(1, v2.size());
+  ASSERT_EQ(0u, v1.size());
+  ASSERT_EQ(1u, v2.size());
 
   v2.clear();
 
@@ -235,9 +235,9 @@ TEST(split_streams_test_case, test)
   e.set_metric_d(1.0);
 
   push_event(split(clauses, sink(v3)), e);
-  ASSERT_EQ(0, v1.size());
-  ASSERT_EQ(0, v2.size());
-  ASSERT_EQ(1, v3.size());
+  ASSERT_EQ(0u, v1.size());
+  ASSERT_EQ(0u, v2.size());
+  ASSERT_EQ(1u, v3.size());
 
   v3.clear();
 
@@ -249,9 +249,9 @@ TEST(split_streams_test_case, test)
 
   e.set_host("host1");
   push_event(split(clauses_stream), e);
-  ASSERT_EQ(0, v1.size());
-  ASSERT_EQ(0, v2.size());
-  ASSERT_EQ(1, v3.size());
+  ASSERT_EQ(0u, v1.size());
+  ASSERT_EQ(0u, v2.size());
+  ASSERT_EQ(1u, v3.size());
 }
 
 TEST(where_xstream_test_case, test)
@@ -262,17 +262,17 @@ TEST(where_xstream_test_case, test)
   predicate_t predicate = PRED(e.host() == "foo");
 
   push_event(where(predicate) >> sink(v1), e);
-  ASSERT_EQ(0, v1.size());
+  ASSERT_EQ(0u, v1.size());
 
 
   e.set_host("foo");
   push_event(where(predicate) >> sink(v1), e);
-  ASSERT_EQ(1, v1.size());
+  ASSERT_EQ(1u, v1.size());
 
   e.set_host("bar");
   push_event(where(predicate, sink(v2)) >> sink(v1), e);
-  ASSERT_EQ(1, v1.size());
-  ASSERT_EQ(1, v2.size());
+  ASSERT_EQ(1u, v1.size());
+  ASSERT_EQ(1u, v2.size());
 }
 
 TEST(by_streams_test_case, test)
@@ -304,19 +304,19 @@ TEST(by_streams_test_case, test)
   push_event(by_stream, e2);
   push_event(by_stream, e3);
 
-  ASSERT_EQ(3, v.size());
-  ASSERT_EQ(1, v[0].size());
-  ASSERT_EQ(1, v[1].size());
-  ASSERT_EQ(1, v[2].size());
+  ASSERT_EQ(3u, v.size());
+  ASSERT_EQ(1u, v[0].size());
+  ASSERT_EQ(1u, v[1].size());
+  ASSERT_EQ(1u, v[2].size());
 
   push_event(by_stream, e1);
   push_event(by_stream, e2);
   push_event(by_stream, e3);
 
-  ASSERT_EQ(3, v.size());
-  ASSERT_EQ(2, v[0].size());
-  ASSERT_EQ(2, v[1].size());
-  ASSERT_EQ(2, v[2].size());
+  ASSERT_EQ(3u, v.size());
+  ASSERT_EQ(2u, v[0].size());
+  ASSERT_EQ(2u, v[1].size());
+  ASSERT_EQ(2u, v[2].size());
 }
 
 TEST(by_fwd_streams_test_case, test)
@@ -348,19 +348,19 @@ TEST(by_fwd_streams_test_case, test)
   push_event(by_stream, e2);
   push_event(by_stream, e3);
 
-  ASSERT_EQ(4, v.size());
-  ASSERT_EQ(1, v[1].size());
-  ASSERT_EQ(1, v[2].size());
-  ASSERT_EQ(1, v[3].size());
+  ASSERT_EQ(4u, v.size());
+  ASSERT_EQ(1u, v[1].size());
+  ASSERT_EQ(1u, v[2].size());
+  ASSERT_EQ(1u, v[3].size());
 
   push_event(by_stream, e1);
   push_event(by_stream, e2);
   push_event(by_stream, e3);
 
-  ASSERT_EQ(4, v.size());
-  ASSERT_EQ(2, v[1].size());
-  ASSERT_EQ(2, v[2].size());
-  ASSERT_EQ(2, v[3].size());
+  ASSERT_EQ(4u, v.size());
+  ASSERT_EQ(2u, v[1].size());
+  ASSERT_EQ(2u, v[2].size());
+  ASSERT_EQ(2u, v[3].size());
 }
 
 
@@ -382,7 +382,7 @@ TEST(changed_state_streams_test_case, test)
     push_event(changed_stream, e);
   }
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   ASSERT_EQ("b", v[0].state());
   ASSERT_EQ("a", v[1].state());
   ASSERT_EQ("b", v[2].state());
@@ -391,7 +391,7 @@ TEST(changed_state_streams_test_case, test)
   e.set_service("baz");
   push_event(changed_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("b", v[0].state());
 
 }
@@ -405,20 +405,20 @@ TEST(tagged_any_test_case, test)
   Event e;
 
   push_event(tag_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.add_tag("baz");
 
   push_event(tag_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.add_tag("foo");
   push_event(tag_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
 
  e.add_tag("bar");
   push_event(tag_stream, e);
-  ASSERT_EQ(2, v.size());
+  ASSERT_EQ(2u, v.size());
 }
 
 TEST(tagged_all_streams_test_case, test)
@@ -430,19 +430,19 @@ TEST(tagged_all_streams_test_case, test)
   Event e;
 
   push_event(tag_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.add_tag("baz");
   push_event(tag_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.add_tag("foo");
   push_event(tag_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.add_tag("bar");
   push_event(tag_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
 }
 
 TEST(tagged_streams_test_case, test)
@@ -454,15 +454,15 @@ TEST(tagged_streams_test_case, test)
   Event e;
 
   push_event(tag_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.add_tag("baz");
   push_event(tag_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.add_tag("foo");
   push_event(tag_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
 }
 
 
@@ -477,7 +477,7 @@ TEST(smap_streams_test_case, test)
   e.set_host("bar");
 
   push_event(smap_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("foo", v[0].host());
 }
 
@@ -501,7 +501,7 @@ TEST(stable_streams_test_case, test)
   push_event(stable_stream, e);
 
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
   v.clear();
 
   e.set_metric_sint64(4);
@@ -509,7 +509,7 @@ TEST(stable_streams_test_case, test)
   e.set_time(4);
   push_event(stable_stream, e);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   ASSERT_EQ(0, v[0].metric_sint64());
   ASSERT_EQ(1, v[1].metric_sint64());
   ASSERT_EQ(4, v[2].metric_sint64());
@@ -519,25 +519,25 @@ TEST(stable_streams_test_case, test)
   e.set_state("info");
   e.set_time(5);
   push_event(stable_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_metric_sint64(6);
   e.set_state("critical");
   e.set_time(6);
   push_event(stable_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_metric_sint64(7);
   e.set_state("critical");
   e.set_time(7);
   push_event(stable_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_metric_sint64(9);
   e.set_state("critical");
   e.set_time(9);
   push_event(stable_stream, e);
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   ASSERT_EQ(6, v[0].metric_sint64());
   ASSERT_EQ(7, v[1].metric_sint64());
   ASSERT_EQ(9, v[2].metric_sint64());
@@ -560,18 +560,18 @@ TEST(throttle_streams_test_case, test)
   for (auto i = 0; i < 3; i++) {
     e.set_time(1);
     push_event(throttle_stream, e);
-    ASSERT_EQ(1, v.size());
+    ASSERT_EQ(1u, v.size());
     v.clear();
   }
 
   e.set_time(1);
   push_event(throttle_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   for (auto i = 0; i < 3; i++) {
     e.set_time(7);
     push_event(throttle_stream, e);
-    ASSERT_EQ(1, v.size());
+    ASSERT_EQ(1u, v.size());
     v.clear();
   }
 }
@@ -594,11 +594,11 @@ TEST(percentiles_streams_test_case, test)
     push_event(percentiles_stream, e);
   }
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   g_core->sched().set_time(2);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
 
   ASSERT_EQ(0, v[0].metric_d());
   ASSERT_EQ(500, v[1].metric_d());
@@ -608,7 +608,7 @@ TEST(percentiles_streams_test_case, test)
 
   g_core->sched().set_time(4);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
 
   ASSERT_EQ(0, v[0].metric_d());
   ASSERT_EQ(0, v[1].metric_d());
@@ -628,11 +628,11 @@ TEST(above_streams_test_case, test)
 
   e.set_metric_d(2);
   push_event(above_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_metric_d(7);
   push_event(above_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
 }
 
 TEST(under_streams_test_case, test)
@@ -645,11 +645,11 @@ TEST(under_streams_test_case, test)
 
   e.set_metric_d(7);
   push_event(under_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_metric_d(2);
   push_event(under_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
 }
 
 TEST(within_streams_test_case, test)
@@ -664,11 +664,11 @@ TEST(within_streams_test_case, test)
   push_event(within_stream, e);
   e.set_metric_d(9);
   push_event(within_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_metric_d(6);
   push_event(within_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
 }
 
 TEST(without_streams_test_case, test)
@@ -681,13 +681,13 @@ TEST(without_streams_test_case, test)
 
   e.set_metric_d(6);
   push_event(without_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_metric_d(2);
   push_event(without_stream, e);
   e.set_metric_d(9);
   push_event(without_stream, e);
-  ASSERT_EQ(2, v.size());
+  ASSERT_EQ(2u, v.size());
 }
 
 TEST(scale_streams_test_case, test)
@@ -700,7 +700,7 @@ TEST(scale_streams_test_case, test)
 
   e.set_metric_d(6);
   push_event(scale_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ(12, v[0].metric());
 }
 
@@ -715,17 +715,17 @@ TEST(counter_streams_test_case, test)
 
   e.set_metric_d(1);
   push_event(counter_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ(1, v[0].metric());
   v.clear();
 
   push_event(counter_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ(2, v[0].metric());
   v.clear();
 
   push_event(counter_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ(3, v[0].metric());
   v.clear();
 }
@@ -738,7 +738,7 @@ TEST(tag_streams_test_case, test)
 
   Event e;
   push_event(tag_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_TRUE(predicates::tagged_all(v[0], {"foo", "bar"}));
 }
 
@@ -753,26 +753,26 @@ TEST(expired_streams_test_case, test)
   e.set_time(0);
 
   push_event(expired_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_state("critical");
   push_event(expired_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_state("expired");
   push_event(expired_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   v.clear();
 
   e.set_time(5);
   e.clear_state();
   push_event(expired_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
   v.clear();
 
   g_core->sched().set_time(100);
   push_event(expired_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
 }
 
 TEST(rate_streams_test_case, test)
@@ -787,7 +787,7 @@ TEST(rate_streams_test_case, test)
 
   // Check that we send a 0-valued metric if no event is received
   g_core->sched().set_time(5);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ(0, v[0].metric_d());
 
 
@@ -800,8 +800,8 @@ TEST(rate_streams_test_case, test)
   push_event(rate_stream, e2);
   push_event(rate_stream, e3);
   g_core->sched().set_time(10);
-  ASSERT_EQ(2, v.size());
-  ASSERT_EQ(12, v[1].metric_d());
+  ASSERT_EQ(2u, v.size());
+  ASSERT_EQ(12u, v[1].metric_d());
 
   e1.clear_metric_d();
   e2.clear_metric_d();
@@ -815,7 +815,7 @@ TEST(rate_streams_test_case, test)
   push_event(rate_stream, e2);
   push_event(rate_stream, e3);
   g_core->sched().set_time(15);
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   ASSERT_EQ(12, v[1].metric_d());
 
   g_core->sched().clear();
@@ -849,7 +849,7 @@ TEST(coalesce_streams_test_case, test)
   e.set_time(1);
   push_event(coalesce_stream, e);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   v.clear();
 
   e.set_host("b");
@@ -857,7 +857,7 @@ TEST(coalesce_streams_test_case, test)
   e.set_time(2);
   push_event(coalesce_stream, e);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   bool ok = false;
   for (const auto & p: v) {
     if (p.host() == "b" && p.time() == 2) {
@@ -873,14 +873,14 @@ TEST(coalesce_streams_test_case, test)
   e.set_service("b");
   e.set_time(90);
   push_event(coalesce_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   v.clear();
 
   e.set_host("b");
   e.set_service("b");
   e.set_time(91);
   push_event(coalesce_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
 }
 
 TEST(project_streams_test_case, test)
@@ -915,7 +915,7 @@ TEST(project_streams_test_case, test)
   e.set_time(1);
   push_event(project_stream, e);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   v.clear();
 
   e.set_host("b");
@@ -923,7 +923,7 @@ TEST(project_streams_test_case, test)
   e.set_time(2);
   push_event(project_stream, e);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   bool ok = false;
   for (const auto & p: v) {
     if (p.host() == "b" && p.time() == 2) {
@@ -939,14 +939,14 @@ TEST(project_streams_test_case, test)
   e.set_service("b");
   e.set_time(90);
   push_event(project_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   v.clear();
 
   e.set_host("b");
   e.set_service("b");
   e.set_time(91);
   push_event(project_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
 }
 
 TEST(moving_event_window_streams_test_case, test)
@@ -960,22 +960,22 @@ TEST(moving_event_window_streams_test_case, test)
 
   e.set_metric_sint64(0);
   push_event(moving_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   v.clear();
 
   e.set_metric_sint64(1);
   push_event(moving_stream, e);
-  ASSERT_EQ(2, v.size());
+  ASSERT_EQ(2u, v.size());
   v.clear();
 
   e.set_metric_sint64(2);
   push_event(moving_stream, e);
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   v.clear();
 
   e.set_metric_sint64(3);
   push_event(moving_stream, e);
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   ASSERT_EQ(1, v[0].metric_sint64());
   ASSERT_EQ(2, v[1].metric_sint64());
   ASSERT_EQ(3, v[2].metric_sint64());
@@ -997,12 +997,12 @@ TEST(fixed_event_window_streams_test_case, test)
   e.set_metric_sint64(1);
   push_event(moving_stream, e);
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_metric_sint64(2);
   push_event(moving_stream, e);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   ASSERT_EQ(0, v[0].metric_sint64());
   ASSERT_EQ(1, v[1].metric_sint64());
   ASSERT_EQ(2, v[2].metric_sint64());
@@ -1013,11 +1013,11 @@ TEST(fixed_event_window_streams_test_case, test)
   push_event(moving_stream, e);
   e.set_metric_sint64(4);
   push_event(moving_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_metric_sint64(5);
   push_event(moving_stream, e);
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   ASSERT_EQ(3, v[0].metric_sint64());
   ASSERT_EQ(4, v[1].metric_sint64());
   ASSERT_EQ(5, v[2].metric_sint64());
@@ -1033,12 +1033,12 @@ TEST(moving_time_window_streams_test_case, test)
   Event e;
 
   // Push 3 events
-  for (auto i = 0; i < 3; i++) {
+  for (unsigned int i = 0; i < 3; i++) {
     e.set_metric_sint64(i);
     e.set_time(i);
     push_event(moving_stream, e);
 
-    ASSERT_EQ(i + 1, v.size());
+    ASSERT_EQ(i + 1u, v.size());
     v.clear();
   }
 
@@ -1046,7 +1046,7 @@ TEST(moving_time_window_streams_test_case, test)
   e.set_time(3);
   push_event(moving_stream, e);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   ASSERT_EQ(1, v[0].metric_sint64());
   ASSERT_EQ(2, v[1].metric_sint64());
   ASSERT_EQ(3, v[2].metric_sint64());
@@ -1056,19 +1056,19 @@ TEST(moving_time_window_streams_test_case, test)
   e.set_metric_sint64(5);
   e.set_time(5);
   push_event(moving_stream, e);
-  ASSERT_EQ(2, v.size());
+  ASSERT_EQ(2u, v.size());
   v.clear();
 
   e.set_metric_sint64(4);
   e.set_time(4);
   push_event(moving_stream, e);
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   v.clear();
 
   e.set_metric_sint64(10);
   e.set_time(10);
   push_event(moving_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   v.clear();
 
 }
@@ -1088,7 +1088,7 @@ TEST(fixed_time_window_streams_test_case, test)
     e.set_time(i);
     push_event(moving_stream, e);
 
-    ASSERT_EQ(0, v.size());
+    ASSERT_EQ(0u, v.size());
     v.clear();
   }
 
@@ -1096,7 +1096,7 @@ TEST(fixed_time_window_streams_test_case, test)
   e.set_time(3);
   push_event(moving_stream, e);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   ASSERT_EQ(0, v[0].metric_sint64());
   ASSERT_EQ(1, v[1].metric_sint64());
   ASSERT_EQ(2, v[2].metric_sint64());
@@ -1106,21 +1106,21 @@ TEST(fixed_time_window_streams_test_case, test)
   e.set_time(4);
   push_event(moving_stream, e);
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
   v.clear();
 
   e.set_metric_sint64(5);
   e.set_time(5);
   push_event(moving_stream, e);
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
   v.clear();
 
   e.set_metric_sint64(6);
   e.set_time(6);
   push_event(moving_stream, e);
 
-  ASSERT_EQ(3, v.size());
+  ASSERT_EQ(3u, v.size());
   ASSERT_EQ(3, v[0].metric_sint64());
   ASSERT_EQ(4, v[1].metric_sint64());
   ASSERT_EQ(5, v[2].metric_sint64());
@@ -1129,7 +1129,7 @@ TEST(fixed_time_window_streams_test_case, test)
   e.set_metric_sint64(10);
   e.set_time(10);
   push_event(moving_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ(6, v[0].metric_sint64());
   v.clear();
 
@@ -1137,14 +1137,14 @@ TEST(fixed_time_window_streams_test_case, test)
   e.set_metric_sint64(14);
   e.set_time(14);
   push_event(moving_stream, e);
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ(10, v[0].metric_sint64());
   v.clear();
 
   e.set_metric_sint64(1);
   e.set_time(1);
   push_event(moving_stream, e);
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
   v.clear();
 }
 
@@ -1158,12 +1158,12 @@ TEST(service_streams_test_case, test)
 
   push_event(service_stream, e);
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_service("foo");
   push_event(service_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("foo", v[0].service());
 }
 
@@ -1178,19 +1178,19 @@ TEST(service_any_streams_test_case, test)
   e.set_service("baz");
   push_event(service_stream, e);
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_service("foo");
   push_event(service_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("foo", v[0].service());
   v.clear();
 
   e.set_service("bar");
   push_event(service_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("bar", v[0].service());
   v.clear();
 
@@ -1206,12 +1206,12 @@ TEST(service_like_streams_test_case, test)
 
   push_event(service_stream, e);
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_service("foobar");
   push_event(service_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("foobar", v[0].service());
 }
 
@@ -1226,19 +1226,19 @@ TEST(service_like_any_streams_test_case, test)
   e.set_service("baz");
   push_event(service_stream, e);
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_service("foobar");
   push_event(service_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("foobar", v[0].service());
   v.clear();
 
   e.set_service("bart");
   push_event(service_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("bart", v[0].service());
   v.clear();
 
@@ -1254,7 +1254,7 @@ TEST(set_state_streams_test_case, test)
 
   push_event(set_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("ok", v[0].state());
 }
 
@@ -1268,7 +1268,7 @@ TEST(set_metric_streams_test_case, test)
 
   push_event(set_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ(1, v[0].metric());
 }
 
@@ -1282,12 +1282,12 @@ TEST(state_streams_test_case, test)
 
   push_event(state_stream, e);
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_state("foo");
   push_event(state_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ("foo", v[0].state());
 }
 
@@ -1305,14 +1305,14 @@ TEST(ddt_streams_test_case, test)
 
   push_event(ddt_stream, e);
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
   e.set_metric_sint64(5);
   e.set_time(1);
 
   push_event(ddt_stream, e);
 
-  ASSERT_EQ(0, v.size());
+  ASSERT_EQ(0u, v.size());
 
 
   e.set_metric_sint64(9);
@@ -1320,7 +1320,7 @@ TEST(ddt_streams_test_case, test)
 
   push_event(ddt_stream, e);
 
-  ASSERT_EQ(1, v.size());
+  ASSERT_EQ(1u, v.size());
   ASSERT_EQ(2, v[0].metric_d());
 
 }
