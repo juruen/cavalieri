@@ -11,8 +11,6 @@
 
 namespace {
 
-const float  k_ws_interval = 5;
-
 std::function<bool(const Event&)> filter_query(const std::string uri) {
 
   std::string index;

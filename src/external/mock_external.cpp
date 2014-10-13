@@ -14,14 +14,12 @@ void add_call(std::vector<external_event_t> & calls,
 
 }
 
-void mock_external::forward(const std::string server, const int port,
-                            const Event e)
+void mock_external::forward(const std::string server, const int, const Event e)
 {
   add_call(calls_, "forward", "forward event to " + server, "", e);
 }
 
-void mock_external::graphite(const std::string server, const int port,
-                             const Event e)
+void mock_external::graphite(const std::string server, const int, const Event e)
 {
   add_call(calls_, "graphite", "send event to " + server, "", e);
 }
@@ -45,7 +43,7 @@ void mock_external::pager_duty_acknowledge(const std::string pg_key,
            "", e);
 }
 
-void mock_external::email(const std::string server, const std::string from,
+void mock_external::email(const std::string, const std::string from,
                           const std::vector<std::string>, const Event e)
 {
   add_call(calls_, "email", "send email from " + from + " to ", "", e);
