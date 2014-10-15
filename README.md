@@ -14,6 +14,21 @@ mimic its stream API where possible.
 
 Cavalieri's current version *0.1.1* is considered to be  in **beta** state.
 
+Background
+----------
+
+We use Riemann at my $DAILY_WORK. I started this project to have a better
+understanding of how Riemann works internally.
+
+I kept working on it, and it reached a point where it became useful.
+
+It's being tested by running side by side with our Riemann servers and seems
+to be stable -at least with the subset of features that are being used- to
+monitoring thousands of hosts.
+
+Next steps are refactoring and cleaning up before adding more features.
+
+
 Content
 -------
 
