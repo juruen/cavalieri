@@ -12,7 +12,7 @@ It implements the original [riemann.io](http://riemann.io) protocol. That means
 you can leverage the existing *riemann* clients and tools. It also tries to
 mimic its stream API where possible.
 
-Cavalieri's current version *0.1.1* is considered to be  in **beta** state.
+Cavalieri's current version *0.1.2* is considered to be  in **beta** state.
 
 Background
 ----------
@@ -235,6 +235,17 @@ you can test months worth of events in just a few seconds.
 This feature allows you to easily add your alert rules to your
 continous integration process.
 
+Reload rules
+------------
+
+When Cavalieri receives a SIGHUP signal, it will only reload the *.so* rule
+libraries that have changed.
+
+This allows deployments where several teams push rules, to only reload and
+affect the namespaces that have changed.
+
+This is something that Riemann doesn't allow and might be especially useful
+when multiple teams mantain rules.
 
 Sending events
 --------------
