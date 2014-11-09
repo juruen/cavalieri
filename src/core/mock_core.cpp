@@ -14,6 +14,8 @@ void mock_core::start() { }
 
 void mock_core::add_stream(std::shared_ptr<streams_t>) {}
 
+void mock_core::reload_rules() {}
+
 class index_interface & mock_core::idx() {
   return *mock_index_;
 }

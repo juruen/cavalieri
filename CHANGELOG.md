@@ -1,3 +1,10 @@
+0.1.2 2014-09-11
+================
+
+  * Use just one timer to schedule tasks
+  * Add ability to reload individual rule libraries
+  * Add try/catch to streams
+
 0.1.1 2014-09-2014
 ==================
 
@@ -6,6 +13,7 @@
 
 0.1.0 2014-09-23
 ================
+
   * Add Event members to README.md
   * Fix concurrency issue with graphite and riemann client pool
   * Remove libcds depdenency and lock-free streams

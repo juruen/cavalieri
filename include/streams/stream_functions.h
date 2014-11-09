@@ -8,6 +8,7 @@
 #include <boost/variant.hpp>
 #include <common/event.h>
 #include <streams/stream_infra.h>
+#include <streams/lib.h>
 #include <index/index.h>
 #include <instrumentation/instrumentation.h>
 
@@ -166,24 +167,23 @@ streams_t pagerduty_acknowledge(const std::string key);
 
 streams_t pagerduty_trigger(const std::string key);
 
-
 class streams {
 public:
-  streams(instrumentation &);
+  streams(const config &, instrumentation &);
   void add_stream(streams_t stream);
+  void reload_rules();
   void process_message(const riemann::Msg& message);
   void push_event(const Event& e);
   void stop();
 
 private:
+  std::string rules_directory_;
+  std::vector<stream_lib> streams_;
   instrumentation & instrumentation_;
   int rate_id_;
   int latency_id_;
   int in_latency_id_;
-  std::vector<streams_t> streams_;
   bool stop_;
 };
-
-
 
 #endif

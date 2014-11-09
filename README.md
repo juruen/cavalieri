@@ -12,7 +12,22 @@ It implements the original [riemann.io](http://riemann.io) protocol. That means
 you can leverage the existing *riemann* clients and tools. It also tries to
 mimic its stream API where possible.
 
-Cavalieri's current version *0.1.0* is considered to be  in **beta** state.
+Cavalieri's current version *0.1.2* is considered to be  in **beta** state.
+
+Background
+----------
+
+We use Riemann at my $DAILY_WORK. I started this project to have a better
+understanding of how Riemann works internally.
+
+I kept working on it, and it reached a point where it became useful.
+
+It's being tested by running side by side with our Riemann servers and seems
+to be stable -at least with the subset of features that are being used- to
+monitoring thousands of hosts.
+
+Next steps are refactoring and cleaning up before adding more features.
+
 
 Content
 -------
@@ -220,6 +235,17 @@ you can test months worth of events in just a few seconds.
 This feature allows you to easily add your alert rules to your
 continous integration process.
 
+Reload rules
+------------
+
+When Cavalieri receives a SIGHUP signal, it will only reload the *.so* rule
+libraries that have changed.
+
+This allows deployments where several teams push rules, to only reload and
+affect the namespaces that have changed.
+
+This is something that Riemann doesn't allow and might be especially useful
+when multiple teams mantain rules.
 
 Sending events
 --------------
@@ -259,7 +285,7 @@ a single one.
 
 #### service_like (const std::string pattern)
 
-It forards events which services match the given pattern.
+It forwards events whose services match the given pattern.
 
 ```cpp
 service_like("foo%") >> prn("service starting with foo");
@@ -267,17 +293,17 @@ service_like("foo%") >> prn("service starting with foo");
 
 #### service_like_any (const std::vector&lt;std::string> patterns)
 
-It forwards events which services match any of the given pattern. This
+It forwards events whose services match any of the given pattern. This
 behaves just like *service_like* but it takes a list of patterns instead of
 a single one.
 
 #### state (const std::string state)
 
-It forwards events which state is set to *state*.
+It forwards events whose state is set to *state*.
 
 #### state_any (const std::vector&lt;std::string> states)
 
-It forwards events which state is any of *states*.
+It forwards events whose state is any of *states*.
 
 #### has_attribute (const std::string attribute)
 
@@ -336,7 +362,7 @@ If TTL is not set, it sets the events TTL to *tll* and forwards them.
 
 #### WITH(EXP)
 
-Use this macro as a way to create a stream that modify any of the event's
+Use this macro as a way to create a stream that modifies any of the event's
 fields.
 
 It defines *e* as an event within its scope. You can call mutable functions on

@@ -23,6 +23,10 @@ remove_task_future_t mock_scheduler::add_once_task(task_fn_t task, float dt) {
   return {};
 }
 
+remove_ns_tasks_future_t mock_scheduler::remove_ns_tasks(const std::string) {
+  return {};
+}
+
 time_t mock_scheduler::unix_time() {
   return unix_time_;
 }

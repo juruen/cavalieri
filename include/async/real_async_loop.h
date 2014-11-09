@@ -53,26 +53,42 @@ public:
   void remove_fd(const int fd);
   void set_fd_mode(const int fd, const async_fd::mode mode);
   ev::dynamic_loop & loop();
-  timer_id_t add_once_task(const timer_cb_fn_t, const float t);
-  timer_id_t add_periodic_task(const timer_cb_fn_t, const float t);
+  timer_id_t add_once_task(
+      const std::string lib_namespace, const timer_cb_fn_t, const float t);
+  timer_id_t add_periodic_task(
+      const std::string lib_namespace, const timer_cb_fn_t, const float t);
   void set_task_interval(const timer_id_t, const float t);
   bool remove_task(const timer_id_t);
+  void remove_task_lib_namespace(const std::string lib_namespace);
 
 private:
-  using timer_ctx_t =  struct {
-    const std::shared_ptr<ev::timer> timer;
-    const std::shared_ptr<task_cb_fn_t> task;
-    real_async_loop & async_loop;
-    const timer_id_t id;
-    const bool once;
+  using sched_task_t =  struct {
+    std::string lib_namespace;
+    task_cb_fn_t task;
+    timer_id_t id;
+    unsigned long interval_ms;
+    unsigned long time_ms;
   };
-  using timers_t = std::map<uint64_t, std::shared_ptr<timer_ctx_t>>;
+
+  class sched_task_cmp
+  {
+    public:
+      bool operator() (const sched_task_t & lhs, const sched_task_t& rhs) const
+      {
+        return (lhs.time_ms > rhs.time_ms);
+      }
+  };
+
+
   using fd_ctx_t = std::map<int, std::shared_ptr<real_async_fd>>;
 
 private:
   void async_callback(ev::async &, int);
-  static void timer_callback(ev::timer &, int);
-  timer_id_t add_timer(const timer_cb_fn_t, bool, float);
+  void timer_callback(ev::timer &, int);
+  timer_id_t add_task(
+      const std::string, const timer_cb_fn_t, bool, float);
+  void sched_next_task();
+  bool remove_task(const std::function<bool(const sched_task_t &)> &);
 
 private:
   bool stop_;
@@ -80,8 +96,11 @@ private:
   async_cb_fn_t async_cb_fn_;
   ev::dynamic_loop loop_;
   ev::async async_;
+  ev::timer timer_;
   fd_ctx_t fds_;
-  timers_t timers_;
+  std::priority_queue<sched_task_t,
+                      std::vector<sched_task_t>,
+                      sched_task_cmp> tasks_;
   uint64_t next_timer_id_;
 };
 
@@ -138,6 +157,7 @@ private:
   ev::default_loop default_loop_;
   ev::sig sigint_;
   ev::sig sigterm_;
+  ev::sig sighup_;
   ev::async async_;
   std::vector<std::shared_ptr<listen_io>> listen_ios_;
   std::vector<std::shared_ptr<timer_io>> timer_ios_;

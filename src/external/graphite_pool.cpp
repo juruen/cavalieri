@@ -9,7 +9,6 @@ using namespace std::placeholders;
 
 namespace {
 
-const size_t k_buffer_size = 2048;
 const size_t k_batch_size = 100;
 
 std::string escape(const std::string str) {

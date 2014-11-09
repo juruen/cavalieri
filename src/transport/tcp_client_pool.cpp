@@ -7,6 +7,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <util/util.h>
+#include <streams/lib.h>
 #include <transport/tcp_connection.h>
 #include <transport/tcp_client_pool.h>
 
@@ -138,10 +139,12 @@ tcp_client_pool::tcp_client_pool(size_t thread_num, const std::string host,
     thread_event_queues_.push_back(queue);
 
     tcp_pool_.loop(i).add_periodic_task(
+        k_global_ns,
         std::bind(&tcp_client_pool::connect_clients, this, _1),
         k_reconnect_interval_secs);
 
     tcp_pool_.loop(i).add_periodic_task(
+        k_global_ns,
         std::bind(&tcp_client_pool::signal_batch_flush, this, _1),
         k_reconnect_interval_secs);
 
@@ -316,12 +319,16 @@ void tcp_client_pool::async(async_loop & loop) {
 
 void tcp_client_pool::signal_batch_flush(const size_t loop_id) {
 
+  VLOG(3) << "signal_batch_flush";
+
   flush_batch_[loop_id] = 1;
   tcp_pool_.signal_thread(loop_id);
 
 }
 
 void tcp_client_pool::connect_clients(const size_t loop_id) {
+
+  VLOG(3) << "connect_clients";
 
   if (!fd_event_queues_[loop_id].empty()) {
     return;
