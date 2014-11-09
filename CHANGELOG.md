@@ -1,5 +1,5 @@
-0.1.2 TBD
-=========
+0.1.2 2014-09-11
+================
 
   * Use just one timer to schedule tasks
   * Add ability to reload individual rule libraries
