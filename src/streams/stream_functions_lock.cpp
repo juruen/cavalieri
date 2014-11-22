@@ -601,9 +601,10 @@ void push_percentiles_(percentiles_data_t & percentiles, forward_fn_t forward) {
     return;
   }
 
-  forward(instrumentation::reservoir_to_events(percentiles.reserv,
-                                               percentiles.percentiles,
-                                               percentiles.event));
+  forward(instrumentation::instrumentation::reservoir_to_events(
+           percentiles.reserv,
+           percentiles.percentiles,
+           percentiles.event));
 }
 
 void update_percentiles_(e_t e, percentiles_data_t &  percentiles) {

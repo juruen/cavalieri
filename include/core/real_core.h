@@ -30,7 +30,7 @@ public:
 private:
   config config_;
 
-  instrumentation instrumentation_;
+  instrumentation::instrumentation instrumentation_;
 
   executor_thread_pool executor_pool_;
 

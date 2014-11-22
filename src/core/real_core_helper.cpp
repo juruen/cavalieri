@@ -45,7 +45,7 @@ std::unique_ptr<riemann_tcp_pool> init_tcp_server(
     main_async_loop_interface & loop,
     streams & streams,
     executor_thread_pool & executor_pool,
-    instrumentation & instr
+    instrumentation::instrumentation & instr
     )
 {
 
@@ -101,7 +101,7 @@ std::unique_ptr<websocket_pool> init_ws_server(
   return ws_server;
 }
 
-void snapshot(instrumentation & inst, streams & streams) {
+void snapshot(instrumentation::instrumentation & inst, streams & streams) {
 
   for (const auto & event : inst.snapshot()) {
     streams.push_event(event);
@@ -111,7 +111,7 @@ void snapshot(instrumentation & inst, streams & streams) {
 
 
 void start_instrumentation(scheduler_interface & sched,
-                           instrumentation & instrumentation,
+                           instrumentation::instrumentation & instrumentation,
                            streams & streams)
 {
   sched.add_periodic_task(

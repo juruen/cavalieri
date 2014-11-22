@@ -11,7 +11,7 @@
 
 class real_external : public external_interface {
 public:
-  real_external(const config, instrumentation & instrumentation);
+  real_external(const config, instrumentation::instrumentation & instrumentation);
   void forward(const std::string server, const int port, const Event event);
   void graphite(const std::string server, const int port, const Event event);
   void pager_duty_trigger(const std::string pg_key, const Event event);
@@ -22,12 +22,11 @@ public:
   void stop();
 
 private:
-  instrumentation & instrumentation_;
   riemann_tcp_client riemann_tcp_client_;
   class graphite graphite_;
   pagerduty_pool pagerduty_;
   mailer_pool email_;
-  std::vector<size_t> rates_;
+  std::vector<instrumentation::update_rate_fn_t> rates_;
 };
 
 #endif

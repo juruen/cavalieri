@@ -41,25 +41,6 @@ time_point_t now() {
 
 }
 
-void update_latency(instrumentation & inst, const int id, time_point_t start)
-{
-
-  inst.update_latency(
-      id,
-      duration_cast<microseconds>(now() - start).count() / 1000.0
-  );
-
-}
-
-void update_in_latency(instrumentation & inst, const int id,
-                       const long int start)
-{
-
-  inst.update_latency(id, difftime(time(0), start));
-
-}
-
-
 }
 
 namespace pred = predicates;
@@ -757,23 +738,16 @@ streams_t pagerduty_trigger(const std::string key) {
   );
 }
 
-streams::streams(const config & conf, instrumentation & instrumentation)
+streams::streams(const config & conf, instrumentation::instrumentation & instr)
   : rules_directory_(conf.rules_directory),
     streams_(k_streams),
-    instrumentation_(instrumentation),
+    update_rate_(instr.add_rate(k_rate_service, k_latency_desc)),
+    update_latency_(instr.add_latency(k_latency_service,
+                                      k_latency_desc, k_percentiles)),
+    update_in_latency_(instr.add_latency(k_in_latency_service,
+                                         k_in_latency_desc, k_percentiles)),
     stop_(false)
 {
-
-  rate_id_ = instrumentation_.add_rate(k_rate_service,
-                                       k_latency_desc);
-
-  latency_id_ = instrumentation_.add_latency(k_latency_service,
-                                             k_latency_desc,
-                                             k_percentiles);
-
-  in_latency_id_ = instrumentation_.add_latency(k_in_latency_service,
-                                                k_in_latency_desc,
-                                                k_percentiles);
 
 }
 
@@ -792,7 +766,7 @@ void streams::process_message(const riemann::Msg& message) {
     return;
   }
 
-  instrumentation_.update_rate(rate_id_, message.events_size());
+  update_rate_(message.events_size());
 
   VLOG(3) << "process message. num of streams " << streams_.size();
   VLOG(3) << "process message. num of events " << message.events_size();
@@ -844,13 +818,14 @@ void streams::push_event(const Event& e) {
 
     if (e.has_time()) {
 
-      update_in_latency(instrumentation_, in_latency_id_, e.time());
+      update_in_latency_(difftime(time(0), e.time()));
 
       auto start_time = now();
 
       ::push_stream(s, e);
 
-      update_latency(instrumentation_, latency_id_, start_time);
+      update_latency_(duration_cast<microseconds>(now() - start_time).count()
+                      / 1000.0);
 
     } else {
       Event ne(e);

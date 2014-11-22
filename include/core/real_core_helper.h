@@ -14,7 +14,7 @@ std::unique_ptr<riemann_tcp_pool> init_tcp_server(
     main_async_loop_interface & loop,
     streams & streams,
     executor_thread_pool & executor_pool,
-    instrumentation & instr);
+    instrumentation::instrumentation & instr);
 
 std::unique_ptr<riemann_udp_pool> init_udp_server(
     const config & conf,
@@ -27,7 +27,7 @@ std::unique_ptr<websocket_pool> init_ws_server(
     real_index & index);
 
 void start_instrumentation(scheduler_interface & sched,
-                           instrumentation & instrumentation,
+                           instrumentation::instrumentation & instrumentation,
                            streams & streams);
 
 #endif

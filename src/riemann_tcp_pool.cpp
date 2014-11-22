@@ -30,15 +30,14 @@ const std::string k_tcp_desc = "number of tcp connections";
 }
 
 riemann_tcp_pool::riemann_tcp_pool(size_t thread_num, raw_msg_fn_t raw_msg_fn,
-                                   instrumentation & instr)
+                                   instrumentation::instrumentation & instr)
 :
   tcp_pool_(thread_num,
             {},
             std::bind(&riemann_tcp_pool::create_conn, this, _1, _2, _3),
             std::bind(&riemann_tcp_pool::data_ready, this, _1, _2)),
   raw_msg_fn_(raw_msg_fn),
-  instrumentation_(instr),
-  gauge_id_(instr.add_gauge(k_tcp_service, k_tcp_desc)),
+  connection_gauge_(instr.add_gauge(k_tcp_service, k_tcp_desc)),
   connections_(thread_num)
 {
   tcp_pool_.start_threads();
@@ -62,7 +61,7 @@ void riemann_tcp_pool::create_conn(int fd, async_loop & loop,
 
   fd_conn.insert({fd, riemann_tcp_connection(conn, raw_msg_fn_)});
 
-  instrumentation_.incr_gauge(gauge_id_, 1);
+  connection_gauge_.incr_fn(1);
 }
 
 void riemann_tcp_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
@@ -80,7 +79,7 @@ void riemann_tcp_pool::data_ready(async_fd & async, tcp_connection & tcp_conn) {
 
   if (tcp_conn.close_connection) {
     fd_conn.erase(it);
-    instrumentation_.decr_gauge(gauge_id_, 1);
+    connection_gauge_.decr_fn(1);
   }
 
 }

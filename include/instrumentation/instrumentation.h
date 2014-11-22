@@ -10,32 +10,45 @@
 #include <instrumentation/gauge.h>
 #include <config/config.h>
 
+namespace instrumentation {
+
+using update_rate_fn_t = std::function<void(const unsigned int)>;
+using update_latency_fn_t = std::function<void(const double)>;
+
+typedef struct {
+    const std::function<void(const unsigned int)> update_fn;
+    const std::function<void(const unsigned int)> incr_fn;
+    const std::function<void(const unsigned int)> decr_fn;
+} update_gauge_t;
+
 class instrumentation {
 public:
 
-  using id_t = unsigned int;
-
   instrumentation(const config conf);
 
-  id_t add_rate(const std::string service, const std::string description);
-  void update_rate(const id_t id,const unsigned int ticks);
+  update_rate_fn_t  add_rate(const std::string service,
+                             const std::string description);
 
-  id_t add_latency(const std::string service, const std::string description,
-                   std::vector<double> percentiles);
-  void update_latency(const unsigned int id, const double value);
+  update_latency_fn_t add_latency(const std::string service,
+                                  const std::string description,
+                                  std::vector<double> percentiles);
 
   static std::vector<Event> reservoir_to_events(reservoir & reservoir,
                                                 std::vector<double> percentiles,
                                                 const Event event_base);
 
-  id_t add_gauge(const std::string service, const std::string description);
-  void update_gauge(const id_t id, unsigned int value);
-  void incr_gauge(const id_t id, unsigned int value);
-  void decr_gauge(const id_t id, unsigned int value);
-
+  update_gauge_t add_gauge(const std::string service,
+                           const std::string description);
   std::vector<Event> snapshot();
 
 private:
+  using id_t = unsigned int;
+
+  void update_rate(const id_t id,const unsigned int ticks);
+  void update_latency(const unsigned int id, const double value);
+  void update_gauge(const id_t id, unsigned int value);
+  void incr_gauge(const id_t id, unsigned int value);
+  void decr_gauge(const id_t id, unsigned int value);
   void set_rates(std::vector<Event> & events, Event event);
   void set_latencies(std::vector<Event> & events, Event event);
   void set_gauges(std::vector<Event> & events, Event event);
@@ -71,5 +84,7 @@ private:
   std::vector<gauge_conf_t> gauges_;
 
 };
+
+}
 
 #endif

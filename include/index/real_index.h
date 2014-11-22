@@ -14,7 +14,7 @@ public:
   real_index(pub_sub & pubsub, push_event_fn_t push_event,
              const int64_t expire_interval,
              scheduler_interface &  sched,
-             instrumentation & instr,
+             instrumentation::instrumentation & instr,
              spwan_thread_fn_t spwan_thread_fn);
   std::vector<Event> query_index(const match_fn_t, const size_t max_matches);
   void add_event(const Event& e);
@@ -29,8 +29,8 @@ private:
 
 private:
   pub_sub & pubsub_;
-  instrumentation & instrumentation_;
-  std::pair<instrumentation::id_t, instrumentation::id_t> instr_ids_;
+  instrumentation::update_gauge_t pre_gauge_;
+  instrumentation::update_gauge_t post_gauge_;
   push_event_fn_t push_event_fn_;
   std::atomic<bool> expiring_;
   spwan_thread_fn_t spwan_thread_fn_;

@@ -169,7 +169,7 @@ streams_t pagerduty_trigger(const std::string key);
 
 class streams {
 public:
-  streams(const config &, instrumentation &);
+  streams(const config &, instrumentation::instrumentation &);
   void add_stream(streams_t stream);
   void reload_rules();
   void process_message(const riemann::Msg& message);
@@ -179,10 +179,9 @@ public:
 private:
   std::string rules_directory_;
   std::vector<stream_lib> streams_;
-  instrumentation & instrumentation_;
-  int rate_id_;
-  int latency_id_;
-  int in_latency_id_;
+  instrumentation::update_rate_fn_t update_rate_;
+  instrumentation::update_latency_fn_t update_latency_;
+  instrumentation::update_latency_fn_t update_in_latency_;
   bool stop_;
 };
 

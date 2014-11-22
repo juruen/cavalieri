@@ -8,7 +8,7 @@
 class riemann_tcp_pool {
   public:
     riemann_tcp_pool(size_t thread_num, raw_msg_fn_t raw_msg_fn,
-                     instrumentation & instr);
+                     instrumentation::instrumentation & instr);
     void add_client (int fd);
     void stop();
     ~riemann_tcp_pool();
@@ -20,8 +20,7 @@ class riemann_tcp_pool {
   private:
     tcp_pool tcp_pool_;
     raw_msg_fn_t raw_msg_fn_;
-    instrumentation & instrumentation_;
-    instrumentation::id_t gauge_id_;
+    instrumentation::update_gauge_t connection_gauge_;
     std::vector<std::map<int, riemann_tcp_connection>> connections_;
 };
 

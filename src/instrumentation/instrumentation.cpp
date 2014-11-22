@@ -61,6 +61,8 @@ const std::string k_fqdn(fqdn());
 
 };
 
+namespace instrumentation {
+
 instrumentation::instrumentation(const config)
   :
     rates_id_(0),
@@ -73,8 +75,8 @@ instrumentation::instrumentation(const config)
 {
 }
 
-id_t instrumentation::add_rate(const std::string service,
-                              const std::string description)
+update_rate_fn_t instrumentation::add_rate(const std::string service,
+                                           const std::string description)
 {
 
   CHECK(rates_id_.load() < k_max_rates) << "max number of rates reached";
@@ -85,7 +87,7 @@ id_t instrumentation::add_rate(const std::string service,
   rates_[id].description = description;
   rates_[id].rate.reset();
 
-  return id;
+  return [=](const unsigned int v) { update_rate(id, v);  };
 }
 
 void instrumentation::update_rate(const id_t id,
@@ -94,9 +96,10 @@ void instrumentation::update_rate(const id_t id,
   rates_[id].rate.add(ticks);
 }
 
-id_t instrumentation::add_latency(const std::string service,
-                                 const std::string description,
-                                 std::vector<double> percentiles)
+update_latency_fn_t instrumentation::add_latency(
+    const std::string service,
+    const std::string description,
+    std::vector<double> percentiles)
 {
 
   CHECK(rates_id_.load() < k_max_latencies)
@@ -108,7 +111,7 @@ id_t instrumentation::add_latency(const std::string service,
   latencies_[id].description = description;
   latencies_[id].percentiles = percentiles;
 
-  return id;
+  return [=](const double v) { update_latency(id, v);  };
 }
 
 void instrumentation::update_latency(const id_t id,
@@ -117,7 +120,7 @@ void instrumentation::update_latency(const id_t id,
   latencies_[id].reservoir.add_sample(value);
 }
 
-unsigned int instrumentation::add_gauge(const std::string service,
+update_gauge_t instrumentation::add_gauge(const std::string service,
                                         const std::string description)
 {
 
@@ -128,7 +131,12 @@ unsigned int instrumentation::add_gauge(const std::string service,
   gauges_[id].service = service;
   gauges_[id].description = description;
 
-  return id;
+  return {
+    [=](const unsigned int v) { update_gauge(id, v);  },
+    [=](const unsigned int v) { incr_gauge(id, v);  },
+    [=](const unsigned int v) { decr_gauge(id, v);  }
+  };
+
 }
 
 void instrumentation::update_gauge(id_t id,
@@ -248,3 +256,4 @@ std::vector<Event> instrumentation::reservoir_to_events(
   return events;
 }
 
+}

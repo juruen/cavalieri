@@ -18,7 +18,7 @@ TEST(index_test_case, test)
   auto no_thread = [](std::function<void()> fn) { fn(); };
 
   config conf;
-  instrumentation instr(conf);
+  instrumentation::instrumentation instr(conf);
 
   real_index index(pubsub, [&](const Event & pe) {  s.push_back(pe); },
                    60, g_core->sched(), instr, no_thread);

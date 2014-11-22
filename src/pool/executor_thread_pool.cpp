@@ -11,11 +11,11 @@ const size_t k_max_queue_size = 1e+7;
 
 }
 
-executor_thread_pool::executor_thread_pool(instrumentation & instr,
-                                           const config & conf)
+executor_thread_pool::executor_thread_pool(
+    instrumentation::instrumentation & instr,
+    const config & conf)
   :
-    instr_(instr),
-    gauge_id_(instr.add_gauge(k_exec_pool_service, k_exec_pool_desc)),
+    task_guague_(instr.add_gauge(k_exec_pool_service, k_exec_pool_desc)),
     finished_threads_(conf.executor_pool_size, 0),
     next_thread_(0),
     tasks_(conf.executor_pool_size)
@@ -36,7 +36,7 @@ executor_thread_pool::executor_thread_pool(instrumentation & instr,
 
 void executor_thread_pool::add_task(const task_fn_t & task) {
 
-  instr_.incr_gauge(gauge_id_, 1);
+  task_guague_.incr_fn(1);
   tasks_[next_thread_].push({task, false});
 
   next_thread_ = (next_thread_ + 1) % tasks_.size();
@@ -92,7 +92,7 @@ void executor_thread_pool::run_tasks(const int i) {
 
     task.fn();
 
-    instr_.decr_gauge(gauge_id_, 1);
+    task_guague_.decr_fn(1);
 
   }
 
