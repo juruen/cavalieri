@@ -244,6 +244,48 @@ streams_t project_lock(const predicates_t predicates, fold_fn_t fold) {
   return create_stream([=](){ return project_lock_(predicates, fold); });
 }
 
+streams_t project_lock(const predicates_t predicates, fold_fn_t fold,
+                       const size_t interval)
+{
+
+  return create_stream(
+
+    // on_init_stream
+    [=](fwd_new_stream_fn_t fwd_new_stream) -> on_event_fn_t
+    {
+
+      auto project_events = std::make_shared<project_t>(predicates.size());
+      auto forward = fwd_new_stream();
+
+      // Schedule periodic task to project results
+      g_core->sched().add_periodic_task([=]() { }, interval);
+
+      // on_event_fn function that stores events
+      return [=](e_t e) -> next_events_t
+      {
+        auto it = std::find_if(begin(predicates), end(predicates),
+                               [&](const predicate_t pred) { return pred(e);});
+
+        if (it != end(predicates)) {
+
+          int index = it - begin(predicates);
+
+          {
+            std::lock_guard<std::mutex> lock(project_events->mutex);
+            project_events->events[index] = e;
+          }
+
+        }
+
+        return {};
+
+      };
+
+    });
+}
+
+
+
 
 typedef struct {
   std::string state;

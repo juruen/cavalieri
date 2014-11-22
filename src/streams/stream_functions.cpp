@@ -354,6 +354,20 @@ streams_t project(const predicates_t predicates, fold_fn_t fold) {
 
 }
 
+streams_t project(const predicates_t predicates, fold_fn_t fold,
+                  size_t interval)
+{
+
+#ifdef PROJECT_LOCKFREE
+  return project_lockfree(predicates, fold, interval);
+#else
+  return project_lock(predicates, fold, interval);
+#endif
+
+}
+
+
+
 streams_t changed_state_(std::string initial) {
 
 #ifdef CHANGED_STATE_LOCKFREE

@@ -96,6 +96,8 @@ streams_t coalesce(fold_fn_t);
 
 streams_t project(const predicates_t predicates, fold_fn_t);
 
+streams_t project(const predicates_t predicates, fold_fn_t, size_t interval);
+
 streams_t changed_state(std::string initial);
 
 streams_t changed_state();
