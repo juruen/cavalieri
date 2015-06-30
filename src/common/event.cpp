@@ -370,6 +370,15 @@ Event & Event::set_attr(const std::string key, const std::string value) {
  return *this;
 }
 
+std::vector<std::pair<std::string, std::string>> Event::attrs() const {
+  std::vector<std::pair<std::string, std::string>> attributes;
+  for (int i = 0; i < event_.attributes_size(); i++) {
+    attributes.push_back({event_.attributes(i).key(),
+                          event_.attributes(i).value()});
+  }
+  return attributes;
+}
+
 Event & Event::clear_attrs() {
   event_.clear_attributes();
   return *this;

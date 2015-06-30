@@ -115,6 +115,8 @@ public:
 
   Event & set_attr(const std::string attribute, const std::string value);
 
+  std::vector<std::pair<std::string, std::string>> attrs() const;
+
   Event & clear_attrs();
 
 private:
