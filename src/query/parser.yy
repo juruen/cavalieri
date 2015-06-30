@@ -124,6 +124,10 @@ action : TAGGED EQUAL STRING
             delete $2;
             $$ = new query_tagged($3);
           }
+        | TAGGED STRING
+          {
+            $$ = new query_tagged($2);
+          }
         | UNQUOTEDSTRING EQUAL NIL
           {
             delete $2;

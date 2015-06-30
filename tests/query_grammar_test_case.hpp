@@ -136,6 +136,9 @@ TEST(query_grammar_tagged_test_case, test)
   e.clear_tags();
   e.add_tag("foo").add_tag("bar").add_tag("baz");
   ASSERT_FALSE(eval_fn(e));
+
+  // Test we also parse tagged without '='
+  ASSERT_TRUE(driver.parse_string("(tagged \"foo\")", "query"));
 }
 
 TEST(query_grammar_fields_test_case, test)

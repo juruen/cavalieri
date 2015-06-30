@@ -1,3 +1,8 @@
+0.1.3 TBD
+================
+  * Add attrs to event class
+  * Support 'tagged "foo"' without '=' in grammar
+
 0.1.2 2014-09-11
 ================
 
