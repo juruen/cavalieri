@@ -5,7 +5,7 @@
 #include <string>
 #include <netinet/in.h>
 #include <riemann_tcp_connection.h>
-#include "mock_async_fd.hpp"
+#include "mock_async_fd.h"
 #include <os/mock_os_functions.h>
 #include <common/event.h>
 #include <async/async_loop.h>
